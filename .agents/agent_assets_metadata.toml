@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "NxCPRMFMFCMHxd7jKotId"
+uri = "file://artifacts/mockup-sandbox/public/images/syncverse-beacon-bg.png"
+type = "image"
+title = "Holographic dark gradient background"
