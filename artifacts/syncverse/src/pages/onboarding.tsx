@@ -34,6 +34,10 @@ import {
   Dumbbell,
   Microscope,
   Briefcase,
+  Asterisk,
+  Radio,
+  MoveUpRight,
+  CornerDownRight,
 } from "lucide-react";
 
 const ZONE_META: Record<
@@ -115,6 +119,104 @@ function StepBubble({ active, done }: { active: boolean; done: boolean }) {
   );
 }
 
+const HERO_STYLES = `
+  @keyframes sv-marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes sv-spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes sv-blink { 0%, 60% { opacity: 1; } 70%, 100% { opacity: 0.2; } }
+  @keyframes sv-float {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(8px,-12px) scale(1.04); }
+  }
+  .sv-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+  .sv-marquee-track {
+    display: inline-flex;
+    animation: sv-marquee 40s linear infinite;
+    will-change: transform;
+  }
+  .sv-marquee-track-fast {
+    display: inline-flex;
+    animation: sv-marquee 20s linear infinite;
+    will-change: transform;
+  }
+  .sv-spin-slow { animation: sv-spin-slow 18s linear infinite; }
+  .sv-blink { animation: sv-blink 1.4s ease-in-out infinite; }
+  .sv-float { animation: sv-float 6s ease-in-out infinite; }
+  .sv-outline-text {
+    color: transparent;
+    -webkit-text-stroke: 2px currentColor;
+  }
+  @media (min-width: 768px) {
+    .sv-outline-text { -webkit-text-stroke-width: 3px; }
+  }
+  .sv-grid-bg {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .sv-tilt-l { transform: rotate(-1.5deg); }
+  .sv-tilt-r { transform: rotate(1.5deg); }
+`;
+
+const SV_HOT = "#FF00C8";
+const SV_CYAN = "#00E5FF";
+const SV_ACID = "#DBFF00";
+const SV_GREEN = "#00FF95";
+const SV_INK = "#0A0A0F";
+
+const ZONE_HUE: Record<CommunityZone, string> = {
+  career: "#FFB800",
+  startup: SV_HOT,
+  study: SV_CYAN,
+  social: "#FF6B9D",
+  creative: SV_GREEN,
+  fitness: SV_ACID,
+  research: "#A78BFA",
+};
+
+function MarqueeStrip({
+  totalActive,
+  trending,
+  hue,
+}: {
+  totalActive: number;
+  trending: { label: string; count: number }[];
+  hue: string;
+}) {
+  const items: string[] = [
+    `${totalActive} students live on campus rn`,
+    "no inbox / no DMs / no cap",
+    "anonymous by default",
+    ...trending.map((t) => `${t.count} on it: ${t.label}`),
+    "ur college only · ur energy only",
+    "match · meet · ship",
+  ];
+  const loop = [...items, ...items];
+  return (
+    <div
+      className="relative overflow-hidden border-y py-3 font-mono text-xs uppercase tracking-[0.25em]"
+      style={{ borderColor: hue, color: hue, backgroundColor: SV_INK }}
+    >
+      <div className="sv-marquee-track gap-10 whitespace-nowrap">
+        {loop.map((t, i) => (
+          <span key={i} className="inline-flex items-center gap-3">
+            <Asterisk className="h-3 w-3" />
+            {t}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function LandingHero({ onStart }: { onStart: () => void }) {
   const [, setLocation] = useLocation();
   const insights = useGetCommunityInsights(
@@ -126,8 +228,8 @@ function LandingHero({ onStart }: { onStart: () => void }) {
     { query: { queryKey: getListUsersQueryKey({}) } },
   );
   const totalActive = insights.data?.totalActiveNow ?? 0;
-  const topZones = insights.data?.mostActiveZones.slice(0, 3) ?? [];
-  const trending = insights.data?.trendingActivities.slice(0, 4) ?? [];
+  const topZones = insights.data?.mostActiveZones.slice(0, 5) ?? [];
+  const trending = insights.data?.trendingActivities.slice(0, 5) ?? [];
 
   // Group seeded users by college, take a few from each so the picker stays compact
   const demoByCollege = new Map<string, typeof allUsers.data>();
@@ -137,6 +239,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
     if (list && list.length < 4) list.push(u);
   }
   const demoColleges = Array.from(demoByCollege.entries()).slice(0, 4);
+  const previewAvatars = (allUsers.data ?? []).slice(0, 6);
 
   const useDemo = (id: string) => {
     setCurrentUserId(id);
@@ -144,244 +247,636 @@ function LandingHero({ onStart }: { onStart: () => void }) {
   };
 
   return (
-    <div className="space-y-10">
-      <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-8 md:p-14">
-        <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+    <div
+      className="relative w-full overflow-x-hidden text-white"
+      style={{ backgroundColor: SV_INK }}
+    >
+      <style dangerouslySetInnerHTML={{ __html: HERO_STYLES }} />
+      <div className="pointer-events-none absolute inset-0 sv-noise opacity-60" />
 
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="relative"
-        >
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-primary">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-            </span>
-            Live on campus
-          </div>
-          <h1 className="mt-5 text-5xl font-black leading-[0.9] tracking-tighter md:text-7xl lg:text-8xl">
-            <span className="text-primary">SYNC</span>
-            <span>VERSE</span>
-          </h1>
-          <p className="mt-5 max-w-2xl text-lg text-foreground/90 md:text-2xl">
-            The campus connection engine. Find the people building, studying,
-            shipping, and hustling — <span className="text-primary">right now</span>.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <Button size="lg" onClick={onStart} className="px-8 text-base font-bold">
-              <Zap className="mr-2 h-4 w-4" /> Sync me in
-            </Button>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="flex -space-x-2">
-                {["#22D3EE", "#A78BFA", "#F472B6", "#34D399"].map((c) => (
-                  <span
-                    key={c}
-                    className="h-7 w-7 rounded-full ring-2 ring-card"
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </span>
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={totalActive}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  className="font-semibold text-foreground"
-                >
-                  {totalActive}
-                </motion.span>
-              </AnimatePresence>
-              students live now
-            </div>
-          </div>
-        </motion.div>
-      </div>
+      {/* MARQUEE */}
+      <MarqueeStrip totalActive={totalActive} trending={trending} hue={SV_CYAN} />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {topZones.map((z, i) => {
-          const meta = ZONE_META[z.zone as CommunityZone];
-          const Icon = meta?.icon ?? Sparkles;
-          return (
-            <motion.div
-              key={z.zone}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * i }}
+      {/* HERO */}
+      <section className="relative">
+        <div className="pointer-events-none absolute inset-0 sv-grid-bg" />
+        <div
+          className="pointer-events-none absolute -top-32 right-0 h-[480px] w-[480px] rounded-full opacity-40 blur-[120px] sv-float"
+          style={{ background: `radial-gradient(circle, ${SV_HOT} 0%, transparent 70%)` }}
+        />
+        <div
+          className="pointer-events-none absolute -bottom-32 left-0 h-[420px] w-[420px] rounded-full opacity-30 blur-[120px] sv-float"
+          style={{
+            background: `radial-gradient(circle, ${SV_CYAN} 0%, transparent 70%)`,
+            animationDelay: "2s",
+          }}
+        />
+
+        <div className="relative mx-auto max-w-[1440px] px-5 pb-20 pt-12 md:px-12 md:pb-32 md:pt-20">
+          <div className="flex items-center justify-between gap-4">
+            <div
+              className="inline-flex items-center gap-2 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.3em]"
+              style={{ borderColor: SV_GREEN, color: SV_GREEN }}
             >
-              <Card className={`border-border bg-gradient-to-br ${meta?.tint ?? ""} h-full`}>
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-                        <Icon className="h-3 w-3" /> {meta?.label ?? z.zone}
-                      </div>
-                      <div className="mt-3 text-3xl font-black tracking-tighter">
-                        {z.activeUsers}
-                      </div>
-                      <div className="text-xs text-muted-foreground">in this zone</div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                        live
-                      </div>
-                      <div className="text-2xl font-black text-primary">{z.livingNow}</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {demoColleges.length > 0 && (
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-              <Sparkles className="h-3 w-3" /> Try the demo as a real student
+              <span
+                className="h-1.5 w-1.5 sv-blink rounded-full"
+                style={{ backgroundColor: SV_GREEN }}
+              />
+              Signal Live
             </div>
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              one click sign-in
-            </span>
+            <div className="hidden items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-white/50 md:flex">
+              <span>v0.4 · spring '26</span>
+              <Asterisk className="h-3 w-3 sv-spin-slow" style={{ color: SV_HOT }} />
+              <span>made for builders</span>
+            </div>
           </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            {demoColleges.map(([college, users]) => (
-              <Card key={college} className="border-border bg-card">
-                <CardContent className="p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className="text-sm font-bold">{college}</div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                      {(users ?? []).length} students
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    {(users ?? []).map((u) => {
-                      const meta = ZONE_META[u.zone as CommunityZone];
-                      const Icon = meta?.icon ?? Sparkles;
-                      const initials = u.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .slice(0, 2)
-                        .join("")
-                        .toUpperCase();
-                      return (
-                        <button
-                          key={u.id}
-                          onClick={() => useDemo(u.id)}
-                          className="group flex w-full items-center gap-3 rounded-lg border border-transparent bg-muted/30 p-2.5 text-left transition-all hover:border-primary/50 hover:bg-primary/5"
-                        >
-                          <div
-                            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-black text-background"
-                            style={{ backgroundColor: u.avatarColor }}
-                          >
-                            {initials}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5 truncate text-sm font-bold">
-                              {u.name}
-                              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                                · {u.major}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-                              <Icon className="h-3 w-3 flex-shrink-0 text-primary" />
-                              <span className="truncate">{u.intent}</span>
-                            </div>
-                          </div>
-                          <ArrowRight className="h-4 w-4 flex-shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+
+          {/* Wordmark */}
+          <div className="relative mt-8 select-none md:mt-12">
+            <h1 className="font-black leading-[0.82] tracking-[-0.05em]">
+              <span
+                className="block text-[20vw] italic md:text-[15vw]"
+                style={{ color: SV_HOT, textShadow: `0 0 60px ${SV_HOT}40` }}
+              >
+                SYNC
+              </span>
+              <span className="-mt-2 flex items-end gap-3 md:-mt-4 md:gap-6">
+                <span
+                  className="sv-outline-text text-[20vw] md:text-[15vw]"
+                  style={{ color: SV_CYAN }}
+                >
+                  VERSE
+                </span>
+                <span
+                  className="mb-3 hidden items-center gap-1 self-end font-mono text-xs uppercase tracking-[0.3em] md:mb-6 md:flex"
+                  style={{ color: SV_ACID }}
+                >
+                  <CornerDownRight className="h-3 w-3" />
+                  campus os
+                </span>
+              </span>
+            </h1>
           </div>
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            Pick any student to instantly see their matches, threads, and squads. Or scroll down to create your own.
-          </p>
+
+          {/* Tagline + CTA */}
+          <div className="mt-10 grid gap-10 md:mt-16 md:grid-cols-12 md:gap-8">
+            <div className="md:col-span-7">
+              <p className="text-2xl font-bold leading-tight tracking-tight md:text-4xl">
+                find the ppl on ur campus{" "}
+                <span className="italic" style={{ color: SV_CYAN }}>
+                  building
+                </span>
+                ,{" "}
+                <span className="italic" style={{ color: SV_HOT }}>
+                  shipping
+                </span>{" "}
+                & locked in{" "}
+                <span
+                  className="inline-block -rotate-2 px-2"
+                  style={{ backgroundColor: SV_ACID, color: SV_INK }}
+                >
+                  right now.
+                </span>
+              </p>
+              <p className="mt-5 max-w-xl text-base text-white/60 md:text-lg">
+                anonymous · single-college · no DMs no inbox no algorithm games.
+                you post what ur on. we sync u with the rest.
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <button
+                  onClick={onStart}
+                  className="group relative inline-flex items-center gap-3 px-7 py-4 text-base font-black uppercase tracking-widest text-black transition-transform hover:-translate-y-0.5"
+                  style={{
+                    backgroundColor: SV_HOT,
+                    boxShadow: `6px 6px 0 0 ${SV_CYAN}`,
+                  }}
+                >
+                  <Zap className="h-5 w-5" />
+                  Sync me in
+                  <MoveUpRight className="h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                </button>
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-2">
+                    {previewAvatars.length > 0
+                      ? previewAvatars.map((u) => {
+                          const initials = u.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .slice(0, 2)
+                            .join("")
+                            .toUpperCase();
+                          return (
+                            <span
+                              key={u.id}
+                              className="flex h-9 w-9 items-center justify-center rounded-full border-2 text-[9px] font-black"
+                              style={{
+                                backgroundColor: u.avatarColor,
+                                borderColor: SV_INK,
+                                color: SV_INK,
+                              }}
+                            >
+                              {initials}
+                            </span>
+                          );
+                        })
+                      : ["#22D3EE", "#A78BFA", "#F472B6", "#34D399"].map((c) => (
+                          <span
+                            key={c}
+                            className="h-9 w-9 rounded-full border-2"
+                            style={{ backgroundColor: c, borderColor: SV_INK }}
+                          />
+                        ))}
+                  </div>
+                  <div className="font-mono text-xs uppercase tracking-widest text-white/70">
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={totalActive}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        className="text-base font-black not-italic"
+                        style={{ color: SV_GREEN }}
+                      >
+                        {totalActive}
+                      </motion.span>
+                    </AnimatePresence>{" "}
+                    on rn
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sticker stack */}
+            <div className="relative md:col-span-5">
+              <div className="pointer-events-none relative mx-auto h-[280px] max-w-md md:h-[340px]">
+                <div
+                  className="absolute left-2 top-4 sv-tilt-l border-2 px-4 py-3 font-mono text-xs uppercase tracking-widest"
+                  style={{ borderColor: SV_CYAN, color: SV_CYAN, backgroundColor: SV_INK }}
+                >
+                  Stata Center · 2:14 AM
+                  <div className="mt-1 text-sm font-bold normal-case tracking-normal text-white">
+                    "looking for hackathon co-builder"
+                  </div>
+                </div>
+                <div
+                  className="absolute right-0 top-24 sv-tilt-r px-4 py-3"
+                  style={{ backgroundColor: SV_ACID, color: SV_INK }}
+                >
+                  <div className="font-mono text-[10px] uppercase tracking-widest opacity-70">
+                    Squad formed
+                  </div>
+                  <div className="text-sm font-black">3/4 locked in</div>
+                </div>
+                <div
+                  className="absolute bottom-8 left-8 sv-tilt-l border-2 px-4 py-2"
+                  style={{ borderColor: SV_HOT, color: "white", backgroundColor: SV_INK }}
+                >
+                  <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: SV_HOT }}>
+                    new match
+                  </span>
+                  <div className="text-sm font-bold">"both in 6.046, both stuck"</div>
+                </div>
+                <div
+                  className="absolute -right-2 bottom-2 flex h-16 w-16 items-center justify-center rounded-full font-mono text-[10px] uppercase tracking-widest"
+                  style={{ backgroundColor: SV_HOT, color: SV_INK }}
+                >
+                  <Asterisk className="absolute h-16 w-16 sv-spin-slow opacity-30" />
+                  <span className="relative font-black">live</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
+
+      {/* BENTO VIBE GRID */}
+      <section className="relative border-t" style={{ borderColor: "#1a1a22" }}>
+        <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-24">
+          <div className="mb-8 flex items-end justify-between gap-4">
+            <h2 className="text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+              what's <span style={{ color: SV_HOT }}>hitting</span>
+              <br />
+              on campus
+            </h2>
+            <div className="hidden text-right font-mono text-xs uppercase tracking-widest text-white/50 md:block">
+              auto-refresh
+              <br />
+              every 8s
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-6 md:gap-4">
+            {/* Total counter mega tile */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative col-span-2 overflow-hidden md:col-span-3 md:row-span-2"
+              style={{ backgroundColor: SV_HOT, color: SV_INK }}
+            >
+              <div className="relative p-6 md:p-10">
+                <div className="font-mono text-xs uppercase tracking-[0.3em]">
+                  total students locked in
+                </div>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={totalActive}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.1 }}
+                    className="mt-2 text-[28vw] font-black italic leading-[0.82] tracking-[-0.07em] md:text-[12vw]"
+                  >
+                    {totalActive.toString().padStart(3, "0")}
+                  </motion.div>
+                </AnimatePresence>
+                <div className="mt-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest">
+                  <Radio className="h-3 w-3 sv-blink" />
+                  broadcasting now
+                </div>
+                <div className="mt-6 max-w-xs text-sm font-bold leading-tight">
+                  every one of them is on something. one of them is on ur thing.
+                </div>
+              </div>
+              <Asterisk className="pointer-events-none absolute -bottom-12 -right-12 h-56 w-56 opacity-10 sv-spin-slow" />
+            </motion.div>
+
+            {/* Top zone tiles */}
+            {topZones.length === 0
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="col-span-1 h-32 animate-pulse md:col-span-3 md:h-auto"
+                    style={{ backgroundColor: "#11111A" }}
+                  />
+                ))
+              : topZones.slice(0, 4).map((z, i) => {
+                  const meta = ZONE_META[z.zone as CommunityZone];
+                  const Icon = meta?.icon ?? Sparkles;
+                  const hue = ZONE_HUE[z.zone as CommunityZone] ?? SV_CYAN;
+                  const big = i === 0;
+                  return (
+                    <motion.div
+                      key={z.zone}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.05 * i }}
+                      className={`group relative overflow-hidden border-2 transition-transform hover:-translate-y-1 ${
+                        big ? "col-span-2 md:col-span-3" : "col-span-1 md:col-span-3"
+                      }`}
+                      style={{ borderColor: hue, backgroundColor: SV_INK }}
+                    >
+                      <div className="relative p-5 md:p-6">
+                        <div className="flex items-start justify-between gap-2">
+                          <div
+                            className="inline-flex items-center gap-1.5 px-2 py-1 font-mono text-[10px] uppercase tracking-widest"
+                            style={{ backgroundColor: hue, color: SV_INK }}
+                          >
+                            <Icon className="h-3 w-3" />
+                            {meta?.label ?? z.zone}
+                          </div>
+                          <span
+                            className="font-mono text-[10px] uppercase tracking-widest"
+                            style={{ color: hue }}
+                          >
+                            #{(i + 1).toString().padStart(2, "0")}
+                          </span>
+                        </div>
+                        <div
+                          className="mt-3 text-5xl font-black italic leading-none tracking-tighter md:text-7xl"
+                          style={{ color: hue }}
+                        >
+                          {z.activeUsers}
+                        </div>
+                        <div className="mt-2 flex items-center justify-between text-xs text-white/60">
+                          <span className="font-mono uppercase tracking-widest">
+                            in zone
+                          </span>
+                          <span
+                            className="font-mono font-black uppercase tracking-widest"
+                            style={{ color: SV_GREEN }}
+                          >
+                            +{z.livingNow} live
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+          </div>
+        </div>
+      </section>
+
+      {/* PICK A BRAIN — DEMO */}
+      {demoColleges.length > 0 && (
+        <section
+          className="relative border-t border-b"
+          style={{ borderColor: "#1a1a22", backgroundColor: "#0d0d14" }}
+        >
+          <div
+            className="overflow-hidden border-b py-2 font-mono text-[10px] uppercase tracking-[0.4em]"
+            style={{ borderColor: "#1a1a22", color: SV_ACID }}
+          >
+            <div className="sv-marquee-track-fast gap-8 whitespace-nowrap">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <span key={i} className="inline-flex items-center gap-2">
+                  <Asterisk className="h-2.5 w-2.5" /> jack into someone's head ·
+                  one tap demo · no signup ·
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-24">
+            <div className="mb-10 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div>
+                <div
+                  className="font-mono text-xs uppercase tracking-[0.3em]"
+                  style={{ color: SV_ACID }}
+                >
+                  / try it live
+                </div>
+                <h2 className="mt-2 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+                  pick a <span className="sv-outline-text" style={{ color: SV_ACID }}>brain</span>
+                </h2>
+              </div>
+              <p className="max-w-md text-sm text-white/60">
+                tap any student to instantly see their feed, matches, threads, squads.
+                no signup. no nothing. just be them for a sec.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {demoColleges.map(([college, users], collegeIdx) => {
+                const accent = [SV_HOT, SV_CYAN, SV_ACID, SV_GREEN][collegeIdx % 4];
+                return (
+                  <div
+                    key={college}
+                    className="border-2"
+                    style={{ borderColor: accent, backgroundColor: SV_INK }}
+                  >
+                    <div
+                      className="flex items-center justify-between px-4 py-3"
+                      style={{ backgroundColor: accent, color: SV_INK }}
+                    >
+                      <div className="font-black uppercase tracking-tight">{college}</div>
+                      <span className="font-mono text-[10px] uppercase tracking-widest">
+                        {(users ?? []).length} online
+                      </span>
+                    </div>
+                    <div className="divide-y" style={{ borderColor: "#1a1a22" }}>
+                      {(users ?? []).map((u) => {
+                        const meta = ZONE_META[u.zone as CommunityZone];
+                        const Icon = meta?.icon ?? Sparkles;
+                        const initials = u.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .slice(0, 2)
+                          .join("")
+                          .toUpperCase();
+                        const zoneHue = ZONE_HUE[u.zone as CommunityZone] ?? SV_CYAN;
+                        return (
+                          <button
+                            key={u.id}
+                            onClick={() => useDemo(u.id)}
+                            className="group relative flex w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-white/[0.03]"
+                            style={{ borderColor: "#1a1a22" }}
+                          >
+                            <div
+                              className="flex h-12 w-12 flex-shrink-0 items-center justify-center text-xs font-black"
+                              style={{ backgroundColor: u.avatarColor, color: SV_INK }}
+                            >
+                              {initials}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 truncate text-sm font-black">
+                                {u.name}
+                                <span
+                                  className="font-mono text-[10px] uppercase tracking-widest"
+                                  style={{ color: zoneHue }}
+                                >
+                                  · {u.major}
+                                </span>
+                              </div>
+                              <div className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-white/60">
+                                <Icon className="h-3 w-3 flex-shrink-0" style={{ color: zoneHue }} />
+                                <span className="truncate italic">"{u.intent}"</span>
+                              </div>
+                            </div>
+                            <div
+                              className="flex h-8 w-8 flex-shrink-0 items-center justify-center transition-transform group-hover:translate-x-1"
+                              style={{ backgroundColor: accent, color: SV_INK }}
+                            >
+                              <ArrowRight className="h-4 w-4" />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
       )}
 
+      {/* TRENDING */}
       {trending.length > 0 && (
-        <div>
-          <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-            <Flame className="h-3 w-3" /> Trending right now
-          </div>
-          <div className="space-y-2">
-            {trending.map((t, i) => (
-              <motion.div
-                key={t.label + i}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05 * i }}
-                className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3"
+        <section className="relative border-t" style={{ borderColor: "#1a1a22" }}>
+          <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-24">
+            <div className="mb-8">
+              <div
+                className="font-mono text-xs uppercase tracking-[0.3em]"
+                style={{ color: SV_HOT }}
               >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <span className="text-sm font-black">{i + 1}</span>
-                  </div>
-                  <div className="truncate text-sm font-semibold">{t.label}</div>
+                / leaderboard
+              </div>
+              <h2 className="mt-2 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+                what people <br />
+                <span style={{ color: SV_HOT }}>can't shut up</span> about
+              </h2>
+            </div>
+
+            <div className="border-y-2" style={{ borderColor: SV_HOT }}>
+              {trending.map((t, i) => {
+                const hue = ZONE_HUE[t.zone as CommunityZone] ?? SV_CYAN;
+                return (
+                  <motion.div
+                    key={t.label + i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.04 * i }}
+                    className="group flex items-center gap-4 border-b py-4 transition-colors last:border-b-0 hover:bg-white/[0.02] md:gap-6 md:py-6"
+                    style={{ borderColor: "#1a1a22" }}
+                  >
+                    <div
+                      className="w-16 text-right font-black italic leading-none sv-outline-text md:w-32 md:text-7xl"
+                      style={{ color: SV_HOT, fontSize: "clamp(2.5rem, 6vw, 5rem)" }}
+                    >
+                      {(i + 1).toString().padStart(2, "0")}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-base font-bold md:text-2xl">
+                        {t.label}
+                      </div>
+                      <div
+                        className="mt-1 inline-block font-mono text-[10px] uppercase tracking-widest"
+                        style={{ color: hue }}
+                      >
+                        / {t.zone}
+                      </div>
+                    </div>
+                    <div
+                      className="flex flex-col items-end gap-0.5 px-2 py-1 font-mono"
+                      style={{ color: SV_GREEN }}
+                    >
+                      <span className="text-2xl font-black md:text-3xl">{t.count}</span>
+                      <span className="text-[9px] uppercase tracking-widest">
+                        on it now
+                      </span>
+                    </div>
+                    <MoveUpRight
+                      className="hidden h-6 w-6 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 md:block"
+                      style={{ color: SV_HOT }}
+                    />
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* MANIFESTO */}
+      <section className="relative border-t" style={{ borderColor: "#1a1a22", backgroundColor: "#0d0d14" }}>
+        <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-24">
+          <div className="mb-12 flex items-center gap-4">
+            <div className="h-px flex-1" style={{ backgroundColor: SV_CYAN }} />
+            <span
+              className="font-mono text-xs uppercase tracking-[0.4em]"
+              style={{ color: SV_CYAN }}
+            >
+              the manifesto
+            </span>
+            <div className="h-px flex-1" style={{ backgroundColor: SV_CYAN }} />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                tag: "01 / matches",
+                pull: "real matches.",
+                hue: SV_CYAN,
+                body:
+                  "you say what ur on. we rank ppl pulling in the same direction. not vibes. alignment.",
+              },
+              {
+                tag: "02 / squads",
+                pull: "auto-squads.",
+                hue: SV_HOT,
+                body:
+                  "3+ ppl lock onto one mission and a squad spawns with a name, a purpose, a first move.",
+              },
+              {
+                tag: "03 / nothing else",
+                pull: "no inbox. no algo.",
+                hue: SV_ACID,
+                body:
+                  "anonymous by default. ur intent updates as ur week shifts. only as deep as u want.",
+              },
+            ].map((c, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.06 * i }}
+                className="group relative overflow-hidden border-2 p-6 transition-transform hover:-translate-y-1 md:p-8"
+                style={{ borderColor: c.hue, backgroundColor: SV_INK }}
+              >
+                <div
+                  className="font-mono text-xs uppercase tracking-[0.3em]"
+                  style={{ color: c.hue }}
+                >
+                  {c.tag}
                 </div>
-                <div className="flex flex-shrink-0 items-center gap-3">
-                  <span className="text-xs uppercase tracking-widest text-muted-foreground">
-                    {t.zone}
-                  </span>
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
-                    {t.count} live
-                  </span>
+                <div
+                  className="mt-6 text-4xl font-black italic leading-none tracking-tighter md:text-5xl"
+                  style={{ color: c.hue }}
+                >
+                  {c.pull}
                 </div>
+                <p className="mt-6 text-sm leading-relaxed text-white/70">{c.body}</p>
+                <Asterisk
+                  className="absolute -bottom-4 -right-4 h-24 w-24 opacity-10 transition-transform group-hover:rotate-45"
+                  style={{ color: c.hue }}
+                />
               </motion.div>
             ))}
           </div>
         </div>
-      )}
+      </section>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {[
-          {
-            icon: Sparkles,
-            title: "Real matches, not chats",
-            body:
-              "Tell SYNCVERSE what you're working on. Get ranked by alignment with people pulling toward the same thing.",
-          },
-          {
-            icon: Users,
-            title: "Auto-formed squads",
-            body:
-              "When 3+ students lock onto a shared mission, SYNCVERSE proposes a squad with a name, purpose, and first move.",
-          },
-          {
-            icon: Activity,
-            title: "Live, anonymous, no inbox spam",
-            body:
-              "Your intent updates as your week changes. Match, message, RSVP — only as deep as you want to go.",
-          },
-        ].map((c, i) => {
-          const Icon = c.icon;
-          return (
-            <Card key={i} className="border-border bg-card">
-              <CardContent className="p-5">
-                <Icon className="mb-3 h-5 w-5 text-primary" />
-                <div className="font-bold">{c.title}</div>
-                <p className="mt-1 text-sm text-muted-foreground">{c.body}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {/* FINAL CTA WALL */}
+      <section
+        className="relative overflow-hidden border-t"
+        style={{ borderColor: "#1a1a22", backgroundColor: SV_HOT }}
+      >
+        <div className="pointer-events-none absolute inset-0 sv-noise opacity-30" />
+        <div
+          className="pointer-events-none absolute -top-20 -right-20 h-96 w-96 rounded-full opacity-50 blur-[120px]"
+          style={{ backgroundColor: SV_CYAN }}
+        />
+        <div className="relative mx-auto max-w-[1440px] px-5 py-20 md:px-12 md:py-32">
+          <div
+            className="font-mono text-xs uppercase tracking-[0.4em]"
+            style={{ color: SV_INK }}
+          >
+            / ur turn
+          </div>
+          <h2
+            className="mt-4 text-[15vw] font-black italic leading-[0.82] tracking-[-0.05em] md:text-[10vw]"
+            style={{ color: SV_INK }}
+          >
+            you in?
+          </h2>
+          <p
+            className="mt-6 max-w-2xl text-lg font-bold md:text-2xl"
+            style={{ color: SV_INK }}
+          >
+            takes 30 seconds. no email. no password. just say what ur on
+            and meet the rest of campus already on it.
+          </p>
+          <div className="mt-10 flex flex-wrap items-center gap-5">
+            <button
+              onClick={onStart}
+              className="group inline-flex items-center gap-3 px-8 py-5 text-lg font-black uppercase tracking-widest transition-transform hover:-translate-y-0.5"
+              style={{
+                backgroundColor: SV_INK,
+                color: SV_ACID,
+                boxShadow: `8px 8px 0 0 ${SV_CYAN}`,
+              }}
+            >
+              <Zap className="h-5 w-5" />
+              Sync me in
+              <MoveUpRight className="h-5 w-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            </button>
+            <div
+              className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest"
+              style={{ color: SV_INK }}
+            >
+              <Asterisk className="h-3 w-3 sv-spin-slow" />
+              <span>no login · no inbox · anonymous by default</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <div className="text-center">
-        <Button size="lg" onClick={onStart} className="px-10 text-base font-bold">
-          Start your sync <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-        <p className="mt-3 text-xs text-muted-foreground">
-          No login. No inbox. Anonymous by default.
-        </p>
+      {/* Footer strip */}
+      <div
+        className="border-t px-5 py-6 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-white/40 md:px-12"
+        style={{ borderColor: "#1a1a22" }}
+      >
+        SYNCVERSE · campus os · single-college only · v0.4
       </div>
     </div>
   );
@@ -429,31 +924,28 @@ export default function Onboarding() {
 
   if (existingUserId && !showForm) {
     return (
-      <div className="space-y-8">
-        <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card">
-          <CardContent className="p-6 md:p-8">
-            <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-                  <Activity className="h-3 w-3 animate-pulse" /> You're already in
-                </div>
-                <h2 className="mt-2 text-2xl font-black tracking-tighter md:text-4xl">
-                  Welcome back to SYNCVERSE
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Your intent is live. Jump back into the feed.
-                </p>
+      <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card">
+        <CardContent className="p-6 md:p-8">
+          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
+                <Activity className="h-3 w-3 animate-pulse" /> You're already in
               </div>
-              <Link href="/feed">
-                <Button size="lg">
-                  Open feed <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+              <h2 className="mt-2 text-2xl font-black tracking-tighter md:text-4xl">
+                Welcome back to SYNCVERSE
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your intent is live. Jump back into the feed.
+              </p>
             </div>
-          </CardContent>
-        </Card>
-        <LandingHero onStart={() => setLocation("/feed")} />
-      </div>
+            <Link href="/feed">
+              <Button size="lg">
+                Open feed <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
