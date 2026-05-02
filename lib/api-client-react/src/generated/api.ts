@@ -17,16 +17,26 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  CampusEvent,
+  CollegeSnapshot,
   CommunityInsights,
+  CreateEventInput,
   CreateUserInput,
   FomoTrigger,
   GetCommunityInsightsParams,
   GetFomoTriggersParams,
+  GetMajorHubParams,
   HealthStatus,
   JoinSquadInput,
+  ListEventsParams,
   ListLiveSignalsParams,
   ListUsersParams,
+  MajorHub,
   Match,
+  Message,
+  MessageThread,
+  RsvpInput,
+  SendMessageInput,
   Signal,
   Squad,
   User,
@@ -994,6 +1004,729 @@ export function useGetFomoTriggers<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetFomoTriggersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Send a direct message
+ */
+export const getSendMessageUrl = () => {
+  return `/api/messages`;
+};
+
+export const sendMessage = async (
+  sendMessageInput: SendMessageInput,
+  options?: RequestInit,
+): Promise<Message> => {
+  return customFetch<Message>(getSendMessageUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(sendMessageInput),
+  });
+};
+
+export const getSendMessageMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendMessage>>,
+    TError,
+    { data: BodyType<SendMessageInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendMessage>>,
+  TError,
+  { data: BodyType<SendMessageInput> },
+  TContext
+> => {
+  const mutationKey = ["sendMessage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendMessage>>,
+    { data: BodyType<SendMessageInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return sendMessage(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendMessageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendMessage>>
+>;
+export type SendMessageMutationBody = BodyType<SendMessageInput>;
+export type SendMessageMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Send a direct message
+ */
+export const useSendMessage = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendMessage>>,
+    TError,
+    { data: BodyType<SendMessageInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof sendMessage>>,
+  TError,
+  { data: BodyType<SendMessageInput> },
+  TContext
+> => {
+  return useMutation(getSendMessageMutationOptions(options));
+};
+
+/**
+ * @summary List recent message threads for a user
+ */
+export const getListThreadsForUserUrl = (userId: string) => {
+  return `/api/users/${userId}/threads`;
+};
+
+export const listThreadsForUser = async (
+  userId: string,
+  options?: RequestInit,
+): Promise<MessageThread[]> => {
+  return customFetch<MessageThread[]>(getListThreadsForUserUrl(userId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListThreadsForUserQueryKey = (userId: string) => {
+  return [`/api/users/${userId}/threads`] as const;
+};
+
+export const getListThreadsForUserQueryOptions = <
+  TData = Awaited<ReturnType<typeof listThreadsForUser>>,
+  TError = ErrorType<unknown>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listThreadsForUser>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListThreadsForUserQueryKey(userId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listThreadsForUser>>
+  > = ({ signal }) => listThreadsForUser(userId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!userId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listThreadsForUser>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListThreadsForUserQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listThreadsForUser>>
+>;
+export type ListThreadsForUserQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List recent message threads for a user
+ */
+
+export function useListThreadsForUser<
+  TData = Awaited<ReturnType<typeof listThreadsForUser>>,
+  TError = ErrorType<unknown>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listThreadsForUser>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListThreadsForUserQueryOptions(userId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Full message history between two users
+ */
+export const getListMessagesBetweenUrl = (meId: string, otherId: string) => {
+  return `/api/users/${meId}/messages/${otherId}`;
+};
+
+export const listMessagesBetween = async (
+  meId: string,
+  otherId: string,
+  options?: RequestInit,
+): Promise<Message[]> => {
+  return customFetch<Message[]>(getListMessagesBetweenUrl(meId, otherId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMessagesBetweenQueryKey = (
+  meId: string,
+  otherId: string,
+) => {
+  return [`/api/users/${meId}/messages/${otherId}`] as const;
+};
+
+export const getListMessagesBetweenQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMessagesBetween>>,
+  TError = ErrorType<unknown>,
+>(
+  meId: string,
+  otherId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listMessagesBetween>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListMessagesBetweenQueryKey(meId, otherId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMessagesBetween>>
+  > = ({ signal }) =>
+    listMessagesBetween(meId, otherId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(meId && otherId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMessagesBetween>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMessagesBetweenQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMessagesBetween>>
+>;
+export type ListMessagesBetweenQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Full message history between two users
+ */
+
+export function useListMessagesBetween<
+  TData = Awaited<ReturnType<typeof listMessagesBetween>>,
+  TError = ErrorType<unknown>,
+>(
+  meId: string,
+  otherId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listMessagesBetween>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMessagesBetweenQueryOptions(
+    meId,
+    otherId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List upcoming events (optionally filtered by college)
+ */
+export const getListEventsUrl = (params?: ListEventsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/events?${stringifiedParams}`
+    : `/api/events`;
+};
+
+export const listEvents = async (
+  params?: ListEventsParams,
+  options?: RequestInit,
+): Promise<CampusEvent[]> => {
+  return customFetch<CampusEvent[]>(getListEventsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEventsQueryKey = (params?: ListEventsParams) => {
+  return [`/api/events`, ...(params ? [params] : [])] as const;
+};
+
+export const getListEventsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEvents>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListEventsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEvents>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListEventsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listEvents>>> = ({
+    signal,
+  }) => listEvents(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listEvents>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListEventsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEvents>>
+>;
+export type ListEventsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List upcoming events (optionally filtered by college)
+ */
+
+export function useListEvents<
+  TData = Awaited<ReturnType<typeof listEvents>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListEventsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEvents>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListEventsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Host a new event for your college
+ */
+export const getCreateEventUrl = () => {
+  return `/api/events`;
+};
+
+export const createEvent = async (
+  createEventInput: CreateEventInput,
+  options?: RequestInit,
+): Promise<CampusEvent> => {
+  return customFetch<CampusEvent>(getCreateEventUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createEventInput),
+  });
+};
+
+export const getCreateEventMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEvent>>,
+    TError,
+    { data: BodyType<CreateEventInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createEvent>>,
+  TError,
+  { data: BodyType<CreateEventInput> },
+  TContext
+> => {
+  const mutationKey = ["createEvent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createEvent>>,
+    { data: BodyType<CreateEventInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createEvent(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateEventMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createEvent>>
+>;
+export type CreateEventMutationBody = BodyType<CreateEventInput>;
+export type CreateEventMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Host a new event for your college
+ */
+export const useCreateEvent = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEvent>>,
+    TError,
+    { data: BodyType<CreateEventInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createEvent>>,
+  TError,
+  { data: BodyType<CreateEventInput> },
+  TContext
+> => {
+  return useMutation(getCreateEventMutationOptions(options));
+};
+
+/**
+ * @summary Toggle RSVP for an event
+ */
+export const getToggleEventRsvpUrl = (eventId: string) => {
+  return `/api/events/${eventId}/rsvp`;
+};
+
+export const toggleEventRsvp = async (
+  eventId: string,
+  rsvpInput: RsvpInput,
+  options?: RequestInit,
+): Promise<CampusEvent> => {
+  return customFetch<CampusEvent>(getToggleEventRsvpUrl(eventId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(rsvpInput),
+  });
+};
+
+export const getToggleEventRsvpMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toggleEventRsvp>>,
+    TError,
+    { eventId: string; data: BodyType<RsvpInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof toggleEventRsvp>>,
+  TError,
+  { eventId: string; data: BodyType<RsvpInput> },
+  TContext
+> => {
+  const mutationKey = ["toggleEventRsvp"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof toggleEventRsvp>>,
+    { eventId: string; data: BodyType<RsvpInput> }
+  > = (props) => {
+    const { eventId, data } = props ?? {};
+
+    return toggleEventRsvp(eventId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ToggleEventRsvpMutationResult = NonNullable<
+  Awaited<ReturnType<typeof toggleEventRsvp>>
+>;
+export type ToggleEventRsvpMutationBody = BodyType<RsvpInput>;
+export type ToggleEventRsvpMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Toggle RSVP for an event
+ */
+export const useToggleEventRsvp = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toggleEventRsvp>>,
+    TError,
+    { eventId: string; data: BodyType<RsvpInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof toggleEventRsvp>>,
+  TError,
+  { eventId: string; data: BodyType<RsvpInput> },
+  TContext
+> => {
+  return useMutation(getToggleEventRsvpMutationOptions(options));
+};
+
+/**
+ * @summary People and stats for a single major
+ */
+export const getGetMajorHubUrl = (params: GetMajorHubParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/majors/hub?${stringifiedParams}`
+    : `/api/majors/hub`;
+};
+
+export const getMajorHub = async (
+  params: GetMajorHubParams,
+  options?: RequestInit,
+): Promise<MajorHub> => {
+  return customFetch<MajorHub>(getGetMajorHubUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMajorHubQueryKey = (params?: GetMajorHubParams) => {
+  return [`/api/majors/hub`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetMajorHubQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMajorHub>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetMajorHubParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMajorHub>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMajorHubQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMajorHub>>> = ({
+    signal,
+  }) => getMajorHub(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMajorHub>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMajorHubQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMajorHub>>
+>;
+export type GetMajorHubQueryError = ErrorType<unknown>;
+
+/**
+ * @summary People and stats for a single major
+ */
+
+export function useGetMajorHub<
+  TData = Awaited<ReturnType<typeof getMajorHub>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetMajorHubParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMajorHub>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMajorHubQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Snapshot of activity at a college
+ */
+export const getGetCollegeSnapshotUrl = (college: string) => {
+  return `/api/college/${college}/snapshot`;
+};
+
+export const getCollegeSnapshot = async (
+  college: string,
+  options?: RequestInit,
+): Promise<CollegeSnapshot> => {
+  return customFetch<CollegeSnapshot>(getGetCollegeSnapshotUrl(college), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCollegeSnapshotQueryKey = (college: string) => {
+  return [`/api/college/${college}/snapshot`] as const;
+};
+
+export const getGetCollegeSnapshotQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCollegeSnapshot>>,
+  TError = ErrorType<unknown>,
+>(
+  college: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCollegeSnapshot>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetCollegeSnapshotQueryKey(college);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getCollegeSnapshot>>
+  > = ({ signal }) =>
+    getCollegeSnapshot(college, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!college,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCollegeSnapshot>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCollegeSnapshotQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCollegeSnapshot>>
+>;
+export type GetCollegeSnapshotQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Snapshot of activity at a college
+ */
+
+export function useGetCollegeSnapshot<
+  TData = Awaited<ReturnType<typeof getCollegeSnapshot>>,
+  TError = ErrorType<unknown>,
+>(
+  college: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCollegeSnapshot>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCollegeSnapshotQueryOptions(college, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

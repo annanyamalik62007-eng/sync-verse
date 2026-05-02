@@ -6,19 +6,30 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./campusEvent";
+export * from "./collegeSnapshot";
 export * from "./communityInsights";
 export * from "./communityZone";
+export * from "./createEventInput";
 export * from "./createUserInput";
 export * from "./energyLevel";
 export * from "./fomoTrigger";
 export * from "./fomoTriggerUrgency";
 export * from "./getCommunityInsightsParams";
 export * from "./getFomoTriggersParams";
+export * from "./getMajorHubParams";
 export * from "./healthStatus";
 export * from "./joinSquadInput";
+export * from "./listEventsParams";
 export * from "./listLiveSignalsParams";
 export * from "./listUsersParams";
+export * from "./majorCount";
+export * from "./majorHub";
 export * from "./match";
+export * from "./message";
+export * from "./messageThread";
+export * from "./rsvpInput";
+export * from "./sendMessageInput";
 export * from "./signal";
 export * from "./signalIntensity";
 export * from "./squad";

@@ -150,6 +150,83 @@ export interface FomoTrigger {
   relatedZone: CommunityZone;
 }
 
+export interface Message {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface SendMessageInput {
+  fromUserId: string;
+  toUserId: string;
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
+  content: string;
+}
+
+export interface MessageThread {
+  otherUser: User;
+  lastMessage: Message;
+  unread: boolean;
+}
+
+export interface CampusEvent {
+  id: string;
+  college: string;
+  title: string;
+  description: string;
+  zone: CommunityZone;
+  location: string;
+  startsAt: string;
+  host?: User;
+  attendees: User[];
+  attendeeCount: number;
+  isAttending: boolean;
+  createdAt: string;
+}
+
+export interface CreateEventInput {
+  hostUserId: string;
+  /** @minLength 3 */
+  title: string;
+  /** @minLength 3 */
+  description: string;
+  zone: CommunityZone;
+  /** @minLength 2 */
+  location: string;
+  startsAt: string;
+}
+
+export interface RsvpInput {
+  userId: string;
+}
+
+export interface MajorHub {
+  major: string;
+  college?: string;
+  peers: User[];
+  zoneBreakdown: ZoneActivity[];
+  topIntents: string[];
+}
+
+export interface MajorCount {
+  major: string;
+  count: number;
+}
+
+export interface CollegeSnapshot {
+  college: string;
+  totalActive: number;
+  livingNow: number;
+  squads: number;
+  upcomingEvents: CampusEvent[];
+  topMajors: MajorCount[];
+}
+
 export type ListUsersParams = {
   zone?: CommunityZone;
   college?: string;
@@ -164,5 +241,18 @@ export type GetCommunityInsightsParams = {
 };
 
 export type GetFomoTriggersParams = {
+  college?: string;
+};
+
+export type ListEventsParams = {
+  college?: string;
+  /**
+   * When provided, each event includes whether this user has RSVPed
+   */
+  userId?: string;
+};
+
+export type GetMajorHubParams = {
+  major: string;
   college?: string;
 };

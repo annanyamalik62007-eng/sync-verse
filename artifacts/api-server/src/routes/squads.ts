@@ -142,7 +142,7 @@ router.get(
       .filter((m) => m.alignmentScore >= 25)
       .sort((a, b) => b.alignmentScore - a.alignmentScore);
 
-    const proposals = [];
+    const proposals: Array<Record<string, unknown>> = [];
     const buildProposal = (members: UserRow[]) => {
       const proposal = generateSquadProposal(me.zone, members);
       const ids = members.map((m) => m.id).join("_");

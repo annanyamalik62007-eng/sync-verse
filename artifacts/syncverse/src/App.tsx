@@ -10,8 +10,16 @@ import Feed from "@/pages/feed";
 import Matches from "@/pages/matches";
 import Squads from "@/pages/squads";
 import Zone from "@/pages/zone";
+import Messages from "@/pages/messages";
+import Chat from "@/pages/chat";
+import Events from "@/pages/events";
+import Major from "@/pages/major";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 10_000, refetchOnWindowFocus: false },
+  },
+});
 
 function Router() {
   return (
@@ -22,6 +30,10 @@ function Router() {
         <Route path="/matches" component={Matches} />
         <Route path="/squads" component={Squads} />
         <Route path="/zone/:zone" component={Zone} />
+        <Route path="/messages" component={Messages} />
+        <Route path="/messages/:userId" component={Chat} />
+        <Route path="/events" component={Events} />
+        <Route path="/major" component={Major} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

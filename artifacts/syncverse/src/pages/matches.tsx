@@ -1,8 +1,9 @@
+import { Link } from "wouter";
 import { useGetMatchesForUser, getGetMatchesForUserQueryKey, type Match } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Sparkles } from "lucide-react";
+import { Flame, Sparkles, MessageCircle } from "lucide-react";
 
 function Avatar({ name, color }: { name: string; color: string }) {
   const initials = name
@@ -80,9 +81,17 @@ export default function Matches() {
                     </div>
                   )}
                 </div>
-                <div className="flex flex-shrink-0 flex-col items-end gap-1">
-                  <div className="text-2xl font-black tracking-tighter text-primary">{m.alignmentScore}</div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">align</div>
+                <div className="flex flex-shrink-0 flex-col items-end gap-2">
+                  <div className="text-right">
+                    <div className="text-2xl font-black leading-none tracking-tighter text-primary">{m.alignmentScore}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">align</div>
+                  </div>
+                  <Link
+                    href={`/messages/${m.user.id}`}
+                    className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2.5 py-1 text-xs font-semibold text-primary transition-all hover:bg-primary hover:text-primary-foreground"
+                  >
+                    <MessageCircle className="h-3 w-3" /> Message
+                  </Link>
                 </div>
               </div>
             </CardContent>

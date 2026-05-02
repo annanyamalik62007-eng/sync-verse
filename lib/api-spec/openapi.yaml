@@ -20,6 +20,12 @@ tags:
     description: Live campus signals and feed
   - name: insights
     description: Community insights and FOMO triggers
+  - name: messages
+    description: Direct messages between matched students
+  - name: events
+    description: Per-college events and RSVPs
+  - name: campus
+    description: College and major hubs
 paths:
   /healthz:
     get:
@@ -239,6 +245,184 @@ paths:
                 items:
                   $ref: "#/components/schemas/FomoTrigger"
 
+  /messages:
+    post:
+      operationId: sendMessage
+      tags: [messages]
+      summary: Send a direct message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageInput"
+      responses:
+        "201":
+          description: Sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+  /users/{userId}/threads:
+    get:
+      operationId: listThreadsForUser
+      tags: [messages]
+      summary: List recent message threads for a user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Thread previews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessageThread"
+
+  /users/{meId}/messages/{otherId}:
+    get:
+      operationId: listMessagesBetween
+      tags: [messages]
+      summary: Full message history between two users
+      parameters:
+        - in: path
+          name: meId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: otherId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+
+  /events:
+    get:
+      operationId: listEvents
+      tags: [events]
+      summary: List upcoming events (optionally filtered by college)
+      parameters:
+        - in: query
+          name: college
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: userId
+          required: false
+          description: When provided, each event includes whether this user has RSVPed
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CampusEvent"
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Host a new event for your college
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEventInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampusEvent"
+
+  /events/{eventId}/rsvp:
+    post:
+      operationId: toggleEventRsvp
+      tags: [events]
+      summary: Toggle RSVP for an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RsvpInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampusEvent"
+
+  /majors/hub:
+    get:
+      operationId: getMajorHub
+      tags: [campus]
+      summary: People and stats for a single major
+      parameters:
+        - in: query
+          name: major
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: college
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Major hub
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MajorHub"
+
+  /college/{college}/snapshot:
+    get:
+      operationId: getCollegeSnapshot
+      tags: [campus]
+      summary: Snapshot of activity at a college
+      parameters:
+        - in: path
+          name: college
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollegeSnapshot"
+
   /insights/zones:
     get:
       operationId: getZoneActivity
@@ -445,3 +629,152 @@ components:
         relatedZone:
           $ref: "#/components/schemas/CommunityZone"
       required: [id, message, urgency, relatedZone]
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        fromUserId:
+          type: string
+        toUserId:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+      required: [id, fromUserId, toUserId, content, createdAt]
+
+    SendMessageInput:
+      type: object
+      properties:
+        fromUserId:
+          type: string
+        toUserId:
+          type: string
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required: [fromUserId, toUserId, content]
+
+    MessageThread:
+      type: object
+      properties:
+        otherUser:
+          $ref: "#/components/schemas/User"
+        lastMessage:
+          $ref: "#/components/schemas/Message"
+        unread:
+          type: boolean
+      required: [otherUser, lastMessage, unread]
+
+    CampusEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        college:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        zone:
+          $ref: "#/components/schemas/CommunityZone"
+        location:
+          type: string
+        startsAt:
+          type: string
+        host:
+          $ref: "#/components/schemas/User"
+        attendees:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        attendeeCount:
+          type: integer
+        isAttending:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        [id, college, title, description, zone, location, startsAt, attendees, attendeeCount, isAttending, createdAt]
+
+    CreateEventInput:
+      type: object
+      properties:
+        hostUserId:
+          type: string
+        title:
+          type: string
+          minLength: 3
+        description:
+          type: string
+          minLength: 3
+        zone:
+          $ref: "#/components/schemas/CommunityZone"
+        location:
+          type: string
+          minLength: 2
+        startsAt:
+          type: string
+      required: [hostUserId, title, description, zone, location, startsAt]
+
+    RsvpInput:
+      type: object
+      properties:
+        userId:
+          type: string
+      required: [userId]
+
+    MajorHub:
+      type: object
+      properties:
+        major:
+          type: string
+        college:
+          type: string
+        peers:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        zoneBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneActivity"
+        topIntents:
+          type: array
+          items:
+            type: string
+      required: [major, peers, zoneBreakdown, topIntents]
+
+    CollegeSnapshot:
+      type: object
+      properties:
+        college:
+          type: string
+        totalActive:
+          type: integer
+        livingNow:
+          type: integer
+        squads:
+          type: integer
+        upcomingEvents:
+          type: array
+          items:
+            $ref: "#/components/schemas/CampusEvent"
+        topMajors:
+          type: array
+          items:
+            $ref: "#/components/schemas/MajorCount"
+      required: [college, totalActive, livingNow, squads, upcomingEvents, topMajors]
+
+    MajorCount:
+      type: object
+      properties:
+        major:
+          type: string
+        count:
+          type: integer
+      required: [major, count]

@@ -379,6 +379,397 @@ export const GetFomoTriggersResponseItem = zod.object({
 export const GetFomoTriggersResponse = zod.array(GetFomoTriggersResponseItem);
 
 /**
+ * @summary Send a direct message
+ */
+export const sendMessageBodyContentMax = 2000;
+
+export const SendMessageBody = zod.object({
+  fromUserId: zod.string(),
+  toUserId: zod.string(),
+  content: zod.string().min(1).max(sendMessageBodyContentMax),
+});
+
+/**
+ * @summary List recent message threads for a user
+ */
+export const ListThreadsForUserParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const ListThreadsForUserResponseItem = zod.object({
+  otherUser: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    college: zod.string(),
+    major: zod.string(),
+    intent: zod.string(),
+    timeframe: zod.enum(["now", "soon", "later"]),
+    energyLevel: zod.enum(["browsing", "exploring", "building"]),
+    zone: zod.enum([
+      "career",
+      "startup",
+      "study",
+      "social",
+      "creative",
+      "fitness",
+      "research",
+    ]),
+    avatarColor: zod.string(),
+    createdAt: zod.string(),
+  }),
+  lastMessage: zod.object({
+    id: zod.string(),
+    fromUserId: zod.string(),
+    toUserId: zod.string(),
+    content: zod.string(),
+    createdAt: zod.string(),
+  }),
+  unread: zod.boolean(),
+});
+export const ListThreadsForUserResponse = zod.array(
+  ListThreadsForUserResponseItem,
+);
+
+/**
+ * @summary Full message history between two users
+ */
+export const ListMessagesBetweenParams = zod.object({
+  meId: zod.coerce.string(),
+  otherId: zod.coerce.string(),
+});
+
+export const ListMessagesBetweenResponseItem = zod.object({
+  id: zod.string(),
+  fromUserId: zod.string(),
+  toUserId: zod.string(),
+  content: zod.string(),
+  createdAt: zod.string(),
+});
+export const ListMessagesBetweenResponse = zod.array(
+  ListMessagesBetweenResponseItem,
+);
+
+/**
+ * @summary List upcoming events (optionally filtered by college)
+ */
+export const ListEventsQueryParams = zod.object({
+  college: zod.coerce.string().optional(),
+  userId: zod.coerce
+    .string()
+    .optional()
+    .describe(
+      "When provided, each event includes whether this user has RSVPed",
+    ),
+});
+
+export const ListEventsResponseItem = zod.object({
+  id: zod.string(),
+  college: zod.string(),
+  title: zod.string(),
+  description: zod.string(),
+  zone: zod.enum([
+    "career",
+    "startup",
+    "study",
+    "social",
+    "creative",
+    "fitness",
+    "research",
+  ]),
+  location: zod.string(),
+  startsAt: zod.string(),
+  host: zod
+    .object({
+      id: zod.string(),
+      name: zod.string(),
+      college: zod.string(),
+      major: zod.string(),
+      intent: zod.string(),
+      timeframe: zod.enum(["now", "soon", "later"]),
+      energyLevel: zod.enum(["browsing", "exploring", "building"]),
+      zone: zod.enum([
+        "career",
+        "startup",
+        "study",
+        "social",
+        "creative",
+        "fitness",
+        "research",
+      ]),
+      avatarColor: zod.string(),
+      createdAt: zod.string(),
+    })
+    .optional(),
+  attendees: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      college: zod.string(),
+      major: zod.string(),
+      intent: zod.string(),
+      timeframe: zod.enum(["now", "soon", "later"]),
+      energyLevel: zod.enum(["browsing", "exploring", "building"]),
+      zone: zod.enum([
+        "career",
+        "startup",
+        "study",
+        "social",
+        "creative",
+        "fitness",
+        "research",
+      ]),
+      avatarColor: zod.string(),
+      createdAt: zod.string(),
+    }),
+  ),
+  attendeeCount: zod.number(),
+  isAttending: zod.boolean(),
+  createdAt: zod.string(),
+});
+export const ListEventsResponse = zod.array(ListEventsResponseItem);
+
+/**
+ * @summary Host a new event for your college
+ */
+export const createEventBodyTitleMin = 3;
+
+export const createEventBodyDescriptionMin = 3;
+
+export const createEventBodyLocationMin = 2;
+
+export const CreateEventBody = zod.object({
+  hostUserId: zod.string(),
+  title: zod.string().min(createEventBodyTitleMin),
+  description: zod.string().min(createEventBodyDescriptionMin),
+  zone: zod.enum([
+    "career",
+    "startup",
+    "study",
+    "social",
+    "creative",
+    "fitness",
+    "research",
+  ]),
+  location: zod.string().min(createEventBodyLocationMin),
+  startsAt: zod.string(),
+});
+
+/**
+ * @summary Toggle RSVP for an event
+ */
+export const ToggleEventRsvpParams = zod.object({
+  eventId: zod.coerce.string(),
+});
+
+export const ToggleEventRsvpBody = zod.object({
+  userId: zod.string(),
+});
+
+export const ToggleEventRsvpResponse = zod.object({
+  id: zod.string(),
+  college: zod.string(),
+  title: zod.string(),
+  description: zod.string(),
+  zone: zod.enum([
+    "career",
+    "startup",
+    "study",
+    "social",
+    "creative",
+    "fitness",
+    "research",
+  ]),
+  location: zod.string(),
+  startsAt: zod.string(),
+  host: zod
+    .object({
+      id: zod.string(),
+      name: zod.string(),
+      college: zod.string(),
+      major: zod.string(),
+      intent: zod.string(),
+      timeframe: zod.enum(["now", "soon", "later"]),
+      energyLevel: zod.enum(["browsing", "exploring", "building"]),
+      zone: zod.enum([
+        "career",
+        "startup",
+        "study",
+        "social",
+        "creative",
+        "fitness",
+        "research",
+      ]),
+      avatarColor: zod.string(),
+      createdAt: zod.string(),
+    })
+    .optional(),
+  attendees: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      college: zod.string(),
+      major: zod.string(),
+      intent: zod.string(),
+      timeframe: zod.enum(["now", "soon", "later"]),
+      energyLevel: zod.enum(["browsing", "exploring", "building"]),
+      zone: zod.enum([
+        "career",
+        "startup",
+        "study",
+        "social",
+        "creative",
+        "fitness",
+        "research",
+      ]),
+      avatarColor: zod.string(),
+      createdAt: zod.string(),
+    }),
+  ),
+  attendeeCount: zod.number(),
+  isAttending: zod.boolean(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary People and stats for a single major
+ */
+export const GetMajorHubQueryParams = zod.object({
+  major: zod.coerce.string(),
+  college: zod.coerce.string().optional(),
+});
+
+export const GetMajorHubResponse = zod.object({
+  major: zod.string(),
+  college: zod.string().optional(),
+  peers: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      college: zod.string(),
+      major: zod.string(),
+      intent: zod.string(),
+      timeframe: zod.enum(["now", "soon", "later"]),
+      energyLevel: zod.enum(["browsing", "exploring", "building"]),
+      zone: zod.enum([
+        "career",
+        "startup",
+        "study",
+        "social",
+        "creative",
+        "fitness",
+        "research",
+      ]),
+      avatarColor: zod.string(),
+      createdAt: zod.string(),
+    }),
+  ),
+  zoneBreakdown: zod.array(
+    zod.object({
+      zone: zod.enum([
+        "career",
+        "startup",
+        "study",
+        "social",
+        "creative",
+        "fitness",
+        "research",
+      ]),
+      activeUsers: zod.number(),
+      livingNow: zod.number().describe("Users with timeframe=now"),
+      squads: zod.number(),
+      trendDirection: zod.enum(["up", "steady", "down"]),
+    }),
+  ),
+  topIntents: zod.array(zod.string()),
+});
+
+/**
+ * @summary Snapshot of activity at a college
+ */
+export const GetCollegeSnapshotParams = zod.object({
+  college: zod.coerce.string(),
+});
+
+export const GetCollegeSnapshotResponse = zod.object({
+  college: zod.string(),
+  totalActive: zod.number(),
+  livingNow: zod.number(),
+  squads: zod.number(),
+  upcomingEvents: zod.array(
+    zod.object({
+      id: zod.string(),
+      college: zod.string(),
+      title: zod.string(),
+      description: zod.string(),
+      zone: zod.enum([
+        "career",
+        "startup",
+        "study",
+        "social",
+        "creative",
+        "fitness",
+        "research",
+      ]),
+      location: zod.string(),
+      startsAt: zod.string(),
+      host: zod
+        .object({
+          id: zod.string(),
+          name: zod.string(),
+          college: zod.string(),
+          major: zod.string(),
+          intent: zod.string(),
+          timeframe: zod.enum(["now", "soon", "later"]),
+          energyLevel: zod.enum(["browsing", "exploring", "building"]),
+          zone: zod.enum([
+            "career",
+            "startup",
+            "study",
+            "social",
+            "creative",
+            "fitness",
+            "research",
+          ]),
+          avatarColor: zod.string(),
+          createdAt: zod.string(),
+        })
+        .optional(),
+      attendees: zod.array(
+        zod.object({
+          id: zod.string(),
+          name: zod.string(),
+          college: zod.string(),
+          major: zod.string(),
+          intent: zod.string(),
+          timeframe: zod.enum(["now", "soon", "later"]),
+          energyLevel: zod.enum(["browsing", "exploring", "building"]),
+          zone: zod.enum([
+            "career",
+            "startup",
+            "study",
+            "social",
+            "creative",
+            "fitness",
+            "research",
+          ]),
+          avatarColor: zod.string(),
+          createdAt: zod.string(),
+        }),
+      ),
+      attendeeCount: zod.number(),
+      isAttending: zod.boolean(),
+      createdAt: zod.string(),
+    }),
+  ),
+  topMajors: zod.array(
+    zod.object({
+      major: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+});
+
+/**
  * @summary Live activity counts per community zone
  */
 export const GetZoneActivityResponseItem = zod.object({
