@@ -3,20 +3,29 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: SYNCVERSE AI - Real-time campus connection engine
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: users
+    description: Student profiles and current intent
+  - name: matches
+    description: Live match detection
+  - name: squads
+    description: Auto-formed squads
+  - name: signals
+    description: Live campus signals and feed
+  - name: insights
+    description: Community insights and FOMO triggers
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +33,227 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all active students
+      parameters:
+        - in: query
+          name: zone
+          required: false
+          schema:
+            $ref: "#/components/schemas/CommunityZone"
+        - in: query
+          name: college
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create or update the current user (drop into the ecosystem)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{userId}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get a single student
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{userId}/matches:
+    get:
+      operationId: getMatchesForUser
+      tags: [matches]
+      summary: Top live matches for a user (3-5)
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Match"
+
+  /squads:
+    get:
+      operationId: listSquads
+      tags: [squads]
+      summary: List active squads
+      responses:
+        "200":
+          description: Squads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Squad"
+
+  /users/{userId}/squad-suggestions:
+    get:
+      operationId: getSquadSuggestionsForUser
+      tags: [squads]
+      summary: AI-generated squad suggestions for a user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Suggested squads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Squad"
+
+  /squads/{squadId}/join:
+    post:
+      operationId: joinSquad
+      tags: [squads]
+      summary: Join a squad
+      parameters:
+        - in: path
+          name: squadId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinSquadInput"
+      responses:
+        "200":
+          description: Joined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Squad"
+
+  /signals:
+    get:
+      operationId: listLiveSignals
+      tags: [signals]
+      summary: Real-time campus feed signals
+      parameters:
+        - in: query
+          name: college
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Signals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Signal"
+
+  /insights/community:
+    get:
+      operationId: getCommunityInsights
+      tags: [insights]
+      summary: Community-wide insights (trending, active zones, common needs)
+      parameters:
+        - in: query
+          name: college
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Insights
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommunityInsights"
+
+  /insights/fomo:
+    get:
+      operationId: getFomoTriggers
+      tags: [insights]
+      summary: FOMO trigger messages
+      parameters:
+        - in: query
+          name: college
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: FOMO triggers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FomoTrigger"
+
+  /insights/zones:
+    get:
+      operationId: getZoneActivity
+      tags: [insights]
+      summary: Live activity counts per community zone
+      responses:
+        "200":
+          description: Zone activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ZoneActivity"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +261,187 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    CommunityZone:
+      type: string
+      enum: [career, startup, study, social, creative, fitness, research]
+
+    Timeframe:
+      type: string
+      enum: [now, soon, later]
+
+    EnergyLevel:
+      type: string
+      enum: [browsing, exploring, building]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        college:
+          type: string
+        major:
+          type: string
+        intent:
+          type: string
+        timeframe:
+          $ref: "#/components/schemas/Timeframe"
+        energyLevel:
+          $ref: "#/components/schemas/EnergyLevel"
+        zone:
+          $ref: "#/components/schemas/CommunityZone"
+        avatarColor:
+          type: string
+        createdAt:
+          type: string
+      required: [id, name, college, major, intent, timeframe, energyLevel, zone, avatarColor, createdAt]
+
+    CreateUserInput:
+      type: object
+      properties:
+        name:
+          type: string
+        college:
+          type: string
+        major:
+          type: string
+        intent:
+          type: string
+          minLength: 3
+        timeframe:
+          $ref: "#/components/schemas/Timeframe"
+        energyLevel:
+          $ref: "#/components/schemas/EnergyLevel"
+        zone:
+          $ref: "#/components/schemas/CommunityZone"
+      required: [name, college, major, intent, timeframe, energyLevel, zone]
+
+    Match:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        alignmentScore:
+          type: number
+          description: 0-100 likelihood of real interaction
+        reason:
+          type: string
+          description: Why they align
+        sharedSignals:
+          type: array
+          items:
+            type: string
+      required: [user, alignmentScore, reason, sharedSignals]
+
+    Squad:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        purpose:
+          type: string
+        firstAction:
+          type: string
+        suggestedMeetup:
+          type: string
+        zone:
+          $ref: "#/components/schemas/CommunityZone"
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        createdAt:
+          type: string
+      required: [id, name, purpose, firstAction, suggestedMeetup, zone, members, createdAt]
+
+    JoinSquadInput:
+      type: object
+      properties:
+        userId:
+          type: string
+      required: [userId]
+
+    Signal:
+      type: object
+      properties:
+        id:
+          type: string
+        message:
+          type: string
+        zone:
+          $ref: "#/components/schemas/CommunityZone"
+        intensity:
+          type: string
+          enum: [low, medium, high]
+        count:
+          type: integer
+        timeAgo:
+          type: string
+      required: [id, message, zone, intensity, count, timeAgo]
+
+    ZoneActivity:
+      type: object
+      properties:
+        zone:
+          $ref: "#/components/schemas/CommunityZone"
+        activeUsers:
+          type: integer
+        livingNow:
+          type: integer
+          description: Users with timeframe=now
+        squads:
+          type: integer
+        trendDirection:
+          type: string
+          enum: [up, steady, down]
+      required: [zone, activeUsers, livingNow, squads, trendDirection]
+
+    TrendingActivity:
+      type: object
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
+        zone:
+          $ref: "#/components/schemas/CommunityZone"
+      required: [label, count, zone]
+
+    CommunityInsights:
+      type: object
+      properties:
+        trendingActivities:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendingActivity"
+        mostActiveZones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneActivity"
+        commonNeeds:
+          type: array
+          items:
+            type: string
+        totalActiveNow:
+          type: integer
+      required: [trendingActivities, mostActiveZones, commonNeeds, totalActiveNow]
+
+    FomoTrigger:
+      type: object
+      properties:
+        id:
+          type: string
+        message:
+          type: string
+        urgency:
+          type: string
+          enum: [subtle, medium, high]
+        relatedZone:
+          $ref: "#/components/schemas/CommunityZone"
+      required: [id, message, urgency, relatedZone]

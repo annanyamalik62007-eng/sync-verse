@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "SYNCVERSE AI"
+version = "1.0.0"
+id = "artifacts/syncverse"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19921
+
+[services.development]
+run = "pnpm --filter @workspace/syncverse run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/syncverse", "run", "build" ]
+publicDir = "artifacts/syncverse/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19921"
+BASE_PATH = "/"
