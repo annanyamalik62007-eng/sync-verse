@@ -16,3 +16,8 @@ export function setCurrentUserId(id: string): void {
   localStorage.setItem(KEY, id);
   window.dispatchEvent(new StorageEvent("storage", { key: KEY, newValue: id }));
 }
+
+export function clearCurrentUserId(): void {
+  localStorage.removeItem(KEY);
+  window.dispatchEvent(new StorageEvent("storage", { key: KEY, newValue: null }));
+}

@@ -4,7 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   useCreateUser,
   useGetCommunityInsights,
+  useListUsers,
   getGetCommunityInsightsQueryKey,
+  getListUsersQueryKey,
 } from "@workspace/api-client-react";
 import {
   CommunityZone,
@@ -114,13 +116,32 @@ function StepBubble({ active, done }: { active: boolean; done: boolean }) {
 }
 
 function LandingHero({ onStart }: { onStart: () => void }) {
+  const [, setLocation] = useLocation();
   const insights = useGetCommunityInsights(
     {},
     { query: { queryKey: getGetCommunityInsightsQueryKey({}), refetchInterval: 8000 } },
   );
+  const allUsers = useListUsers(
+    {},
+    { query: { queryKey: getListUsersQueryKey({}) } },
+  );
   const totalActive = insights.data?.totalActiveNow ?? 0;
   const topZones = insights.data?.mostActiveZones.slice(0, 3) ?? [];
   const trending = insights.data?.trendingActivities.slice(0, 4) ?? [];
+
+  // Group seeded users by college, take a few from each so the picker stays compact
+  const demoByCollege = new Map<string, typeof allUsers.data>();
+  for (const u of allUsers.data ?? []) {
+    if (!demoByCollege.has(u.college)) demoByCollege.set(u.college, []);
+    const list = demoByCollege.get(u.college)!;
+    if (list && list.length < 4) list.push(u);
+  }
+  const demoColleges = Array.from(demoByCollege.entries()).slice(0, 4);
+
+  const useDemo = (id: string) => {
+    setCurrentUserId(id);
+    setLocation("/feed");
+  };
 
   return (
     <div className="space-y-10">
@@ -216,6 +237,75 @@ function LandingHero({ onStart }: { onStart: () => void }) {
           );
         })}
       </div>
+
+      {demoColleges.length > 0 && (
+        <div>
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
+              <Sparkles className="h-3 w-3" /> Try the demo as a real student
+            </div>
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              one click sign-in
+            </span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {demoColleges.map(([college, users]) => (
+              <Card key={college} className="border-border bg-card">
+                <CardContent className="p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="text-sm font-bold">{college}</div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      {(users ?? []).length} students
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {(users ?? []).map((u) => {
+                      const meta = ZONE_META[u.zone as CommunityZone];
+                      const Icon = meta?.icon ?? Sparkles;
+                      const initials = u.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .slice(0, 2)
+                        .join("")
+                        .toUpperCase();
+                      return (
+                        <button
+                          key={u.id}
+                          onClick={() => useDemo(u.id)}
+                          className="group flex w-full items-center gap-3 rounded-lg border border-transparent bg-muted/30 p-2.5 text-left transition-all hover:border-primary/50 hover:bg-primary/5"
+                        >
+                          <div
+                            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-black text-background"
+                            style={{ backgroundColor: u.avatarColor }}
+                          >
+                            {initials}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 truncate text-sm font-bold">
+                              {u.name}
+                              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                                · {u.major}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                              <Icon className="h-3 w-3 flex-shrink-0 text-primary" />
+                              <span className="truncate">{u.intent}</span>
+                            </div>
+                          </div>
+                          <ArrowRight className="h-4 w-4 flex-shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            Pick any student to instantly see their matches, threads, and squads. Or scroll down to create your own.
+          </p>
+        </div>
+      )}
 
       {trending.length > 0 && (
         <div>

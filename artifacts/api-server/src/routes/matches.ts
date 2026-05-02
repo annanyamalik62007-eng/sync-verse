@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ne } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import {
   GetMatchesForUserParams,
@@ -23,15 +23,16 @@ router.get("/users/:userId/matches", async (req, res): Promise<void> => {
     res.status(404).json({ error: "User not found" });
     return;
   }
+  // Matches are scoped to the same college — campus connection is the whole point.
   const others = await db
     .select()
     .from(usersTable)
-    .where(ne(usersTable.id, me.id));
+    .where(and(ne(usersTable.id, me.id), eq(usersTable.college, me.college)));
 
   const scored = others
     .map((o) => scoreMatch(me, o))
     .sort((a, b) => b.alignmentScore - a.alignmentScore)
-    .slice(0, 5)
+    .slice(0, 8)
     .map((m) => ({
       ...m,
       user: rowToUser(m.user),

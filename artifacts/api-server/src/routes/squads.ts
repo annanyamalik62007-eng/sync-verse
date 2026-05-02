@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, inArray, desc } from "drizzle-orm";
+import { and, eq, inArray, desc } from "drizzle-orm";
 import {
   db,
   usersTable,
@@ -132,10 +132,11 @@ router.get(
       res.status(404).json({ error: "User not found" });
       return;
     }
+    // Squad suggestions are scoped to the same college as well — squads form on campus.
     const candidates = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.zone, me.zone));
+      .where(and(eq(usersTable.zone, me.zone), eq(usersTable.college, me.college)));
     const others = candidates.filter((u) => u.id !== me.id);
     const scored = others
       .map((o) => scoreMatch(me, o))

@@ -12,7 +12,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useGetUser, getGetUserQueryKey } from "@workspace/api-client-react";
-import { useCurrentUserId } from "@/hooks/use-current-user";
+import { clearCurrentUserId, useCurrentUserId } from "@/hooks/use-current-user";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,9 +21,22 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [location, setLocation] = useLocation();
   const userId = useCurrentUserId();
-  const { data: me } = useGetUser(userId ?? "", {
-    query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId ?? "") },
+  const { data: me, error } = useGetUser(userId ?? "", {
+    query: {
+      enabled: !!userId,
+      queryKey: getGetUserQueryKey(userId ?? ""),
+      retry: false,
+    },
   });
+
+  // If the saved userId is stale (e.g. after a re-seed), clear it and bounce home.
+  useEffect(() => {
+    const status = (error as { status?: number } | null)?.status;
+    if (userId && status === 404) {
+      clearCurrentUserId();
+      setLocation("/");
+    }
+  }, [error, userId, setLocation]);
 
   useEffect(() => {
     if (!userId && location !== "/") {
