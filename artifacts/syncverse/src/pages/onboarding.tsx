@@ -239,8 +239,8 @@ function MarqueeStrip({
 }) {
   const items: string[] = [
     `${totalActive} students live on campus rn`,
-    "no inbox / no DMs / no cap",
-    "anonymous by default",
+    "dms unlock when u match · no cap",
+    "anonymous till u text first",
     ...trending.map((t) => `${t.count} on it: ${t.label}`),
     "ur college only · ur energy only",
     "match · meet · ship",
@@ -468,8 +468,8 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                 </span>
               </p>
               <p className="mt-5 max-w-xl text-base text-white/60 md:text-lg">
-                anonymous · single-college · no DMs no inbox no algorithm games.
-                you post what ur on. we sync u with the rest.
+                anonymous till u say hi · dms + group chats when ur synced · zero
+                algorithm games. you post what ur on. we sync u with the rest.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -1705,11 +1705,11 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                   "3+ ppl lock onto one mission and a squad spawns with a name, a purpose, a first move.",
               },
               {
-                tag: "03 / nothing else",
-                pull: "no inbox. no algo.",
+                tag: "03 / on ur terms",
+                pull: "dm. squad. ghost.",
                 hue: SV_ACID,
                 body:
-                  "anonymous by default. ur intent updates as ur week shifts. only as deep as u want.",
+                  "anonymous till u text first. spin up a squad when the vibe hits. ur intent updates as ur week shifts. only as deep as u want.",
               },
             ].map((c, i) => (
               <motion.div
@@ -1792,7 +1792,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
               style={{ color: SV_INK }}
             >
               <Asterisk className="h-3 w-3 sv-spin-slow" />
-              <span>no login · no inbox · anonymous by default</span>
+              <span>anonymous till u text · dms + squads on tap · no algo games</span>
             </div>
           </div>
         </div>
