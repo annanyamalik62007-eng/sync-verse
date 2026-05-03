@@ -407,6 +407,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/CampusEvent"
 
+  /majors/active:
+    get:
+      operationId: listActiveMajors
+      tags: [campus]
+      summary: Top majors with live activity counts across all campuses
+      responses:
+        "200":
+          description: Active majors across the network
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActiveMajor"
+
   /majors/hub:
     get:
       operationId: getMajorHub
@@ -983,6 +998,31 @@ components:
         userId:
           type: string
       required: [userId]
+
+    ActiveMajor:
+      type: object
+      properties:
+        major:
+          type: string
+        totalActive:
+          type: integer
+        livingNow:
+          type: integer
+        sampleAvatarUrls:
+          type: array
+          items:
+            type: string
+        colleges:
+          type: array
+          items:
+            type: object
+            properties:
+              college:
+                type: string
+              count:
+                type: integer
+            required: [college, count]
+      required: [major, totalActive, livingNow, sampleAvatarUrls, colleges]
 
     MajorHub:
       type: object

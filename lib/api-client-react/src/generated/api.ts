@@ -17,6 +17,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  ActiveMajor,
   CampusEvent,
   CollegeSnapshot,
   CommunityInsights,
@@ -1649,6 +1650,81 @@ export const useToggleEventRsvp = <
 > => {
   return useMutation(getToggleEventRsvpMutationOptions(options));
 };
+
+/**
+ * @summary Top majors with live activity counts across all campuses
+ */
+export const getListActiveMajorsUrl = () => {
+  return `/api/majors/active`;
+};
+
+export const listActiveMajors = async (
+  options?: RequestInit,
+): Promise<ActiveMajor[]> => {
+  return customFetch<ActiveMajor[]>(getListActiveMajorsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListActiveMajorsQueryKey = () => {
+  return [`/api/majors/active`] as const;
+};
+
+export const getListActiveMajorsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listActiveMajors>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listActiveMajors>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListActiveMajorsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listActiveMajors>>
+  > = ({ signal }) => listActiveMajors({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listActiveMajors>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListActiveMajorsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listActiveMajors>>
+>;
+export type ListActiveMajorsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Top majors with live activity counts across all campuses
+ */
+
+export function useListActiveMajors<
+  TData = Awaited<ReturnType<typeof listActiveMajors>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listActiveMajors>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListActiveMajorsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary People and stats for a single major

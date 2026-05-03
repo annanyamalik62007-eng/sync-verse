@@ -261,6 +261,19 @@ export interface RsvpInput {
   userId: string;
 }
 
+export type ActiveMajorCollegesItem = {
+  college: string;
+  count: number;
+};
+
+export interface ActiveMajor {
+  major: string;
+  totalActive: number;
+  livingNow: number;
+  sampleAvatarUrls: string[];
+  colleges: ActiveMajorCollegesItem[];
+}
+
 export interface MajorHub {
   major: string;
   college?: string;

@@ -26,6 +26,57 @@ function trendForZone(zone: string): "up" | "steady" | "down" {
   return hot.includes(zone) ? "up" : "steady";
 }
 
+router.get("/majors/active", async (_req, res): Promise<void> => {
+  // Pull every user once and aggregate in memory — small dataset, simple
+  // joins, and we want avatar URLs + per-college counts in one round trip.
+  const allUsers = await db.select().from(usersTable);
+  const byMajor = new Map<
+    string,
+    {
+      major: string;
+      totalActive: number;
+      livingNow: number;
+      sampleAvatarUrls: string[];
+      collegeCounts: Map<string, number>;
+    }
+  >();
+  for (const u of allUsers) {
+    if (!u.major) continue;
+    let entry = byMajor.get(u.major);
+    if (!entry) {
+      entry = {
+        major: u.major,
+        totalActive: 0,
+        livingNow: 0,
+        sampleAvatarUrls: [],
+        collegeCounts: new Map(),
+      };
+      byMajor.set(u.major, entry);
+    }
+    entry.totalActive += 1;
+    if (u.timeframe === "now") entry.livingNow += 1;
+    if (entry.sampleAvatarUrls.length < 5 && u.avatarUrl) {
+      entry.sampleAvatarUrls.push(u.avatarUrl);
+    }
+    if (u.college) {
+      entry.collegeCounts.set(u.college, (entry.collegeCounts.get(u.college) ?? 0) + 1);
+    }
+  }
+  const out = Array.from(byMajor.values())
+    .sort((a, b) => b.totalActive - a.totalActive)
+    .slice(0, 8)
+    .map((m) => ({
+      major: m.major,
+      totalActive: m.totalActive,
+      livingNow: m.livingNow,
+      sampleAvatarUrls: m.sampleAvatarUrls,
+      colleges: Array.from(m.collegeCounts.entries())
+        .map(([college, count]) => ({ college, count }))
+        .sort((a, b) => b.count - a.count),
+    }));
+  res.json(out);
+});
+
 router.get("/majors/hub", async (req, res): Promise<void> => {
   const parsed = GetMajorHubQueryParams.safeParse(req.query);
   if (!parsed.success) {

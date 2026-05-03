@@ -6,19 +6,22 @@ import {
   useGetUser,
   useListEvents,
   useGetMajorHub,
+  useListActiveMajors,
   getGetUserQueryKey,
   getListEventsQueryKey,
   getGetMajorHubQueryKey,
+  getListActiveMajorsQueryKey,
   type Signal,
   type FomoTrigger,
   type ZoneActivity,
   type TrendingActivity,
   type CommunityZone,
   type CampusEvent,
+  type ActiveMajor,
   type User,
 } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
-import { Activity, Flame, TrendingUp, Users, Zap, Clock, ArrowRight, Edit3, Radio, Calendar, MapPin, GraduationCap } from "lucide-react";
+import { Activity, Flame, TrendingUp, Users, Zap, Clock, ArrowRight, Edit3, Radio, Calendar, MapPin, GraduationCap, ArrowUpRight, Sparkles } from "lucide-react";
 import { SV_INK, SV_HOT, SV_CYAN, SV_ACID, SV_GREEN, SV_GRID, ZONE_HUE } from "@/lib/theme";
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -92,6 +95,9 @@ export default function Feed() {
       },
     },
   );
+  const activeMajors = useListActiveMajors({
+    query: { queryKey: getListActiveMajorsQueryKey() },
+  });
 
   const totalActive = insights.data?.totalActiveNow ?? 0;
   const upcomingEvents = (events.data ?? [])
@@ -340,6 +346,135 @@ export default function Feed() {
                         you in
                       </span>
                     )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* MAJORS BUZZING — directory of every major across the network */}
+      {(activeMajors.data?.length ?? 0) > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between gap-2 px-1">
+            <SectionHeader
+              hue={SV_HOT}
+              tag="majors buzzing right now"
+              icon={Sparkles}
+              compact
+            />
+            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/40">
+              {activeMajors.data!.reduce((s, m) => s + m.totalActive, 0)} students live
+            </span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {activeMajors.data!.map((m: ActiveMajor) => {
+              const isMine = !!user?.major && m.major === user.major;
+              const cardHue = isMine ? SV_HOT : SV_CYAN;
+              const myCollegeCount = college
+                ? m.colleges.find((c) => c.college === college)?.count ?? 0
+                : 0;
+              return (
+                <Link key={m.major} href={`/major/${encodeURIComponent(m.major)}`}>
+                  <div
+                    className="group relative h-full cursor-pointer overflow-hidden rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:bg-white/[0.04]"
+                    style={{
+                      borderColor: isMine ? `${cardHue}66` : "rgba(255,255,255,0.08)",
+                      background: isMine
+                        ? `linear-gradient(135deg, ${cardHue}18 0%, transparent 70%), rgba(255,255,255,0.02)`
+                        : "rgba(255,255,255,0.02)",
+                      boxShadow: isMine
+                        ? `0 12px 40px -20px ${cardHue}88`
+                        : undefined,
+                    }}
+                  >
+                    {isMine && (
+                      <span
+                        className="absolute right-3 top-3 rounded-full px-1.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-widest"
+                        style={{ backgroundColor: cardHue, color: SV_INK }}
+                      >
+                        your major
+                      </span>
+                    )}
+                    <div className="flex items-baseline gap-2">
+                      <span
+                        className="font-mono text-3xl font-black leading-none"
+                        style={{ color: cardHue }}
+                      >
+                        {m.totalActive}
+                      </span>
+                      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">
+                        active
+                      </span>
+                      {m.livingNow > 0 && (
+                        <span
+                          className="ml-1 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.2em]"
+                          style={{ color: SV_GREEN }}
+                        >
+                          <span
+                            className="h-1.5 w-1.5 animate-pulse rounded-full"
+                            style={{ backgroundColor: SV_GREEN }}
+                          />
+                          {m.livingNow} living it now
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="mt-1 text-base font-bold leading-snug">{m.major}</h3>
+                    <div className="mt-2.5 flex items-center justify-between gap-2">
+                      <div className="flex -space-x-1.5">
+                        {m.sampleAvatarUrls.slice(0, 5).map((url, i) => (
+                          <img
+                            key={`${m.major}-av-${i}`}
+                            src={url}
+                            alt=""
+                            loading="lazy"
+                            className="h-6 w-6 rounded-full border object-cover"
+                            style={{
+                              borderColor: SV_INK,
+                              backgroundColor: "rgba(255,255,255,0.05)",
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1">
+                        {m.colleges.slice(0, 3).map((c) => (
+                          <span
+                            key={`${m.major}-${c.college}`}
+                            className="rounded-full border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                            style={{
+                              borderColor:
+                                college === c.college
+                                  ? `${cardHue}55`
+                                  : "rgba(255,255,255,0.12)",
+                              color:
+                                college === c.college
+                                  ? cardHue
+                                  : "rgba(255,255,255,0.5)",
+                            }}
+                          >
+                            {c.college} {c.count}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">
+                        {isMine && college
+                          ? `${myCollegeCount} at ${college} · join the group`
+                          : `${m.colleges.length} colleges · open hub`}
+                      </span>
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-mono text-[9px] font-black uppercase tracking-widest transition-colors"
+                        style={{
+                          backgroundColor: isMine ? cardHue : "rgba(255,255,255,0.06)",
+                          color: isMine ? SV_INK : "rgba(255,255,255,0.85)",
+                        }}
+                      >
+                        {isMine ? "join your group" : "enter hub"}
+                        <ArrowUpRight className="h-3 w-3" />
+                      </span>
+                    </div>
                   </div>
                 </Link>
               );

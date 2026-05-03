@@ -975,6 +975,23 @@ export const ToggleEventRsvpResponse = zod.object({
 });
 
 /**
+ * @summary Top majors with live activity counts across all campuses
+ */
+export const ListActiveMajorsResponseItem = zod.object({
+  major: zod.string(),
+  totalActive: zod.number(),
+  livingNow: zod.number(),
+  sampleAvatarUrls: zod.array(zod.string()),
+  colleges: zod.array(
+    zod.object({
+      college: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+});
+export const ListActiveMajorsResponse = zod.array(ListActiveMajorsResponseItem);
+
+/**
  * @summary People and stats for a single major
  */
 export const GetMajorHubQueryParams = zod.object({

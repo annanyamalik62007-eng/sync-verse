@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./activeMajor";
+export * from "./activeMajorCollegesItem";
 export * from "./campusEvent";
 export * from "./collegeSnapshot";
 export * from "./communityInsights";
