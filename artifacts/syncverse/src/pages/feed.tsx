@@ -4,17 +4,39 @@ import {
   useGetCommunityInsights,
   useGetFomoTriggers,
   useGetUser,
+  useListEvents,
+  useGetMajorHub,
   getGetUserQueryKey,
+  getListEventsQueryKey,
+  getGetMajorHubQueryKey,
   type Signal,
   type FomoTrigger,
   type ZoneActivity,
   type TrendingActivity,
   type CommunityZone,
+  type CampusEvent,
+  type User,
 } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
-import { Activity, Flame, TrendingUp, Users, Zap, Clock, ArrowRight, Edit3, Radio } from "lucide-react";
+import { Activity, Flame, TrendingUp, Users, Zap, Clock, ArrowRight, Edit3, Radio, Calendar, MapPin, GraduationCap } from "lucide-react";
 import { SV_INK, SV_HOT, SV_CYAN, SV_ACID, SV_GREEN, SV_GRID, ZONE_HUE } from "@/lib/theme";
 import { UserAvatar } from "@/components/user-avatar";
+
+function eventTimeLabel(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = d.getTime() - now.getTime();
+  const diffH = Math.round(diffMs / 3600000);
+  const sameDay = d.toDateString() === now.toDateString();
+  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+  const isTomorrow = d.toDateString() === tomorrow.toDateString();
+  const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  if (Math.abs(diffH) < 1) return "starting now";
+  if (diffH > 0 && diffH < 6) return `in ${diffH}h · ${time}`;
+  if (sameDay) return `today · ${time}`;
+  if (isTomorrow) return `tomorrow · ${time}`;
+  return d.toLocaleDateString([], { weekday: "short" }) + " · " + time;
+}
 
 const intensityHue: Record<string, string> = {
   high: SV_HOT,
@@ -52,8 +74,34 @@ export default function Feed() {
   const signals = useListLiveSignals({ college });
   const insights = useGetCommunityInsights({ college });
   const fomos = useGetFomoTriggers({ college });
+  const events = useListEvents(
+    { college, userId: userId ?? undefined },
+    {
+      query: {
+        enabled: !!college,
+        queryKey: getListEventsQueryKey({ college, userId: userId ?? undefined }),
+      },
+    },
+  );
+  const majorHub = useGetMajorHub(
+    { major: user?.major ?? "", college },
+    {
+      query: {
+        enabled: !!user?.major && !!college,
+        queryKey: getGetMajorHubQueryKey({ major: user?.major ?? "", college }),
+      },
+    },
+  );
 
   const totalActive = insights.data?.totalActiveNow ?? 0;
+  const upcomingEvents = (events.data ?? [])
+    .slice()
+    .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
+    .filter((e) => new Date(e.startsAt).getTime() > Date.now() - 60 * 60 * 1000)
+    .slice(0, 4);
+  const majorPeers = (majorHub.data?.peers ?? [])
+    .filter((p) => p.id !== userId)
+    .slice(0, 6);
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8">
@@ -197,6 +245,156 @@ export default function Feed() {
           </Link>
         </div>
       </section>
+
+      {/* HAPPENING ON CAMPUS — events */}
+      {upcomingEvents.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between gap-2 px-1">
+            <SectionHeader hue={SV_ACID} tag="happening on campus" icon={Calendar} compact />
+            <Link
+              href="/events"
+              className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/40 hover:text-white/80"
+            >
+              all events →
+            </Link>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {upcomingEvents.map((e: CampusEvent) => {
+              const hue = ZONE_HUE[e.zone] ?? SV_ACID;
+              const timeLbl = eventTimeLabel(e.startsAt);
+              const isLive = timeLbl === "starting now";
+              return (
+                <Link key={e.id} href="/events">
+                  <div
+                    className="group relative h-full cursor-pointer overflow-hidden rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:bg-white/[0.04]"
+                    style={{
+                      borderColor: `${hue}33`,
+                      background: `linear-gradient(135deg, ${hue}10 0%, transparent 70%), rgba(255,255,255,0.02)`,
+                    }}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <ZoneChip zone={e.zone} />
+                      <span
+                        className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.2em]"
+                        style={{ color: isLive ? SV_GREEN : hue }}
+                      >
+                        {isLive && (
+                          <span
+                            className="h-1.5 w-1.5 animate-pulse rounded-full"
+                            style={{ backgroundColor: SV_GREEN }}
+                          />
+                        )}
+                        {timeLbl}
+                      </span>
+                    </div>
+                    <h3 className="mt-2.5 text-base font-bold leading-snug">{e.title}</h3>
+                    <p className="mt-1 line-clamp-2 text-xs text-white/60">{e.description}</p>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.15em] text-white/50">
+                        <MapPin className="h-3 w-3" />
+                        {e.location}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex -space-x-1.5">
+                          {e.attendees.slice(0, 3).map((a: User) => (
+                            <UserAvatar
+                              key={a.id}
+                              user={a}
+                              size="xs"
+                              className="border"
+                              ring={SV_INK}
+                            />
+                          ))}
+                        </div>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/50">
+                          {e.attendeeCount} in
+                        </span>
+                      </div>
+                    </div>
+                    {e.isAttending && (
+                      <span
+                        className="absolute right-3 top-3 rounded-full px-1.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-widest"
+                        style={{ backgroundColor: SV_GREEN, color: SV_INK }}
+                      >
+                        you in
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* IN YOUR MAJOR — peer activity */}
+      {majorPeers.length > 0 && user && (
+        <section>
+          <div className="mb-3 flex items-center justify-between gap-2 px-1">
+            <SectionHeader
+              hue={SV_CYAN}
+              tag={`${majorPeers.length}+ in ${user.major.toLowerCase()} right now`}
+              icon={GraduationCap}
+              compact
+            />
+            <Link
+              href={`/major/${encodeURIComponent(user.major)}`}
+              className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/40 hover:text-white/80"
+            >
+              all peers →
+            </Link>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {majorPeers.map((p) => {
+              const hue = ZONE_HUE[p.zone] ?? SV_CYAN;
+              return (
+                <Link key={p.id} href={`/user/${p.id}`}>
+                  <div
+                    className="group flex h-full cursor-pointer items-start gap-3 rounded-2xl border p-3.5 transition-all hover:-translate-y-0.5 hover:bg-white/[0.04]"
+                    style={{
+                      borderColor: "rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(255,255,255,0.02)",
+                    }}
+                  >
+                    <UserAvatar user={p} size="md" ring={hue} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-sm font-bold">{p.name}</span>
+                        <ZoneChip zone={p.zone} />
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-xs italic leading-snug text-white/70">
+                        "{p.intent}"
+                      </p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        <span
+                          className="rounded-full border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                          style={{
+                            borderColor: `${SV_ACID}55`,
+                            color: SV_ACID,
+                          }}
+                        >
+                          {p.timeframe}
+                        </span>
+                        {p.lookingFor && (
+                          <span
+                            className="rounded-full border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                            style={{
+                              borderColor: "rgba(255,255,255,0.15)",
+                              color: "rgba(255,255,255,0.6)",
+                            }}
+                          >
+                            wants {p.lookingFor}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* FOMO triggers */}
       {(fomos.data?.length ?? 0) > 0 && (
