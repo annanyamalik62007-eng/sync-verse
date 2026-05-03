@@ -71,13 +71,22 @@ router.get("/events", async (req, res): Promise<void> => {
   }
   const { college, userId } = parsed.data;
   const now = new Date();
-  const conditions = [gte(eventsTable.startsAt, now)];
-  if (college) conditions.push(eq(eventsTable.college, college));
-  const rows = await db
+  const upcomingOnly = gte(eventsTable.startsAt, now);
+  let rows = await db
     .select()
     .from(eventsTable)
-    .where(conditions.length === 1 ? conditions[0] : and(...conditions))
+    .where(college ? and(upcomingOnly, eq(eventsTable.college, college)) : upcomingOnly)
     .orderBy(asc(eventsTable.startsAt));
+  // Fallback: if a college filter was supplied but produced nothing (new user
+  // joined a campus that isn't seeded), surface upcoming events from any
+  // campus so the feed is never empty.
+  if (rows.length === 0 && college) {
+    rows = await db
+      .select()
+      .from(eventsTable)
+      .where(upcomingOnly)
+      .orderBy(asc(eventsTable.startsAt));
+  }
   const hydrated = await hydrateEvents(rows, userId);
   res.json(ListEventsResponse.parse(hydrated));
 });

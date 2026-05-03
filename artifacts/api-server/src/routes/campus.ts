@@ -33,12 +33,20 @@ router.get("/majors/hub", async (req, res): Promise<void> => {
     return;
   }
   const { major, college } = parsed.data;
-  const conditions = [eq(usersTable.major, major)];
-  if (college) conditions.push(eq(usersTable.college, college));
-  const peers: UserRow[] = await db
+  let peers: UserRow[] = await db
     .select()
     .from(usersTable)
-    .where(conditions.length === 1 ? conditions[0] : and(...conditions));
+    .where(college ? and(eq(usersTable.major, major), eq(usersTable.college, college)) : eq(usersTable.major, major));
+  // Fallback: if a niche major+college combo has no peers, return same-major
+  // peers from any campus so the feed never shows an empty section.
+  if (peers.length === 0 && college) {
+    peers = await db.select().from(usersTable).where(eq(usersTable.major, major));
+  }
+  // Final fallback: if the major itself isn't seeded, return a small slice
+  // of same-college users so the user still sees nearby peers.
+  if (peers.length === 0 && college) {
+    peers = await db.select().from(usersTable).where(eq(usersTable.college, college));
+  }
 
   const zoneBreakdown = ZONES.map((z) => {
     const inZone = peers.filter((p) => p.zone === z);
