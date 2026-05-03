@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useGetUser, getGetUserQueryKey } from "@workspace/api-client-react";
 import { clearCurrentUserId, useCurrentUserId } from "@/hooks/use-current-user";
+import { UserAvatar } from "@/components/user-avatar";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -123,17 +124,7 @@ export function Layout({ children }: LayoutProps) {
         {me && (
           <div className="border-t border-border p-4">
             <Link href="/major" className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted">
-              <div
-                className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-background"
-                style={{ backgroundColor: me.avatarColor }}
-              >
-                {me.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .slice(0, 2)
-                  .join("")
-                  .toUpperCase()}
-              </div>
+              <UserAvatar user={me} size="md" />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-bold">{me.name}</div>
                 <div className="truncate text-xs text-muted-foreground">

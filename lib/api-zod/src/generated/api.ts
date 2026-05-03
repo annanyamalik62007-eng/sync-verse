@@ -50,6 +50,21 @@ export const ListUsersResponseItem = zod.object({
     "research",
   ]),
   avatarColor: zod.string(),
+  avatarUrl: zod.string().nullish().describe("Profile photo URL (real face)"),
+  lookingFor: zod
+    .string()
+    .nullish()
+    .describe(
+      "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+    ),
+  skills: zod
+    .string()
+    .nullish()
+    .describe("Comma-separated skill\/interest tags"),
+  availability: zod
+    .string()
+    .nullish()
+    .describe("When they are free (mornings, evenings, weekends, late-nights)"),
   createdAt: zod.string(),
 });
 export const ListUsersResponse = zod.array(ListUsersResponseItem);
@@ -75,6 +90,9 @@ export const CreateUserBody = zod.object({
     "fitness",
     "research",
   ]),
+  lookingFor: zod.string().nullish(),
+  skills: zod.string().nullish(),
+  availability: zod.string().nullish(),
 });
 
 /**
@@ -102,6 +120,21 @@ export const GetUserResponse = zod.object({
     "research",
   ]),
   avatarColor: zod.string(),
+  avatarUrl: zod.string().nullish().describe("Profile photo URL (real face)"),
+  lookingFor: zod
+    .string()
+    .nullish()
+    .describe(
+      "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+    ),
+  skills: zod
+    .string()
+    .nullish()
+    .describe("Comma-separated skill\/interest tags"),
+  availability: zod
+    .string()
+    .nullish()
+    .describe("When they are free (mornings, evenings, weekends, late-nights)"),
   createdAt: zod.string(),
 });
 
@@ -131,6 +164,23 @@ export const GetMatchesForUserResponseItem = zod.object({
       "research",
     ]),
     avatarColor: zod.string(),
+    avatarUrl: zod.string().nullish().describe("Profile photo URL (real face)"),
+    lookingFor: zod
+      .string()
+      .nullish()
+      .describe(
+        "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+      ),
+    skills: zod
+      .string()
+      .nullish()
+      .describe("Comma-separated skill\/interest tags"),
+    availability: zod
+      .string()
+      .nullish()
+      .describe(
+        "When they are free (mornings, evenings, weekends, late-nights)",
+      ),
     createdAt: zod.string(),
   }),
   alignmentScore: zod.number().describe("0-100 likelihood of real interaction"),
@@ -178,6 +228,26 @@ export const ListSquadsResponseItem = zod.object({
         "research",
       ]),
       avatarColor: zod.string(),
+      avatarUrl: zod
+        .string()
+        .nullish()
+        .describe("Profile photo URL (real face)"),
+      lookingFor: zod
+        .string()
+        .nullish()
+        .describe(
+          "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+        ),
+      skills: zod
+        .string()
+        .nullish()
+        .describe("Comma-separated skill\/interest tags"),
+      availability: zod
+        .string()
+        .nullish()
+        .describe(
+          "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
       createdAt: zod.string(),
     }),
   ),
@@ -226,6 +296,26 @@ export const GetSquadSuggestionsForUserResponseItem = zod.object({
         "research",
       ]),
       avatarColor: zod.string(),
+      avatarUrl: zod
+        .string()
+        .nullish()
+        .describe("Profile photo URL (real face)"),
+      lookingFor: zod
+        .string()
+        .nullish()
+        .describe(
+          "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+        ),
+      skills: zod
+        .string()
+        .nullish()
+        .describe("Comma-separated skill\/interest tags"),
+      availability: zod
+        .string()
+        .nullish()
+        .describe(
+          "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
       createdAt: zod.string(),
     }),
   ),
@@ -280,6 +370,26 @@ export const JoinSquadResponse = zod.object({
         "research",
       ]),
       avatarColor: zod.string(),
+      avatarUrl: zod
+        .string()
+        .nullish()
+        .describe("Profile photo URL (real face)"),
+      lookingFor: zod
+        .string()
+        .nullish()
+        .describe(
+          "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+        ),
+      skills: zod
+        .string()
+        .nullish()
+        .describe("Comma-separated skill\/interest tags"),
+      availability: zod
+        .string()
+        .nullish()
+        .describe(
+          "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
       createdAt: zod.string(),
     }),
   ),
@@ -415,6 +525,23 @@ export const ListThreadsForUserResponseItem = zod.object({
       "research",
     ]),
     avatarColor: zod.string(),
+    avatarUrl: zod.string().nullish().describe("Profile photo URL (real face)"),
+    lookingFor: zod
+      .string()
+      .nullish()
+      .describe(
+        "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+      ),
+    skills: zod
+      .string()
+      .nullish()
+      .describe("Comma-separated skill\/interest tags"),
+    availability: zod
+      .string()
+      .nullish()
+      .describe(
+        "When they are free (mornings, evenings, weekends, late-nights)",
+      ),
     createdAt: zod.string(),
   }),
   lastMessage: zod.object({
@@ -497,6 +624,26 @@ export const ListEventsResponseItem = zod.object({
         "research",
       ]),
       avatarColor: zod.string(),
+      avatarUrl: zod
+        .string()
+        .nullish()
+        .describe("Profile photo URL (real face)"),
+      lookingFor: zod
+        .string()
+        .nullish()
+        .describe(
+          "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+        ),
+      skills: zod
+        .string()
+        .nullish()
+        .describe("Comma-separated skill\/interest tags"),
+      availability: zod
+        .string()
+        .nullish()
+        .describe(
+          "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
       createdAt: zod.string(),
     })
     .optional(),
@@ -519,6 +666,26 @@ export const ListEventsResponseItem = zod.object({
         "research",
       ]),
       avatarColor: zod.string(),
+      avatarUrl: zod
+        .string()
+        .nullish()
+        .describe("Profile photo URL (real face)"),
+      lookingFor: zod
+        .string()
+        .nullish()
+        .describe(
+          "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+        ),
+      skills: zod
+        .string()
+        .nullish()
+        .describe("Comma-separated skill\/interest tags"),
+      availability: zod
+        .string()
+        .nullish()
+        .describe(
+          "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
       createdAt: zod.string(),
     }),
   ),
@@ -600,6 +767,26 @@ export const ToggleEventRsvpResponse = zod.object({
         "research",
       ]),
       avatarColor: zod.string(),
+      avatarUrl: zod
+        .string()
+        .nullish()
+        .describe("Profile photo URL (real face)"),
+      lookingFor: zod
+        .string()
+        .nullish()
+        .describe(
+          "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+        ),
+      skills: zod
+        .string()
+        .nullish()
+        .describe("Comma-separated skill\/interest tags"),
+      availability: zod
+        .string()
+        .nullish()
+        .describe(
+          "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
       createdAt: zod.string(),
     })
     .optional(),
@@ -622,6 +809,26 @@ export const ToggleEventRsvpResponse = zod.object({
         "research",
       ]),
       avatarColor: zod.string(),
+      avatarUrl: zod
+        .string()
+        .nullish()
+        .describe("Profile photo URL (real face)"),
+      lookingFor: zod
+        .string()
+        .nullish()
+        .describe(
+          "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+        ),
+      skills: zod
+        .string()
+        .nullish()
+        .describe("Comma-separated skill\/interest tags"),
+      availability: zod
+        .string()
+        .nullish()
+        .describe(
+          "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
       createdAt: zod.string(),
     }),
   ),
@@ -660,6 +867,26 @@ export const GetMajorHubResponse = zod.object({
         "research",
       ]),
       avatarColor: zod.string(),
+      avatarUrl: zod
+        .string()
+        .nullish()
+        .describe("Profile photo URL (real face)"),
+      lookingFor: zod
+        .string()
+        .nullish()
+        .describe(
+          "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+        ),
+      skills: zod
+        .string()
+        .nullish()
+        .describe("Comma-separated skill\/interest tags"),
+      availability: zod
+        .string()
+        .nullish()
+        .describe(
+          "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
       createdAt: zod.string(),
     }),
   ),
@@ -731,6 +958,26 @@ export const GetCollegeSnapshotResponse = zod.object({
             "research",
           ]),
           avatarColor: zod.string(),
+          avatarUrl: zod
+            .string()
+            .nullish()
+            .describe("Profile photo URL (real face)"),
+          lookingFor: zod
+            .string()
+            .nullish()
+            .describe(
+              "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+            ),
+          skills: zod
+            .string()
+            .nullish()
+            .describe("Comma-separated skill\/interest tags"),
+          availability: zod
+            .string()
+            .nullish()
+            .describe(
+              "When they are free (mornings, evenings, weekends, late-nights)",
+            ),
           createdAt: zod.string(),
         })
         .optional(),
@@ -753,6 +1000,26 @@ export const GetCollegeSnapshotResponse = zod.object({
             "research",
           ]),
           avatarColor: zod.string(),
+          avatarUrl: zod
+            .string()
+            .nullish()
+            .describe("Profile photo URL (real face)"),
+          lookingFor: zod
+            .string()
+            .nullish()
+            .describe(
+              "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+            ),
+          skills: zod
+            .string()
+            .nullish()
+            .describe("Comma-separated skill\/interest tags"),
+          availability: zod
+            .string()
+            .nullish()
+            .describe(
+              "When they are free (mornings, evenings, weekends, late-nights)",
+            ),
           createdAt: zod.string(),
         }),
       ),

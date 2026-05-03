@@ -480,6 +480,22 @@ components:
           $ref: "#/components/schemas/CommunityZone"
         avatarColor:
           type: string
+        avatarUrl:
+          type: string
+          nullable: true
+          description: Profile photo URL (real face)
+        lookingFor:
+          type: string
+          nullable: true
+          description: What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)
+        skills:
+          type: string
+          nullable: true
+          description: Comma-separated skill/interest tags
+        availability:
+          type: string
+          nullable: true
+          description: When they are free (mornings, evenings, weekends, late-nights)
         createdAt:
           type: string
       required: [id, name, college, major, intent, timeframe, energyLevel, zone, avatarColor, createdAt]
@@ -502,6 +518,15 @@ components:
           $ref: "#/components/schemas/EnergyLevel"
         zone:
           $ref: "#/components/schemas/CommunityZone"
+        lookingFor:
+          type: string
+          nullable: true
+        skills:
+          type: string
+          nullable: true
+        availability:
+          type: string
+          nullable: true
       required: [name, college, major, intent, timeframe, energyLevel, zone]
 
     Match:

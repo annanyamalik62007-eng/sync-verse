@@ -10,6 +10,10 @@ export const usersTable = pgTable("users", {
   energyLevel: text("energy_level").notNull(),
   zone: text("zone").notNull(),
   avatarColor: text("avatar_color").notNull(),
+  avatarUrl: text("avatar_url"),
+  lookingFor: text("looking_for"),
+  skills: text("skills"),
+  availability: text("availability"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

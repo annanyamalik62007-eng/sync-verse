@@ -8,7 +8,7 @@ import {
   GetUserParams,
   GetUserResponse,
 } from "@workspace/api-zod";
-import { pickAvatarColor, rowToUser } from "../lib/matching";
+import { pickAvatarColor, pickAvatarUrl, rowToUser } from "../lib/matching";
 
 const router: IRouter = Router();
 
@@ -43,9 +43,10 @@ router.post("/users", async (req, res): Promise<void> => {
   }
   const data = parsed.data;
   const avatarColor = pickAvatarColor(data.name + data.major);
+  const avatarUrl = pickAvatarUrl(data.name + data.college + data.major);
   const [row] = await db
     .insert(usersTable)
-    .values({ ...data, avatarColor })
+    .values({ ...data, avatarColor, avatarUrl })
     .returning();
   if (!row) {
     res.status(500).json({ error: "Failed to create user" });

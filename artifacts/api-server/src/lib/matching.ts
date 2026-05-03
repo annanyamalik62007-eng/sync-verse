@@ -35,6 +35,17 @@ export interface ScoredMatch {
   sharedSignals: string[];
 }
 
+function skillTokens(s: string | null): Set<string> {
+  if (!s) return new Set();
+  return new Set(
+    s
+      .toLowerCase()
+      .split(/[,;]+/)
+      .map((t) => t.trim())
+      .filter((t) => t.length > 1),
+  );
+}
+
 export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
   const myTokens = tokens(me.intent);
   const theirTokens = tokens(other.intent);
@@ -54,19 +65,39 @@ export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
   const theirE = ENERGY_SCORE[other.energyLevel] ?? 1;
   const energyAlignment = 1 - Math.abs(myE - theirE) / 2;
 
+  // New optional dimensions
+  const sameLookingFor =
+    me.lookingFor && other.lookingFor && me.lookingFor === other.lookingFor ? 1 : 0;
+  const sameAvailability =
+    me.availability && other.availability && me.availability === other.availability ? 1 : 0;
+  const mySkills = skillTokens(me.skills);
+  const theirSkills = skillTokens(other.skills);
+  const sharedSkills = [...mySkills].filter((s) => theirSkills.has(s));
+  // Flat +10 for any shared skill token, plus +2 per additional shared token (cap at +18)
+  const sharedSkillBonus =
+    sharedSkills.length === 0
+      ? 0
+      : Math.min(10 + (sharedSkills.length - 1) * 2, 18);
+
   const score =
-    intentOverlap * 35 +
-    sameZone * 25 +
-    timeAlignment * 15 +
-    energyAlignment * 10 +
-    sameCollege * 10 +
-    sameMajor * 5;
+    intentOverlap * 30 +
+    sameZone * 22 +
+    timeAlignment * 12 +
+    energyAlignment * 8 +
+    sameCollege * 8 +
+    sameMajor * 4 +
+    sameLookingFor * 8 +
+    sharedSkillBonus +
+    sameAvailability * 5;
 
   const reasons: string[] = [];
   if (sharedTokens.length > 0) {
     reasons.push(`Both mention "${sharedTokens.slice(0, 3).join(", ")}"`);
   }
   if (sameZone) reasons.push(`Both in ${me.zone} zone`);
+  if (sharedSkills.length > 0) reasons.push(`Shared skills: ${sharedSkills.slice(0, 3).join(", ")}`);
+  if (sameLookingFor) reasons.push(`Both want ${me.lookingFor}`);
+  if (sameAvailability) reasons.push(`Both free ${me.availability}`);
   if (me.timeframe === other.timeframe) reasons.push(`Both ready ${me.timeframe}`);
   if (me.energyLevel === other.energyLevel) reasons.push(`Same ${me.energyLevel} energy`);
   if (sameCollege) reasons.push(`Same campus`);
@@ -76,6 +107,8 @@ export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
   if (sameZone) sharedSignals.push(me.zone);
   if (me.timeframe === other.timeframe) sharedSignals.push(me.timeframe);
   if (me.energyLevel === other.energyLevel) sharedSignals.push(me.energyLevel);
+  if (sameLookingFor && me.lookingFor) sharedSignals.push(me.lookingFor);
+  for (const s of sharedSkills) sharedSignals.push(s);
   for (const t of sharedTokens) sharedSignals.push(t);
 
   return {
@@ -95,6 +128,14 @@ export function pickAvatarColor(seed: string): string {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
   return COLOR_PALETTE[h % COLOR_PALETTE.length]!;
+}
+
+export function pickAvatarUrl(seed: string): string {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  const gender = h % 2 === 0 ? "men" : "women";
+  const idx = h % 99;
+  return `https://randomuser.me/api/portraits/${gender}/${idx}.jpg`;
 }
 
 export function timeAgoFrom(date: Date): string {
@@ -119,6 +160,10 @@ export function rowToUser(row: UserRow) {
     energyLevel: row.energyLevel,
     zone: row.zone,
     avatarColor: row.avatarColor,
+    avatarUrl: row.avatarUrl,
+    lookingFor: row.lookingFor,
+    skills: row.skills,
+    availability: row.availability,
     createdAt: row.createdAt.toISOString(),
   };
 }

@@ -9,6 +9,7 @@ import { useCurrentUserId } from "@/hooks/use-current-user";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle, Sparkles, ArrowRight } from "lucide-react";
+import { UserAvatar } from "@/components/user-avatar";
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -18,28 +19,6 @@ function timeAgo(iso: string) {
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h ago`;
   return `${Math.floor(h / 24)}d ago`;
-}
-
-function Avatar({ name, color, size = 12 }: { name: string; color: string; size?: number }) {
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-  return (
-    <div
-      className="flex flex-shrink-0 items-center justify-center rounded-full font-bold text-background"
-      style={{
-        backgroundColor: color,
-        width: `${size * 4}px`,
-        height: `${size * 4}px`,
-        fontSize: `${size * 1.2}px`,
-      }}
-    >
-      {initials}
-    </div>
-  );
 }
 
 export default function Messages() {
@@ -83,7 +62,7 @@ export default function Messages() {
                   href={`/messages/${m.user.id}`}
                   className="flex items-center gap-2 rounded-full border border-primary/30 bg-card px-3 py-1.5 text-sm font-semibold transition-all hover:border-primary hover:bg-primary/10"
                 >
-                  <Avatar name={m.user.name} color={m.user.avatarColor} size={6} />
+                  <UserAvatar user={m.user} size="xs" />
                   {m.user.name.split(" ")[0]}
                 </Link>
               ))}
@@ -120,7 +99,7 @@ export default function Messages() {
                 }`}
               >
                 <CardContent className="flex items-center gap-4 p-4">
-                  <Avatar name={t.otherUser.name} color={t.otherUser.avatarColor} />
+                  <UserAvatar user={t.otherUser} size="lg" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="truncate font-bold">{t.otherUser.name}</span>

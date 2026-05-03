@@ -18,4 +18,7 @@ export interface CreateUserInput {
   timeframe: Timeframe;
   energyLevel: EnergyLevel;
   zone: CommunityZone;
+  lookingFor?: string | null;
+  skills?: string | null;
+  availability?: string | null;
 }

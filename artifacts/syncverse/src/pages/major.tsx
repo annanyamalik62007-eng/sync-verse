@@ -18,28 +18,7 @@ import {
   TrendingUp,
   Building2,
 } from "lucide-react";
-
-function Avatar({ name, color, size = 11 }: { name: string; color: string; size?: number }) {
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-  return (
-    <div
-      className="flex flex-shrink-0 items-center justify-center rounded-full font-bold text-background"
-      style={{
-        backgroundColor: color,
-        width: `${size * 4}px`,
-        height: `${size * 4}px`,
-        fontSize: `${size}px`,
-      }}
-    >
-      {initials}
-    </div>
-  );
-}
+import { UserAvatar } from "@/components/user-avatar";
 
 export default function Major() {
   const userId = useCurrentUserId();
@@ -156,7 +135,7 @@ export default function Major() {
           {peers.map((p) => (
             <Card key={p.id} className="border-border bg-card hover:border-primary/40">
               <CardContent className="flex items-start gap-4 p-4">
-                <Avatar name={p.name} color={p.avatarColor} />
+                <UserAvatar user={p} size="md" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-bold">{p.name}</span>

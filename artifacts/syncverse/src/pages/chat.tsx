@@ -14,28 +14,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Send } from "lucide-react";
-
-function Avatar({ name, color, size = 10 }: { name: string; color: string; size?: number }) {
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-  return (
-    <div
-      className="flex flex-shrink-0 items-center justify-center rounded-full font-bold text-background"
-      style={{
-        backgroundColor: color,
-        width: `${size * 4}px`,
-        height: `${size * 4}px`,
-        fontSize: `${size * 1.2}px`,
-      }}
-    >
-      {initials}
-    </div>
-  );
-}
+import { UserAvatar } from "@/components/user-avatar";
 
 export default function Chat() {
   const params = useParams<{ userId: string }>();
@@ -99,7 +78,7 @@ export default function Chat() {
         </Button>
         {other.data && (
           <>
-            <Avatar name={other.data.name} color={other.data.avatarColor} />
+            <UserAvatar user={other.data} size="md" />
             <div>
               <div className="font-bold">{other.data.name}</div>
               <Link

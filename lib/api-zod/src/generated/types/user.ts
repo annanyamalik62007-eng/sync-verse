@@ -19,5 +19,13 @@ export interface User {
   energyLevel: EnergyLevel;
   zone: CommunityZone;
   avatarColor: string;
+  /** Profile photo URL (real face) */
+  avatarUrl?: string | null;
+  /** What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner) */
+  lookingFor?: string | null;
+  /** Comma-separated skill/interest tags */
+  skills?: string | null;
+  /** When they are free (mornings, evenings, weekends, late-nights) */
+  availability?: string | null;
   createdAt: string;
 }

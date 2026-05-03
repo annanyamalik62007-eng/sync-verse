@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { UserAvatar } from "@/components/user-avatar";
 import {
   Activity,
   Zap,
@@ -107,6 +108,30 @@ const ENERGY: { value: EnergyLevel; label: string; sub: string }[] = [
   { value: "browsing", label: "Browsing", sub: "Just curious, scanning the room" },
   { value: "exploring", label: "Exploring", sub: "Open to ideas, ready to chat" },
   { value: "building", label: "Building", sub: "Heads down, ready to ship" },
+];
+
+const LOOKING_FOR_OPTIONS: { value: string; label: string }[] = [
+  { value: "cofounder", label: "Cofounder" },
+  { value: "study buddy", label: "Study buddy" },
+  { value: "mentor", label: "Mentor" },
+  { value: "friend", label: "Friend" },
+  { value: "collab", label: "Collaborator" },
+  { value: "event partner", label: "Event partner" },
+];
+
+const SKILL_SUGGESTIONS = [
+  "react", "typescript", "python", "ai", "ml", "design",
+  "leetcode", "system-design", "fundraising", "writing",
+  "running", "climbing", "music",
+];
+
+const AVAILABILITY_OPTIONS: { value: string; label: string }[] = [
+  { value: "weekday-mornings", label: "Weekday mornings" },
+  { value: "weekday-evenings", label: "Weekday evenings" },
+  { value: "weekends", label: "Weekends" },
+  { value: "evenings", label: "Evenings" },
+  { value: "weekend-mornings", label: "Weekend mornings" },
+  { value: "anytime", label: "Anytime" },
 ];
 
 function StepBubble({ active, done }: { active: boolean; done: boolean }) {
@@ -241,6 +266,45 @@ function LandingHero({ onStart }: { onStart: () => void }) {
   const demoColleges = Array.from(demoByCollege.entries()).slice(0, 4);
   const previewAvatars = (allUsers.data ?? []).slice(0, 6);
 
+  // Featured match pair for the "anatomy of a match" demo section.
+  // Try to grab two users from the same startup cohort with overlapping signals;
+  // fall back to the first two users we have.
+  const findUser = (name: string) =>
+    (allUsers.data ?? []).find((u) => u.name === name);
+  const matchA = findUser("Maya Chen") ?? (allUsers.data ?? [])[0];
+  const matchB =
+    findUser("Rohan Mehra") ??
+    findUser("Taylor Reed") ??
+    (allUsers.data ?? [])[1];
+  const sharedSignals: string[] = [];
+  if (matchA && matchB) {
+    if (matchA.zone === matchB.zone) sharedSignals.push(matchA.zone);
+    if (matchA.timeframe === matchB.timeframe) sharedSignals.push(matchA.timeframe);
+    if (matchA.energyLevel === matchB.energyLevel) sharedSignals.push(matchA.energyLevel);
+    if (
+      matchA.lookingFor &&
+      matchB.lookingFor &&
+      matchA.lookingFor === matchB.lookingFor
+    ) {
+      sharedSignals.push(matchA.lookingFor);
+    }
+    if (
+      matchA.availability &&
+      matchB.availability &&
+      matchA.availability === matchB.availability
+    ) {
+      sharedSignals.push(matchA.availability);
+    }
+    const skillsA = new Set(
+      (matchA.skills ?? "").toLowerCase().split(/[,;]+/).map((s) => s.trim()).filter(Boolean),
+    );
+    const skillsB = new Set(
+      (matchB.skills ?? "").toLowerCase().split(/[,;]+/).map((s) => s.trim()).filter(Boolean),
+    );
+    for (const s of skillsA) if (skillsB.has(s)) sharedSignals.push(s);
+  }
+  const facesWall = (allUsers.data ?? []).slice(0, 18);
+
   const useDemo = (id: string) => {
     setCurrentUserId(id);
     setLocation("/feed");
@@ -359,27 +423,15 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-2">
                     {previewAvatars.length > 0
-                      ? previewAvatars.map((u) => {
-                          const initials = u.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .slice(0, 2)
-                            .join("")
-                            .toUpperCase();
-                          return (
-                            <span
-                              key={u.id}
-                              className="flex h-9 w-9 items-center justify-center rounded-full border-2 text-[9px] font-black"
-                              style={{
-                                backgroundColor: u.avatarColor,
-                                borderColor: SV_INK,
-                                color: SV_INK,
-                              }}
-                            >
-                              {initials}
-                            </span>
-                          );
-                        })
+                      ? previewAvatars.map((u) => (
+                          <UserAvatar
+                            key={u.id}
+                            user={u}
+                            size="md"
+                            className="border-2"
+                            ring={SV_INK}
+                          />
+                        ))
                       : ["#22D3EE", "#A78BFA", "#F472B6", "#34D399"].map((c) => (
                           <span
                             key={c}
@@ -449,6 +501,206 @@ function LandingHero({ onStart }: { onStart: () => void }) {
           </div>
         </div>
       </section>
+
+      {/* ANATOMY OF A MATCH */}
+      {matchA && matchB && (
+        <section
+          className="relative border-t"
+          style={{ borderColor: "#1a1a22", backgroundColor: "#0d0d14" }}
+        >
+          <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-24">
+            <div className="mb-10 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div>
+                <div
+                  className="font-mono text-xs uppercase tracking-[0.3em]"
+                  style={{ color: SV_CYAN }}
+                >
+                  / how matching works
+                </div>
+                <h2 className="mt-2 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+                  anatomy of a{" "}
+                  <span className="sv-outline-text" style={{ color: SV_CYAN }}>
+                    match
+                  </span>
+                </h2>
+              </div>
+              <p className="max-w-md text-sm text-white/60">
+                two real students. they both posted what they were on. SYNCVERSE
+                spotted the overlap and surfaced them to each other.
+              </p>
+            </div>
+
+            <div className="grid items-stretch gap-4 md:grid-cols-[1fr_auto_1fr]">
+              {[matchA, matchB].map((u, idx) => {
+                const accent = idx === 0 ? SV_HOT : SV_CYAN;
+                const meta = ZONE_META[u.zone as CommunityZone];
+                const Icon = meta?.icon ?? Sparkles;
+                return (
+                  <motion.div
+                    key={u.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="relative border-2 p-5 md:p-6"
+                    style={{ borderColor: accent, backgroundColor: SV_INK }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <UserAvatar user={u} size="xl" square />
+                      <div className="min-w-0">
+                        <div className="text-lg font-black leading-tight">
+                          {u.name}
+                        </div>
+                        <div
+                          className="font-mono text-[10px] uppercase tracking-widest"
+                          style={{ color: accent }}
+                        >
+                          {u.major} · {u.college}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-sm leading-snug text-white/80">
+                      "{u.intent}"
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      <span
+                        className="inline-flex items-center gap-1 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest"
+                        style={{ backgroundColor: accent, color: SV_INK }}
+                      >
+                        <Icon className="h-3 w-3" />
+                        {u.zone}
+                      </span>
+                      {u.lookingFor && (
+                        <span
+                          className="inline-flex items-center px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest"
+                          style={{ borderColor: accent, color: accent, borderWidth: 1 }}
+                        >
+                          wants {u.lookingFor}
+                        </span>
+                      )}
+                      {u.availability && (
+                        <span
+                          className="inline-flex items-center px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest"
+                          style={{ borderColor: accent, color: accent, borderWidth: 1 }}
+                        >
+                          free {u.availability}
+                        </span>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+
+              {/* Connector */}
+              <div className="flex items-center justify-center md:flex-col">
+                <motion.div
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex h-24 w-24 flex-col items-center justify-center md:h-28 md:w-28"
+                  style={{
+                    backgroundColor: SV_ACID,
+                    color: SV_INK,
+                    boxShadow: `4px 4px 0 0 ${SV_HOT}`,
+                  }}
+                >
+                  <div className="font-mono text-[9px] uppercase tracking-widest">
+                    align
+                  </div>
+                  <div className="text-3xl font-black italic leading-none tracking-tighter md:text-4xl">
+                    94
+                  </div>
+                  <Asterisk className="mt-1 h-4 w-4 sv-spin-slow" />
+                </motion.div>
+              </div>
+            </div>
+
+            {sharedSignals.length > 0 && (
+              <div className="mt-8 border-2 p-5" style={{ borderColor: "#1a1a22", backgroundColor: SV_INK }}>
+                <div
+                  className="font-mono text-[10px] uppercase tracking-[0.3em]"
+                  style={{ color: SV_GREEN }}
+                >
+                  / shared signals SYNCVERSE picked up
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {sharedSignals.slice(0, 8).map((s, i) => (
+                    <motion.span
+                      key={s + i}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.05 * i }}
+                      className="inline-flex items-center gap-1 px-3 py-1 font-mono text-xs uppercase tracking-widest"
+                      style={{
+                        backgroundColor: SV_GREEN,
+                        color: SV_INK,
+                        boxShadow: `2px 2px 0 0 ${SV_INK}`,
+                      }}
+                    >
+                      <Asterisk className="h-3 w-3" />
+                      {s}
+                    </motion.span>
+                  ))}
+                </div>
+                <p className="mt-4 max-w-2xl text-sm text-white/60">
+                  no questionnaires. no swiping. just the overlap between what
+                  you posted and what 200 other students already posted today.
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* FACES WALL */}
+      {facesWall.length > 0 && (
+        <section
+          className="relative border-t"
+          style={{ borderColor: "#1a1a22", backgroundColor: SV_INK }}
+        >
+          <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-20">
+            <div className="mb-8 flex items-end justify-between gap-4">
+              <h2 className="text-3xl font-black italic leading-none tracking-tighter md:text-5xl">
+                live <span style={{ color: SV_HOT }}>faces</span> on campus
+              </h2>
+              <div
+                className="hidden font-mono text-[10px] uppercase tracking-[0.3em] md:block"
+                style={{ color: SV_ACID }}
+              >
+                tap a face to drop into their feed
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 md:gap-3">
+              {facesWall.map((u) => {
+                const meta = ZONE_META[u.zone as CommunityZone];
+                const hue = ZONE_HUE[u.zone as CommunityZone] ?? SV_CYAN;
+                return (
+                  <button
+                    key={u.id}
+                    onClick={() => useDemo(u.id)}
+                    className="group relative aspect-square overflow-hidden border-2 transition-transform hover:-translate-y-1"
+                    style={{ borderColor: "#1a1a22" }}
+                  >
+                    <UserAvatar user={u} fill />
+                    <div
+                      className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent p-2"
+                    >
+                      <div className="truncate text-[10px] font-black uppercase tracking-tight text-white">
+                        {u.name.split(" ")[0]}
+                      </div>
+                      <div
+                        className="truncate font-mono text-[8px] uppercase tracking-widest"
+                        style={{ color: hue }}
+                      >
+                        {meta?.label ?? u.zone}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* BENTO VIBE GRID */}
       <section className="relative border-t" style={{ borderColor: "#1a1a22" }}>
@@ -627,12 +879,6 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                       {(users ?? []).map((u) => {
                         const meta = ZONE_META[u.zone as CommunityZone];
                         const Icon = meta?.icon ?? Sparkles;
-                        const initials = u.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .slice(0, 2)
-                          .join("")
-                          .toUpperCase();
                         const zoneHue = ZONE_HUE[u.zone as CommunityZone] ?? SV_CYAN;
                         return (
                           <button
@@ -641,12 +887,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                             className="group relative flex w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-white/[0.03]"
                             style={{ borderColor: "#1a1a22" }}
                           >
-                            <div
-                              className="flex h-12 w-12 flex-shrink-0 items-center justify-center text-xs font-black"
-                              style={{ backgroundColor: u.avatarColor, color: SV_INK }}
-                            >
-                              {initials}
-                            </div>
+                            <UserAvatar user={u} size="lg" square />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 truncate text-sm font-black">
                                 {u.name}
@@ -895,6 +1136,9 @@ export default function Onboarding() {
     timeframe: "now",
     energyLevel: "exploring",
     zone: "startup",
+    lookingFor: "",
+    skills: "",
+    availability: "",
   });
 
   // If they've already onboarded, show the landing page with a "go to feed" CTA
@@ -963,17 +1207,17 @@ export default function Onboarding() {
             <Activity className="h-3 w-3 animate-pulse" /> Setting up your sync
           </div>
           <h1 className="text-4xl font-black tracking-tighter md:text-5xl">
-            Three quick steps
+            Four quick steps
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Step {step + 1} of 3 — under 30 seconds.
+            Step {step + 1} of 4 — under 45 seconds.
           </p>
         </div>
 
         <Card className="border-border bg-card">
           <CardContent className="p-6 md:p-8">
             <div className="mb-6 flex items-center gap-2">
-              {[0, 1, 2].map((i) => (
+              {[0, 1, 2, 3].map((i) => (
                 <StepBubble key={i} active={i === step} done={i < step} />
               ))}
             </div>
@@ -1146,8 +1390,133 @@ export default function Onboarding() {
                       Back
                     </Button>
                     <Button
+                      onClick={next}
+                      disabled={!canStep2}
+                      className="flex-1"
+                      size="lg"
+                    >
+                      Continue <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 3 && (
+                <motion.div
+                  key="s3"
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -12 }}
+                  className="space-y-5"
+                >
+                  <h2 className="text-2xl font-bold">One more layer</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Optional. The more you say, the sharper your matches.
+                  </p>
+
+                  <div className="space-y-2">
+                    <Label>You're looking for</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {LOOKING_FOR_OPTIONS.map((o) => {
+                        const active = form.lookingFor === o.value;
+                        return (
+                          <button
+                            key={o.value}
+                            type="button"
+                            onClick={() =>
+                              setForm({
+                                ...form,
+                                lookingFor: active ? "" : o.value,
+                              })
+                            }
+                            className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+                              active
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-muted/30 hover:border-primary/50"
+                            }`}
+                          >
+                            {o.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="skills">Your skills (comma separated)</Label>
+                    <Input
+                      id="skills"
+                      placeholder="react, typescript, ai, fundraising"
+                      value={form.skills ?? ""}
+                      onChange={(e) =>
+                        setForm({ ...form, skills: e.target.value })
+                      }
+                    />
+                    <div className="flex flex-wrap gap-1.5">
+                      {SKILL_SUGGESTIONS.map((s) => {
+                        const tokens = (form.skills ?? "")
+                          .split(",")
+                          .map((t) => t.trim().toLowerCase())
+                          .filter(Boolean);
+                        const active = tokens.includes(s.toLowerCase());
+                        return (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => {
+                              const next = active
+                                ? tokens.filter((t) => t !== s.toLowerCase())
+                                : [...tokens, s.toLowerCase()];
+                              setForm({ ...form, skills: next.join(", ") });
+                            }}
+                            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all ${
+                              active
+                                ? "border-primary bg-primary/15 text-primary"
+                                : "border-border bg-muted/20 text-muted-foreground hover:border-primary/40"
+                            }`}
+                          >
+                            + {s}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>When you're free</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {AVAILABILITY_OPTIONS.map((o) => {
+                        const active = form.availability === o.value;
+                        return (
+                          <button
+                            key={o.value}
+                            type="button"
+                            onClick={() =>
+                              setForm({
+                                ...form,
+                                availability: active ? "" : o.value,
+                              })
+                            }
+                            className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+                              active
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-muted/30 hover:border-primary/50"
+                            }`}
+                          >
+                            {o.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button onClick={back} variant="outline" size="lg">
+                      Back
+                    </Button>
+                    <Button
                       onClick={submit}
-                      disabled={!canStep2 || createUser.isPending}
+                      disabled={createUser.isPending}
                       className="flex-1"
                       size="lg"
                     >
@@ -1155,7 +1524,9 @@ export default function Onboarding() {
                     </Button>
                   </div>
                   {createUser.isError && (
-                    <p className="text-sm text-destructive">Something went wrong. Try again.</p>
+                    <p className="text-sm text-destructive">
+                      Something went wrong. Try again.
+                    </p>
                   )}
                 </motion.div>
               )}

@@ -4,23 +4,7 @@ import { useCurrentUserId } from "@/hooks/use-current-user";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Flame, Sparkles, MessageCircle } from "lucide-react";
-
-function Avatar({ name, color }: { name: string; color: string }) {
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-  return (
-    <div
-      className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-background"
-      style={{ backgroundColor: color }}
-    >
-      {initials}
-    </div>
-  );
-}
+import { UserAvatar } from "@/components/user-avatar";
 
 export default function Matches() {
   const userId = useCurrentUserId();
@@ -61,7 +45,7 @@ export default function Matches() {
           >
             <CardContent className="p-5">
               <div className="flex items-start gap-4">
-                <Avatar name={m.user.name} color={m.user.avatarColor} />
+                <UserAvatar user={m.user} size="lg" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-lg font-bold">{m.user.name}</h3>

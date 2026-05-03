@@ -12,27 +12,21 @@ import { useCurrentUserId } from "@/hooks/use-current-user";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Rocket, MapPin, Target } from "lucide-react";
+import { UserAvatar } from "@/components/user-avatar";
 
 function MemberDots({ members }: { members: User[] }) {
   return (
     <div className="flex -space-x-2">
       {members.slice(0, 5).map((m) => (
-        <div
+        <UserAvatar
           key={m.id}
-          title={m.name}
-          className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-card text-[10px] font-bold text-background"
-          style={{ backgroundColor: m.avatarColor }}
-        >
-          {m.name
-            .split(" ")
-            .map((n) => n[0])
-            .slice(0, 2)
-            .join("")
-            .toUpperCase()}
-        </div>
+          user={m}
+          size="sm"
+          className="border-2 border-card"
+        />
       ))}
       {members.length > 5 && (
-        <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-card bg-muted text-[10px] font-bold text-foreground">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-muted text-[10px] font-bold text-foreground">
           +{members.length - 5}
         </div>
       )}

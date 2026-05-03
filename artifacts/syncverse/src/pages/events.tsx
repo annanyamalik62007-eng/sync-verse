@@ -33,6 +33,7 @@ import {
   Check,
   Sparkles,
 } from "lucide-react";
+import { UserAvatar } from "@/components/user-avatar";
 
 const ZONES: CommunityZone[] = [
   "career",
@@ -62,28 +63,6 @@ function countdown(iso: string) {
   if (h < 1) return `in ${Math.max(1, Math.floor(diff / 60000))}m`;
   if (h < 24) return `in ${h}h`;
   return `in ${Math.floor(h / 24)}d`;
-}
-
-function Avatar({ name, color, size = 7 }: { name: string; color: string; size?: number }) {
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-  return (
-    <div
-      className="flex flex-shrink-0 items-center justify-center rounded-full font-bold text-background ring-2 ring-card"
-      style={{
-        backgroundColor: color,
-        width: `${size * 4}px`,
-        height: `${size * 4}px`,
-        fontSize: `${size}px`,
-      }}
-    >
-      {initials}
-    </div>
-  );
 }
 
 function EventCard({ event, onToggle, isPending }: { event: CampusEvent; onToggle: () => void; isPending: boolean }) {
@@ -123,7 +102,7 @@ function EventCard({ event, onToggle, isPending }: { event: CampusEvent; onToggl
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
                   {event.attendees.slice(0, 5).map((a) => (
-                    <Avatar key={a.id} name={a.name} color={a.avatarColor} size={6} />
+                    <UserAvatar key={a.id} user={a} size="xs" className="ring-2 ring-card" />
                   ))}
                 </div>
                 <span className="text-xs text-muted-foreground">

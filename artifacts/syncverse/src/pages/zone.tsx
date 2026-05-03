@@ -10,6 +10,7 @@ import {
 import { useCurrentUserId } from "@/hooks/use-current-user";
 import { Card, CardContent } from "@/components/ui/card";
 import { Activity, ArrowLeft, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { UserAvatar } from "@/components/user-avatar";
 
 const ZONE_LABELS: Record<CommunityZone, string> = {
   career: "Career",
@@ -101,17 +102,7 @@ function ZoneInner({ zone, college }: { zone: CommunityZone; college?: string })
           {users.data?.map((u: User) => (
             <Card key={u.id} className="border-border bg-card">
               <CardContent className="flex items-start gap-3 p-4">
-                <div
-                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-background"
-                  style={{ backgroundColor: u.avatarColor }}
-                >
-                  {u.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .slice(0, 2)
-                    .join("")
-                    .toUpperCase()}
-                </div>
+                <UserAvatar user={u} size="md" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold">{u.name}</h3>
