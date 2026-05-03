@@ -425,23 +425,23 @@ function LandingHero({ onStart }: { onStart: () => void }) {
           </div>
 
           {/* Wordmark */}
-          <div className="relative mt-8 select-none md:mt-12">
+          <div className="relative mt-6 select-none md:mt-8">
             <h1 className="font-black leading-[0.82] tracking-[-0.05em]">
               <span
-                className="block text-[20vw] italic md:text-[15vw]"
+                className="block text-[14vw] italic md:text-[10.5vw]"
                 style={{ color: SV_HOT, textShadow: `0 0 60px ${SV_HOT}40` }}
               >
                 SYNC
               </span>
-              <span className="-mt-2 flex items-end gap-3 md:-mt-4 md:gap-6">
+              <span className="-mt-1 flex items-end gap-3 md:-mt-3 md:gap-5">
                 <span
-                  className="sv-outline-text text-[20vw] md:text-[15vw]"
+                  className="sv-outline-text text-[14vw] md:text-[10.5vw]"
                   style={{ color: SV_CYAN }}
                 >
                   VERSE
                 </span>
                 <span
-                  className="mb-3 hidden items-center gap-1 self-end font-mono text-xs uppercase tracking-[0.3em] md:mb-6 md:flex"
+                  className="mb-2 hidden items-center gap-1 self-end font-mono text-xs uppercase tracking-[0.3em] md:mb-4 md:flex"
                   style={{ color: SV_ACID }}
                 >
                   <CornerDownRight className="h-3 w-3" />
@@ -452,18 +452,14 @@ function LandingHero({ onStart }: { onStart: () => void }) {
           </div>
 
           {/* Tagline + CTA */}
-          <div className="mt-10 grid gap-10 md:mt-16 md:grid-cols-12 md:gap-8">
+          <div className="mt-7 grid gap-10 md:mt-10 md:grid-cols-12 md:gap-8">
             <div className="md:col-span-7">
               <p className="text-2xl font-bold leading-tight tracking-tight md:text-4xl">
-                find the ppl on ur campus{" "}
+                find{" "}
                 <span className="italic" style={{ color: SV_CYAN }}>
-                  building
-                </span>
-                ,{" "}
-                <span className="italic" style={{ color: SV_HOT }}>
-                  shipping
+                  your people
                 </span>{" "}
-                & locked in{" "}
+                on campus.{" "}
                 <span
                   className="inline-block -rotate-2 px-2"
                   style={{ backgroundColor: SV_ACID, color: SV_INK }}

@@ -23,9 +23,33 @@ function hashSeed(s: string): number {
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
   return h;
 }
-function pickAvatarUrl(seed: string): string {
+const FEMALE_FIRST_NAMES = new Set([
+  "maya", "aisha", "priya", "marisol", "ines", "hana", "lila", "sienna",
+  "sofia", "yuna", "lina", "aria", "naomi", "mira", "ada", "noor", "elena",
+  "zara", "amara", "leah", "chloe", "ruby", "iris", "luna", "nadia",
+  "fatima", "anya", "imani", "rosa", "june", "ivy", "stella", "kira",
+  "tessa", "willa", "esme", "freya", "harper", "wren", "saira", "yara",
+  "mei", "kavya", "anika", "tara",
+]);
+const MALE_FIRST_NAMES = new Set([
+  "jordan", "rohan", "noah", "sam", "theo", "alex", "yusuf", "kai",
+  "ethan", "devon", "hiro", "caleb", "owen", "liam", "marcus", "diego",
+  "omar", "leo", "mateo", "ravi", "jude", "felix", "wesley", "ezra",
+  "kian", "rio", "axel", "rafael", "amir", "isaiah", "andre", "miles",
+  "soren", "jasper", "tariq", "lucas", "arjun", "tomas",
+]);
+function genderForName(name: string): "men" | "women" {
+  const first = name.split(" ")[0]?.toLowerCase() ?? "";
+  if (FEMALE_FIRST_NAMES.has(first)) return "women";
+  if (MALE_FIRST_NAMES.has(first)) return "men";
+  // Default heuristic: many female names end in 'a' or 'e'
+  const last = first.slice(-1);
+  if (last === "a" || last === "e") return "women";
+  return hashSeed(name) % 2 === 0 ? "men" : "women";
+}
+function pickAvatarUrl(seed: string, name?: string): string {
   const h = hashSeed(seed);
-  const gender = h % 2 === 0 ? "men" : "women";
+  const gender = name ? genderForName(name) : h % 2 === 0 ? "men" : "women";
   const idx = h % 99;
   return `https://randomuser.me/api/portraits/${gender}/${idx}.jpg`;
 }
@@ -309,7 +333,7 @@ async function main() {
       seedUsers.map((u, i) => ({
         ...u,
         avatarColor: pickColor(i),
-        avatarUrl: pickAvatarUrl(u.name + u.college + u.major),
+        avatarUrl: pickAvatarUrl(u.name + u.college + u.major, u.name),
       })),
     )
     .returning();
