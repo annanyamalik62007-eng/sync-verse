@@ -1314,6 +1314,31 @@ export default function Onboarding() {
     skills: "",
     availability: "",
   });
+  const [extraZones, setExtraZones] = useState<CommunityZone[]>([]);
+
+  const selectedZones: CommunityZone[] = [form.zone, ...extraZones];
+
+  const toggleZone = (z: CommunityZone) => {
+    if (form.zone === z) {
+      // demoting primary: promote first extra if present, else no-op (need at least 1)
+      if (extraZones.length === 0) return;
+      const [newPrimary, ...rest] = extraZones;
+      setForm({ ...form, zone: newPrimary });
+      setExtraZones(rest);
+      return;
+    }
+    if (extraZones.includes(z)) {
+      setExtraZones(extraZones.filter((x) => x !== z));
+      return;
+    }
+    // adding new zone
+    if (selectedZones.length === 0) {
+      setForm({ ...form, zone: z });
+      return;
+    }
+    if (selectedZones.length >= 3) return; // cap at 3
+    setExtraZones([...extraZones, z]);
+  };
 
   // If they've already onboarded, show the landing page with a "go to feed" CTA
   useEffect(() => {
@@ -1331,7 +1356,13 @@ export default function Onboarding() {
 
   const next = () => setStep((s) => s + 1);
   const back = () => setStep((s) => Math.max(0, s - 1));
-  const submit = () => createUser.mutate({ data: form });
+  const submit = () => {
+    // pack extra zones as `zone:<name>` tokens into skills so matching picks them up
+    const zoneTokens = extraZones.map((z) => `zone:${z}`).join(", ");
+    const baseSkills = (form.skills ?? "").trim();
+    const mergedSkills = [baseSkills, zoneTokens].filter(Boolean).join(", ");
+    createUser.mutate({ data: { ...form, skills: mergedSkills } });
+  };
 
   const canStep0 =
     form.name.trim().length > 1 &&
@@ -1449,30 +1480,58 @@ export default function Onboarding() {
                   exit={{ opacity: 0, x: -12 }}
                   className="space-y-5"
                 >
-                  <h2 className="text-2xl font-bold">Pick your zone</h2>
+                  <h2 className="text-2xl font-bold">Pick your zones</h2>
                   <p className="text-sm text-muted-foreground">
-                    Where is your energy this week? You can switch any time.
+                    Choose 1–3 zones. First pick is your primary; extras widen
+                    your match pool. ({selectedZones.length}/3 selected)
                   </p>
                   <div className="grid gap-3 md:grid-cols-2">
                     {ZONES_LIST.map((z) => {
                       const meta = ZONE_META[z];
                       const Icon = meta.icon;
-                      const active = form.zone === z;
+                      const isPrimary = form.zone === z;
+                      const isExtra = extraZones.includes(z);
+                      const active = isPrimary || isExtra;
+                      const atCap = !active && selectedZones.length >= 3;
+                      const order = isPrimary
+                        ? 1
+                        : isExtra
+                          ? extraZones.indexOf(z) + 2
+                          : 0;
                       return (
                         <button
                           key={z}
-                          onClick={() => setForm({ ...form, zone: z })}
+                          onClick={() => toggleZone(z)}
+                          disabled={atCap}
                           className={`group relative overflow-hidden rounded-xl border p-4 text-left transition-all ${
                             active
                               ? "border-primary bg-gradient-to-br " + meta.tint + " shadow-[0_0_20px_-5px_hsl(var(--primary))]"
-                              : "border-border bg-muted/20 hover:border-primary/50"
+                              : atCap
+                                ? "border-border bg-muted/10 opacity-40 cursor-not-allowed"
+                                : "border-border bg-muted/20 hover:border-primary/50"
                           }`}
                         >
+                          {active && (
+                            <div
+                              className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-xs font-black"
+                              style={{
+                                backgroundColor: isPrimary ? SV_HOT : SV_CYAN,
+                                color: SV_INK,
+                              }}
+                            >
+                              {order}
+                            </div>
+                          )}
                           <div className="flex items-center gap-2">
                             <Icon
                               className={`h-4 w-4 ${active ? "text-primary" : "text-muted-foreground"}`}
                             />
                             <div className="font-bold">{meta.label}</div>
+                            {isPrimary && (
+                              <span className="ml-1 rounded border border-primary/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                                primary
+                              </span>
+                            )}
                           </div>
                           <div className="mt-1 text-xs text-muted-foreground">{meta.desc}</div>
                         </button>

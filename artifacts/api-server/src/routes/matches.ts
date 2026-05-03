@@ -32,7 +32,7 @@ router.get("/users/:userId/matches", async (req, res): Promise<void> => {
   const scored = others
     .map((o) => scoreMatch(me, o))
     .sort((a, b) => b.alignmentScore - a.alignmentScore)
-    .slice(0, 8)
+    .slice(0, 50)
     .map((m) => ({
       ...m,
       user: rowToUser(m.user),
