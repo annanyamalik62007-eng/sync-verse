@@ -85,8 +85,10 @@ router.get("/majors/hub", async (req, res): Promise<void> => {
   }
   const { major, college } = parsed.data;
   const MIN_PEERS = 18;
-  // Always return same-major peers from any campus, ordered with the user's
-  // own college first so they feel local but the feed is never empty.
+  // Major hub is a single-college experience. We surface peers FROM the user's
+  // own college only — but if their major isn't well-seeded locally, we fill
+  // with same-major demo peers from anywhere and present them AS IF they were
+  // at the user's college (campus-feeling list, populated demo content).
   const sameMajorAnyCollege: UserRow[] = await db
     .select()
     .from(usersTable)
@@ -101,13 +103,34 @@ router.get("/majors/hub", async (req, res): Promise<void> => {
       }
     }
   };
-  // 1. same major + same college first (most relevant)
+  // 1. same college + same major (real local cohort)
   if (college) {
     pushUnique(sameMajorAnyCollege.filter((p) => p.college === college));
   }
-  // 2. same major from any other college
-  pushUnique(sameMajorAnyCollege.filter((p) => !college || p.college !== college));
-  // 3. top up with same-college peers (other majors) so the local feed feels alive
+  // 2. demo same-major peers from any college, RELABELED to the user's college
+  //    so the hub feels like a populated single-school experience.
+  if (college) {
+    const remoteSameMajor = sameMajorAnyCollege
+      .filter((p) => p.college !== college)
+      .map((p) => ({ ...p, college }));
+    pushUnique(remoteSameMajor);
+  } else {
+    pushUnique(sameMajorAnyCollege);
+  }
+  // 2b. if we still don't have enough same-major peers, fabricate demo
+  //     same-major peers by pulling other-major users from any college and
+  //     relabeling them as if they were in the user's major + college. This
+  //     guarantees the hub always has visible "in your major" demo cohorts.
+  const MIN_SAME_MAJOR = 8;
+  if (peers.length < MIN_SAME_MAJOR) {
+    const filler = await db.select().from(usersTable).limit(40);
+    const relabeled = filler
+      .filter((p) => !peerIds.has(p.id))
+      .slice(0, MIN_SAME_MAJOR - peers.length)
+      .map((p) => ({ ...p, college: college ?? p.college, major }));
+    pushUnique(relabeled);
+  }
+  // 3. top up with other same-college peers (other majors) so the hub feels alive
   if (peers.length < MIN_PEERS && college) {
     const collegePeers = await db
       .select()
@@ -115,10 +138,11 @@ router.get("/majors/hub", async (req, res): Promise<void> => {
       .where(eq(usersTable.college, college));
     pushUnique(collegePeers);
   }
-  // 4. last-resort: any users from anywhere — guarantees a populated hub
+  // 4. last-resort demo fill: relabel any users to the user's college too
   if (peers.length < MIN_PEERS) {
     const anyone = await db.select().from(usersTable).limit(MIN_PEERS * 2);
-    pushUnique(anyone);
+    const relabeled = college ? anyone.map((p) => ({ ...p, college })) : anyone;
+    pushUnique(relabeled);
   }
 
   const zoneBreakdown = ZONES.map((z) => {

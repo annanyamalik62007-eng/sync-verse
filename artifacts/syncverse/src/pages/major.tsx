@@ -46,25 +46,12 @@ export default function Major() {
 
   const peers = (hub.data?.peers ?? []).filter((p) => p.id !== userId);
   const livingNow = peers.filter((p) => p.timeframe === "now");
-  const sameMajorSameCollege = peers.filter(
-    (p) => p.major === major && (!college || p.college === college),
-  );
-  const sameMajorOtherCollege = peers.filter(
-    (p) => p.major === major && college && p.college !== college,
-  );
+  // Backend already relabels every peer to the user's college, so the hub
+  // is purely a single-school experience. Bucket only by major.
+  const sameMajorPeers = peers.filter((p) => p.major === major);
   const otherMajorPeers = peers.filter((p) => p.major !== major);
-  const orderedPeers = [
-    ...sameMajorSameCollege,
-    ...sameMajorOtherCollege,
-    ...otherMajorPeers,
-  ];
-  const sameMajorTotal = sameMajorSameCollege.length + sameMajorOtherCollege.length;
-  const collegesRepresented = new Set(
-    [...sameMajorSameCollege, ...sameMajorOtherCollege]
-      .map((p) => p.college)
-      .filter(Boolean),
-  );
-  const peersSpanCampuses = collegesRepresented.size > 1;
+  const orderedPeers = [...sameMajorPeers, ...otherMajorPeers];
+  const sameMajorTotal = sameMajorPeers.length;
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8">
@@ -80,9 +67,7 @@ export default function Major() {
         </h1>
         <p className="mt-3 text-sm text-white/60">
           {college
-            ? peersSpanCampuses
-              ? `everyone studying ${major} across ${collegesRepresented.size} campuses — what they're up to right now`
-              : `everyone studying ${major} at ${college} — what they're up to right now`
+            ? `everyone studying ${major} at ${college} — what they're up to right now`
             : "loading..."}
         </p>
       </header>
@@ -93,11 +78,7 @@ export default function Major() {
           hue={SV_HOT}
           label="in your major"
           value={sameMajorTotal}
-          sub={
-            peersSpanCampuses
-              ? `across ${collegesRepresented.size} campuses`
-              : "peers on syncverse"
-          }
+          sub={`${major} peers at ${college ?? "your campus"}`}
         />
         <Stat
           icon={Activity}
@@ -109,13 +90,9 @@ export default function Major() {
         <Stat
           icon={Building2}
           hue={SV_ACID}
-          label={college ? `at ${college}` : "your campus"}
-          value={sameMajorSameCollege.length}
-          sub={
-            sameMajorOtherCollege.length > 0
-              ? `+ ${sameMajorOtherCollege.length} from other campuses`
-              : "same major peers"
-          }
+          label="active on campus"
+          value={peers.length}
+          sub={college ? `students at ${college}` : "students nearby"}
         />
       </div>
 
@@ -171,25 +148,11 @@ export default function Major() {
         <div className="space-y-3">
           {orderedPeers.map((p, idx) => {
             const hue = ZONE_HUE[p.zone] ?? SV_CYAN;
-            const isCrossCampus = !!college && p.college !== college;
             const isOtherMajor = p.major !== major;
-            const isFirstCrossCampus =
-              !isOtherMajor && idx === sameMajorSameCollege.length && sameMajorOtherCollege.length > 0;
             const isFirstOtherMajor =
-              isOtherMajor && idx === sameMajorSameCollege.length + sameMajorOtherCollege.length;
+              isOtherMajor && idx === sameMajorPeers.length;
             return (
               <div key={p.id}>
-                {isFirstCrossCampus && (
-                  <div className="mb-3 mt-2 flex items-center gap-3 px-1">
-                    <div className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
-                    <span
-                      className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/40"
-                    >
-                      also studying {major} across the network
-                    </span>
-                    <div className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
-                  </div>
-                )}
                 {isFirstOtherMajor && (
                   <div className="mb-3 mt-2 flex items-center gap-3 px-1">
                     <div className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
@@ -238,17 +201,6 @@ export default function Major() {
                       >
                         {p.zone}
                       </span>
-                      {isCrossCampus && (
-                        <span
-                          className="rounded-full border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
-                          style={{
-                            borderColor: "rgba(255,255,255,0.15)",
-                            color: "rgba(255,255,255,0.55)",
-                          }}
-                        >
-                          {p.college}
-                        </span>
-                      )}
                       {isOtherMajor && (
                         <span
                           className="rounded-full border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
