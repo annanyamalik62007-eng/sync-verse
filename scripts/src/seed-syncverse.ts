@@ -315,6 +315,78 @@ const seedUsers: SeedUser[] = [
     intent: "Researching causal inference in social data — looking for a research peer",
     timeframe: "soon", energyLevel: "exploring", zone: "research",
     lookingFor: "collab", skills: "stats, causal-inference, r, research", availability: "weekday-mornings" },
+
+  // ============ EXPANSION COHORTS (deliberate matches) ============
+
+  // Stanford — game dev cofounder pack
+  { name: "Sasha Volkov", college: "Stanford", major: "Computer Science",
+    intent: "Building a co-op indie game in Unity for game jam — need a 3D artist + sound designer",
+    timeframe: "now", energyLevel: "building", zone: "creative",
+    lookingFor: "cofounder", skills: "unity, c-sharp, gamedev, shaders", availability: "weekends" },
+  { name: "Riya Joshi", college: "Stanford", major: "Art Practice",
+    intent: "3D artist looking to join a small Unity game jam team this weekend",
+    timeframe: "now", energyLevel: "building", zone: "creative",
+    lookingFor: "cofounder", skills: "blender, 3d, unity, texturing", availability: "weekends" },
+  { name: "Felix Wong", college: "Stanford", major: "Music",
+    intent: "Sound designer + composer free this weekend — happy to score a game jam project",
+    timeframe: "now", energyLevel: "building", zone: "creative",
+    lookingFor: "cofounder", skills: "sound-design, music, ableton, unity", availability: "weekends" },
+
+  // MIT — quant trading study cohort
+  { name: "Avery Lin", college: "MIT", major: "Mathematics",
+    intent: "Jane Street final round prep — need someone to drill mental math + market making",
+    timeframe: "now", energyLevel: "building", zone: "career",
+    lookingFor: "study buddy", skills: "quant, probability, mental-math, trading", availability: "weekday-evenings" },
+  { name: "Daniyar Akhmetov", college: "MIT", major: "EECS",
+    intent: "Trading firm interviews next week — looking for a partner to drill estimation + games",
+    timeframe: "now", energyLevel: "building", zone: "career",
+    lookingFor: "study buddy", skills: "quant, probability, trading, python", availability: "weekday-evenings" },
+  { name: "Ren Takahashi", college: "MIT", major: "Mathematics",
+    intent: "Quant trading interview prep — open to forming a 3-person estimation drill group",
+    timeframe: "now", energyLevel: "building", zone: "career",
+    lookingFor: "study buddy", skills: "quant, probability, mental-math", availability: "weekday-evenings" },
+
+  // Berkeley — UX research / design ethnography crew
+  { name: "Imogen Ross", college: "Berkeley", major: "Cognitive Science",
+    intent: "Running user interviews for a thesis on social apps — looking for a research partner",
+    timeframe: "soon", energyLevel: "building", zone: "research",
+    lookingFor: "collab", skills: "ux-research, interviews, qualitative, figma", availability: "weekday-mornings" },
+  { name: "Pablo Mendez", college: "Berkeley", major: "Information Science",
+    intent: "Want to co-author a paper on Gen-Z social platforms — qualitative research lead",
+    timeframe: "soon", energyLevel: "building", zone: "research",
+    lookingFor: "collab", skills: "ux-research, qualitative, writing, interviews", availability: "weekday-mornings" },
+  { name: "Sloane Tanaka", college: "Berkeley", major: "Design",
+    intent: "Design researcher — open to a collaborator on a Gen-Z behavior study this semester",
+    timeframe: "soon", energyLevel: "building", zone: "research",
+    lookingFor: "collab", skills: "ux-research, design, qualitative, figma", availability: "weekday-mornings" },
+
+  // Harvard — climate hackathon team
+  { name: "Mateo Suarez", college: "Harvard", major: "Environmental Science",
+    intent: "Forming a team for the MIT Climate Hackathon — need ML + viz folks",
+    timeframe: "soon", energyLevel: "building", zone: "startup",
+    lookingFor: "cofounder", skills: "climate, data, python, viz", availability: "weekends" },
+  { name: "Hana Yoshida", college: "Harvard", major: "Computer Science",
+    intent: "Climate hackathon teammate hunt — I do ML + d3 viz, looking for domain folks",
+    timeframe: "soon", energyLevel: "building", zone: "startup",
+    lookingFor: "cofounder", skills: "ml, python, d3, viz, climate", availability: "weekends" },
+  { name: "Ines Larsen", college: "Harvard", major: "Earth & Planetary Sciences",
+    intent: "Joining the MIT Climate Hackathon — geo data background, looking for an eng partner",
+    timeframe: "soon", energyLevel: "building", zone: "startup",
+    lookingFor: "cofounder", skills: "climate, geo, python, gis", availability: "weekends" },
+
+  // Berkeley — late-night jazz combo (deliberate cohort, single campus so they actually match)
+  { name: "Otis Bell", college: "Berkeley", major: "Music",
+    intent: "Jazz pianist looking for a bassist + drummer for casual late-night sessions",
+    timeframe: "soon", energyLevel: "exploring", zone: "creative",
+    lookingFor: "collab", skills: "jazz, piano, improvisation", availability: "evenings" },
+  { name: "Niko Schroeder", college: "Berkeley", major: "Mechanical Engineering",
+    intent: "Upright bassist into bebop — looking for a small combo to jam with weekly",
+    timeframe: "soon", energyLevel: "exploring", zone: "creative",
+    lookingFor: "collab", skills: "jazz, bass, improvisation", availability: "evenings" },
+  { name: "Yael Stern", college: "Berkeley", major: "Music",
+    intent: "Drummer free Sunday nights — open to a new combo, happy with bebop or fusion",
+    timeframe: "soon", energyLevel: "exploring", zone: "creative",
+    lookingFor: "collab", skills: "jazz, drums, improvisation", availability: "evenings" },
 ];
 
 async function main() {
