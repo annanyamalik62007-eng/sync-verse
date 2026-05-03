@@ -46,13 +46,10 @@ function skillTokens(s: string | null): Set<string> {
   );
 }
 
-// Keyword → zone affinity. If a user's intent text strongly suggests a zone
-// (e.g. "socialise", "hangout") that differs from the zone they picked at
-// onboarding, we treat the inferred zone as their effective intent for
-// matching purposes. This prevents the classic failure: "I typed I want to
-// socialise but you matched me with founders".
-// Strong, unambiguous zone keywords only. Generic verbs ("meet", "build",
-// "review") are deliberately excluded because they leak between zones.
+// Strong, unambiguous zone keywords. Used as a SOFT bonus: when a user's
+// intent text mentions these words AND the other user has that zone in their
+// zone set (primary + extras), we add a small bonus. This combines with —
+// not replaces — the explicit zone picks.
 const ZONE_KEYWORDS: Record<string, string[]> = {
   social: [
     "socialise", "socialize", "socializing", "socialising", "hangout",
@@ -87,23 +84,28 @@ const ZONE_KEYWORDS: Record<string, string[]> = {
   ],
 };
 
-function inferZoneFromIntent(intent: string): string | null {
+// Parse zone keywords out of an intent text → set of inferred zones.
+function inferredZones(intent: string): Set<string> {
   const text = intent.toLowerCase();
-  const scores: Record<string, number> = {};
+  const out = new Set<string>();
   for (const [zone, keywords] of Object.entries(ZONE_KEYWORDS)) {
     for (const kw of keywords) {
-      if (text.includes(kw)) scores[zone] = (scores[zone] ?? 0) + 1;
+      if (text.includes(kw)) {
+        out.add(zone);
+        break;
+      }
     }
   }
-  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-  return sorted[0]?.[0] ?? null;
+  return out;
 }
 
-export function effectiveZone(u: UserRow): string {
-  // Inferred zone wins if the intent text strongly signals one — the picked
-  // zone is just a starting hint, the words in the intent are the real signal.
-  const inferred = inferZoneFromIntent(u.intent);
-  return inferred ?? u.zone;
+// A user's full zone set: primary picked zone + any extras embedded as
+// "zone:X" tokens in their intent (onboarding stores extras that way).
+export function userZones(u: UserRow): Set<string> {
+  const set = new Set<string>([u.zone]);
+  const matches = u.intent.toLowerCase().matchAll(/zone:([a-z]+)/g);
+  for (const m of matches) set.add(m[1]!);
+  return set;
 }
 
 export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
@@ -113,11 +115,27 @@ export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
 
   const sharedTokens = [...myTokens].filter((t) => theirTokens.has(t)).slice(0, 5);
 
-  // Use intent-inferred zone for matching: if someone wrote "I want to
-  // socialise" but picked the career zone, we still treat them as social.
-  const myZone = effectiveZone(me);
-  const theirZone = effectiveZone(other);
-  const sameZone = myZone === theirZone ? 1 : 0;
+  // Combine ALL zone signals: each user has a set of picked zones (primary +
+  // extras). We score on the size of the overlap, NOT on equality of one
+  // primary pick. So a user who picked "social + creative" matches well with
+  // a user who picked "creative + study" via the shared "creative".
+  const myZones = userZones(me);
+  const theirZones = userZones(other);
+  const zoneIntersection: string[] = [];
+  for (const z of myZones) if (theirZones.has(z)) zoneIntersection.push(z);
+  const zoneOverlap = zoneIntersection.length;
+  const sameZone = zoneOverlap > 0 ? 1 : 0;
+
+  // Soft intent-keyword bonus: if MY written intent suggests zone X (e.g.
+  // "want to socialise" → social) AND the OTHER user has X in their zone
+  // set, we add a bonus. This rewards intent text matching the other person's
+  // explicit picks WITHOUT overriding either user's chosen zones.
+  const myInferred = inferredZones(me.intent);
+  const theirInferred = inferredZones(other.intent);
+  const intentToZoneHits =
+    [...myInferred].filter((z) => theirZones.has(z)).length +
+    [...theirInferred].filter((z) => myZones.has(z)).length;
+
   const sameCollege = me.college === other.college ? 1 : 0;
   const sameMajor = me.major === other.major ? 1 : 0;
 
@@ -143,15 +161,22 @@ export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
       ? 0
       : Math.min(10 + (sharedSkills.length - 1) * 2, 18);
 
-  // Zone is the strongest signal of "what the user is here for" (socialise vs
-  // build vs study). We weight it heavily AND penalize cross-zone matches so
-  // someone looking to socialise primarily matches with other socialisers.
-  // A strong shared intent + lookingFor can still bridge zones when warranted.
-  const crossZonePenalty = sameZone ? 0 : 18;
+  // Score combines every dimension the user gave us:
+  //   - zone overlap (up to 3 picked zones each — count shared)
+  //   - lookingFor (who they want to connect with) — hard match
+  //   - intent text overlap (jaccard on intent words)
+  //   - intent-keyword cross-match (my words land in their zones, vice versa)
+  //   - skills, availability, timeframe, energy, college, major
+  // Mild penalty (not a hard cutoff) when zero zones overlap so cross-vibe
+  // matches need OTHER strong signals to bubble up.
+  const zoneScore = sameZone ? 28 + Math.min(zoneOverlap - 1, 2) * 8 : 0;
+  const intentZoneBonus = Math.min(intentToZoneHits, 3) * 6;
+  const crossZonePenalty = sameZone ? 0 : 10;
   const score =
     intentOverlap * 26 +
-    sameZone * 35 +
-    sameLookingFor * 14 +
+    zoneScore +
+    intentZoneBonus +
+    sameLookingFor * 18 +
     timeAlignment * 12 +
     energyAlignment * 8 +
     sameCollege * 8 +
@@ -164,7 +189,13 @@ export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
   if (sharedTokens.length > 0) {
     reasons.push(`Both mention "${sharedTokens.slice(0, 3).join(", ")}"`);
   }
-  if (sameZone) reasons.push(`Both in ${myZone} zone`);
+  if (sameZone) {
+    reasons.push(
+      zoneOverlap > 1
+        ? `Shared zones: ${zoneIntersection.slice(0, 2).join(" + ")}`
+        : `Both in ${zoneIntersection[0]} zone`,
+    );
+  }
   if (sharedSkills.length > 0) reasons.push(`Shared skills: ${sharedSkills.slice(0, 3).join(", ")}`);
   if (sameLookingFor) reasons.push(`Both want ${me.lookingFor}`);
   if (sameAvailability) reasons.push(`Both free ${me.availability}`);
@@ -174,7 +205,7 @@ export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
   if (sameMajor) reasons.push(`${me.major} alignment`);
 
   const sharedSignals: string[] = [];
-  if (sameZone) sharedSignals.push(myZone);
+  for (const z of zoneIntersection) sharedSignals.push(z);
   if (me.timeframe === other.timeframe) sharedSignals.push(me.timeframe);
   if (me.energyLevel === other.energyLevel) sharedSignals.push(me.energyLevel);
   if (sameLookingFor && me.lookingFor) sharedSignals.push(me.lookingFor);

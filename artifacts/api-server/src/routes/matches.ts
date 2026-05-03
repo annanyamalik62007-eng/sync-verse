@@ -5,7 +5,7 @@ import {
   GetMatchesForUserParams,
   GetMatchesForUserResponse,
 } from "@workspace/api-zod";
-import { rowToUser, scoreMatch, effectiveZone } from "../lib/matching";
+import { rowToUser, scoreMatch, userZones } from "../lib/matching";
 
 const router: IRouter = Router();
 
@@ -46,25 +46,25 @@ router.get("/users/:userId/matches", async (req, res): Promise<void> => {
     deck.push(...scored);
   };
 
-  // Effective zone may differ from picked zone if intent text strongly signals
-  // a different vibe (e.g. user picked "career" but typed "want to socialise").
-  const myZone = effectiveZone(me);
+  // Match using the union of every zone the user picked (primary + extras).
+  // Anyone who shares ANY zone counts as a zone-overlap match.
+  const myZones = userZones(me);
+  const overlaps = (o: (typeof allOthers)[number]): boolean => {
+    for (const z of userZones(o)) if (myZones.has(z)) return true;
+    return false;
+  };
 
-  // 1. same college + same effective zone — strongest real signal
-  pushScored(
-    allOthers.filter((o) => o.college === me.college && effectiveZone(o) === myZone),
-  );
+  // 1. same college + zone overlap — strongest real signal
+  pushScored(allOthers.filter((o) => o.college === me.college && overlaps(o)));
 
-  // 2. same effective zone, any college, RELABELED to user's college (demo fill)
+  // 2. zone overlap, any college, RELABELED to user's college (demo fill)
   const remoteSameZone = allOthers
-    .filter((o) => o.college !== me.college && effectiveZone(o) === myZone)
+    .filter((o) => o.college !== me.college && overlaps(o))
     .map((o) => ({ ...o, college: me.college }));
   pushScored(remoteSameZone);
 
-  // 3. same college, other zones — still local, just different vibe
-  pushScored(
-    allOthers.filter((o) => o.college === me.college && effectiveZone(o) !== myZone),
-  );
+  // 3. same college, no zone overlap — still local, different vibe
+  pushScored(allOthers.filter((o) => o.college === me.college && !overlaps(o)));
 
   const MIN_DECK = 12;
   // 4. last-resort demo fill: anyone, relabeled to user's college
