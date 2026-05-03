@@ -20,13 +20,16 @@ import type {
   CampusEvent,
   CollegeSnapshot,
   CommunityInsights,
+  CommunityZone,
   CreateEventInput,
+  CreatePostInput,
   CreateUserInput,
   FomoTrigger,
   GetCommunityInsightsParams,
   GetFomoTriggersParams,
   GetMajorHubParams,
   HealthStatus,
+  JoinInput,
   JoinSquadInput,
   ListEventsParams,
   ListLiveSignalsParams,
@@ -35,6 +38,8 @@ import type {
   Match,
   Message,
   MessageThread,
+  Post,
+  ReactionInput,
   RsvpInput,
   SendMessageInput,
   Signal,
@@ -1734,6 +1739,440 @@ export function useGetCollegeSnapshot<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List recent posts in a zone
+ */
+export const getListZonePostsUrl = (zone: CommunityZone) => {
+  return `/api/zones/${zone}/posts`;
+};
+
+export const listZonePosts = async (
+  zone: CommunityZone,
+  options?: RequestInit,
+): Promise<Post[]> => {
+  return customFetch<Post[]>(getListZonePostsUrl(zone), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListZonePostsQueryKey = (zone: CommunityZone) => {
+  return [`/api/zones/${zone}/posts`] as const;
+};
+
+export const getListZonePostsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listZonePosts>>,
+  TError = ErrorType<unknown>,
+>(
+  zone: CommunityZone,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listZonePosts>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListZonePostsQueryKey(zone);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listZonePosts>>> = ({
+    signal,
+  }) => listZonePosts(zone, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!zone,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listZonePosts>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListZonePostsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listZonePosts>>
+>;
+export type ListZonePostsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List recent posts in a zone
+ */
+
+export function useListZonePosts<
+  TData = Awaited<ReturnType<typeof listZonePosts>>,
+  TError = ErrorType<unknown>,
+>(
+  zone: CommunityZone,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listZonePosts>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListZonePostsQueryOptions(zone, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List posts authored by a user (Instagram-like profile feed)
+ */
+export const getListUserPostsUrl = (userId: string) => {
+  return `/api/users/${userId}/posts`;
+};
+
+export const listUserPosts = async (
+  userId: string,
+  options?: RequestInit,
+): Promise<Post[]> => {
+  return customFetch<Post[]>(getListUserPostsUrl(userId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListUserPostsQueryKey = (userId: string) => {
+  return [`/api/users/${userId}/posts`] as const;
+};
+
+export const getListUserPostsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listUserPosts>>,
+  TError = ErrorType<unknown>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listUserPosts>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListUserPostsQueryKey(userId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listUserPosts>>> = ({
+    signal,
+  }) => listUserPosts(userId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!userId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listUserPosts>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListUserPostsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listUserPosts>>
+>;
+export type ListUserPostsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List posts authored by a user (Instagram-like profile feed)
+ */
+
+export function useListUserPosts<
+  TData = Awaited<ReturnType<typeof listUserPosts>>,
+  TError = ErrorType<unknown>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listUserPosts>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListUserPostsQueryOptions(userId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a new post in a zone
+ */
+export const getCreatePostUrl = () => {
+  return `/api/posts`;
+};
+
+export const createPost = async (
+  createPostInput: CreatePostInput,
+  options?: RequestInit,
+): Promise<Post> => {
+  return customFetch<Post>(getCreatePostUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createPostInput),
+  });
+};
+
+export const getCreatePostMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPost>>,
+    TError,
+    { data: BodyType<CreatePostInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPost>>,
+  TError,
+  { data: BodyType<CreatePostInput> },
+  TContext
+> => {
+  const mutationKey = ["createPost"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPost>>,
+    { data: BodyType<CreatePostInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createPost(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePostMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createPost>>
+>;
+export type CreatePostMutationBody = BodyType<CreatePostInput>;
+export type CreatePostMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a new post in a zone
+ */
+export const useCreatePost = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPost>>,
+    TError,
+    { data: BodyType<CreatePostInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createPost>>,
+  TError,
+  { data: BodyType<CreatePostInput> },
+  TContext
+> => {
+  return useMutation(getCreatePostMutationOptions(options));
+};
+
+/**
+ * @summary Toggle a reaction (fire/heart/clap) on a post
+ */
+export const getTogglePostReactionUrl = (postId: string) => {
+  return `/api/posts/${postId}/react`;
+};
+
+export const togglePostReaction = async (
+  postId: string,
+  reactionInput: ReactionInput,
+  options?: RequestInit,
+): Promise<Post> => {
+  return customFetch<Post>(getTogglePostReactionUrl(postId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reactionInput),
+  });
+};
+
+export const getTogglePostReactionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof togglePostReaction>>,
+    TError,
+    { postId: string; data: BodyType<ReactionInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof togglePostReaction>>,
+  TError,
+  { postId: string; data: BodyType<ReactionInput> },
+  TContext
+> => {
+  const mutationKey = ["togglePostReaction"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof togglePostReaction>>,
+    { postId: string; data: BodyType<ReactionInput> }
+  > = (props) => {
+    const { postId, data } = props ?? {};
+
+    return togglePostReaction(postId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TogglePostReactionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof togglePostReaction>>
+>;
+export type TogglePostReactionMutationBody = BodyType<ReactionInput>;
+export type TogglePostReactionMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Toggle a reaction (fire/heart/clap) on a post
+ */
+export const useTogglePostReaction = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof togglePostReaction>>,
+    TError,
+    { postId: string; data: BodyType<ReactionInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof togglePostReaction>>,
+  TError,
+  { postId: string; data: BodyType<ReactionInput> },
+  TContext
+> => {
+  return useMutation(getTogglePostReactionMutationOptions(options));
+};
+
+/**
+ * @summary Toggle joining the activity in a post
+ */
+export const getTogglePostJoinUrl = (postId: string) => {
+  return `/api/posts/${postId}/join`;
+};
+
+export const togglePostJoin = async (
+  postId: string,
+  joinInput: JoinInput,
+  options?: RequestInit,
+): Promise<Post> => {
+  return customFetch<Post>(getTogglePostJoinUrl(postId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(joinInput),
+  });
+};
+
+export const getTogglePostJoinMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof togglePostJoin>>,
+    TError,
+    { postId: string; data: BodyType<JoinInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof togglePostJoin>>,
+  TError,
+  { postId: string; data: BodyType<JoinInput> },
+  TContext
+> => {
+  const mutationKey = ["togglePostJoin"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof togglePostJoin>>,
+    { postId: string; data: BodyType<JoinInput> }
+  > = (props) => {
+    const { postId, data } = props ?? {};
+
+    return togglePostJoin(postId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TogglePostJoinMutationResult = NonNullable<
+  Awaited<ReturnType<typeof togglePostJoin>>
+>;
+export type TogglePostJoinMutationBody = BodyType<JoinInput>;
+export type TogglePostJoinMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Toggle joining the activity in a post
+ */
+export const useTogglePostJoin = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof togglePostJoin>>,
+    TError,
+    { postId: string; data: BodyType<JoinInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof togglePostJoin>>,
+  TError,
+  { postId: string; data: BodyType<JoinInput> },
+  TContext
+> => {
+  return useMutation(getTogglePostJoinMutationOptions(options));
+};
 
 /**
  * @summary Live activity counts per community zone

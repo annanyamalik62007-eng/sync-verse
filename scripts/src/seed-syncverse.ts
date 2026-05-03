@@ -6,6 +6,9 @@ import {
   eventsTable,
   eventRsvpsTable,
   messagesTable,
+  postsTable,
+  postReactionsTable,
+  postJoinsTable,
   pool,
 } from "@workspace/db";
 
@@ -550,6 +553,120 @@ async function main() {
     }
   }
   console.log(`Seeded ${messageCount} messages across ${conversations.length} threads`);
+
+  // Community posts (Instagram-like): each user drops 1-3 posts in their zone.
+  type Zone7 = "career" | "startup" | "study" | "social" | "creative" | "fitness" | "research";
+  const POST_TEMPLATES: Record<Zone7, Array<{ body: (n: string, m: string) => string; tag: string }>> = {
+    startup: [
+      { body: (n) => `${n} here — sprinting on a v0 this weekend. who wants to pair-program Saturday morning?`, tag: "weekend sprint" },
+      { body: () => `Posted my deck draft in the squad chat. Looking for one more honest review before Monday.`, tag: "deck review" },
+      { body: () => `Found my cofounder through this thing literally yesterday. We start building tonight.`, tag: "found cofounder" },
+      { body: () => `Customer interviews are humbling. Day 3, talked to 9 students, learned what NOT to build.`, tag: "user research" },
+    ],
+    career: [
+      { body: (n) => `${n} — doing 3 mock interviews tonight, library room 204. drop in if you're prepping FAANG.`, tag: "mock interviews" },
+      { body: () => `Just finished a Karat round. AMA — happy to share what came up so others can prep.`, tag: "interview debrief" },
+      { body: () => `Resume review trade — I'll review yours if you tear mine apart. honest only.`, tag: "resume swap" },
+      { body: () => `Recruiter coffee chat tomorrow at 4 — anyone want to share questions to ask?`, tag: "recruiter prep" },
+    ],
+    study: [
+      { body: (n, m) => `${n} grinding ${m} problem sets at the library tonight. quiet table, west wing, come thru.`, tag: "study session" },
+      { body: () => `Forming a small study group for finals — 4 people max, serious only. dm to join.`, tag: "finals group" },
+      { body: () => `Made a shared notes doc for the midterm. comment below and I'll send the link.`, tag: "shared notes" },
+      { body: () => `Pulling an all-nighter at the 24h cafe. who's in? coffee on me for the first 3.`, tag: "all-nighter" },
+    ],
+    social: [
+      { body: (n) => `${n} hosting a tiny dinner Friday — 6 seats, anyone interesting welcome. comment +1.`, tag: "dinner party" },
+      { body: () => `Picnic in the quad Sunday afternoon. bringing snacks + speakers. join.`, tag: "quad picnic" },
+      { body: () => `Trying that new ramen place at 7 tonight. who wants to come?`, tag: "food run" },
+      { body: () => `Board games at the lounge tonight. catan + codenames + werewolf. all skill levels.`, tag: "game night" },
+    ],
+    creative: [
+      { body: (n) => `${n} — running a portrait shoot in the studio Saturday, free for 5 students. dm for slot.`, tag: "free shoot" },
+      { body: () => `Open mic tomorrow night. need 2 more slots filled. poetry, music, anything raw.`, tag: "open mic" },
+      { body: () => `Sketch session at the cafe — 90 min, bring a notebook. silence pact.`, tag: "sketch session" },
+      { body: () => `Working on an indie short film — looking for a sound designer. budget = pizza.`, tag: "film crew" },
+    ],
+    fitness: [
+      { body: (n) => `${n} — 6:30am run on the loop tomorrow, easy pace. who's in?`, tag: "morning run" },
+      { body: () => `Bouldering at the campus wall tonight 7-9. solo climbers welcome — auto-belays open.`, tag: "bouldering" },
+      { body: () => `Pickup soccer at the field Sunday 4pm. need 4 more for a full game.`, tag: "pickup soccer" },
+      { body: () => `Yoga in the quad sunrise tomorrow. mats available. dm me.`, tag: "sunrise yoga" },
+    ],
+    research: [
+      { body: (n, m) => `${n} from ${m} — looking for collaborators on an ML interpretability paper. dm me.`, tag: "paper collab" },
+      { body: () => `Reading group on the new mech-interp paper this Friday 5pm at Stata. drop in.`, tag: "reading group" },
+      { body: () => `RA position open in the lab — 10h/wk, paid. CS or stats background. dm.`, tag: "RA position" },
+      { body: () => `Submitting to NeurIPS in 3 weeks. would love a second pair of eyes on the draft.`, tag: "draft review" },
+    ],
+  };
+
+  let postCount = 0;
+  let reactionCount = 0;
+  let joinCount = 0;
+  const allPostRows: Array<{ id: string; authorId: string; zone: Zone7 }> = [];
+  const baseTime = Date.now();
+
+  for (const u of inserted) {
+    const z = u.zone as Zone7;
+    const templates = POST_TEMPLATES[z] ?? POST_TEMPLATES.social;
+    const seed = hashSeed(u.name);
+    const numPosts = (seed % 3) + 1; // 1-3 posts each
+    for (let i = 0; i < numPosts; i++) {
+      const tpl = templates[(seed + i) % templates.length]!;
+      const body = tpl.body(u.name.split(" ")[0]!, u.major);
+      const ageMin = ((seed + i * 17) % 5760) + 5; // 5min - 4 days ago
+      const createdAt = new Date(baseTime - ageMin * 60 * 1000);
+      const [post] = await db
+        .insert(postsTable)
+        .values({
+          authorId: u.id,
+          zone: z,
+          body,
+          activityTag: tpl.tag,
+          createdAt,
+        })
+        .returning();
+      if (post) {
+        allPostRows.push({ id: post.id, authorId: u.id, zone: z });
+        postCount++;
+      }
+    }
+  }
+
+  // Reactions + joins from same-zone same-college peers
+  for (const post of allPostRows) {
+    const author = inserted.find((u) => u.id === post.authorId)!;
+    const peers = inserted.filter(
+      (u) =>
+        u.id !== post.authorId &&
+        u.college === author.college &&
+        (u.zone === post.zone || hashSeed(u.id + post.id) % 4 === 0),
+    );
+    const seed = hashSeed(post.id);
+    const numReactions = (seed % 7) + 1; // 1-7 reactions
+    const numJoins = (seed % 4); // 0-3 joins
+    const shuffled = [...peers].sort(
+      (a, b) => (hashSeed(a.id + post.id) % 1000) - (hashSeed(b.id + post.id) % 1000),
+    );
+    const reactors = shuffled.slice(0, Math.min(numReactions, shuffled.length));
+    const joiners = shuffled.slice(0, Math.min(numJoins, shuffled.length));
+    if (reactors.length > 0) {
+      await db
+        .insert(postReactionsTable)
+        .values(reactors.map((r) => ({ postId: post.id, userId: r.id, kind: "fire" as const })))
+        .onConflictDoNothing();
+      reactionCount += reactors.length;
+    }
+    if (joiners.length > 0) {
+      await db
+        .insert(postJoinsTable)
+        .values(joiners.map((j) => ({ postId: post.id, userId: j.id })))
+        .onConflictDoNothing();
+      joinCount += joiners.length;
+    }
+  }
+  console.log(`Seeded ${postCount} posts with ${reactionCount} reactions and ${joinCount} joins`);
 
   console.log("Done.");
   await pool.end();

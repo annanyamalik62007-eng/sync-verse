@@ -14,6 +14,7 @@ import Messages from "@/pages/messages";
 import Chat from "@/pages/chat";
 import Events from "@/pages/events";
 import Major from "@/pages/major";
+import Profile from "@/pages/profile";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ function Router() {
         <Route path="/messages/:userId" component={Chat} />
         <Route path="/events" component={Events} />
         <Route path="/major" component={Major} />
+        <Route path="/user/:userId" component={Profile} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

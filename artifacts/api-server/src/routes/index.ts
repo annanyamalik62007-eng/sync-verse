@@ -7,6 +7,7 @@ import insightsRouter from "./insights";
 import messagesRouter from "./messages";
 import eventsRouter from "./events";
 import campusRouter from "./campus";
+import postsRouter from "./posts";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(insightsRouter);
 router.use(messagesRouter);
 router.use(eventsRouter);
 router.use(campusRouter);
+router.use(postsRouter);
 
 export default router;

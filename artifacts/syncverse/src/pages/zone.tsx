@@ -1,16 +1,41 @@
+import { useState } from "react";
 import { Link, useRoute } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useListUsers,
   useGetZoneActivity,
   useGetUser,
+  useListZonePosts,
+  useCreatePost,
+  useTogglePostReaction,
+  useTogglePostJoin,
   getGetUserQueryKey,
+  getListZonePostsQueryKey,
   type User,
+  type Post,
   type CommunityZone,
 } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
-import { Activity, ArrowLeft, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import {
+  Activity,
+  ArrowLeft,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Flame,
+  UserPlus,
+  Send,
+} from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
-import { SV_INK, SV_GRID, ZONE_HUE, SV_CYAN } from "@/lib/theme";
+import {
+  SV_INK,
+  SV_GRID,
+  SV_HOT,
+  SV_ACID,
+  SV_GREEN,
+  ZONE_HUE,
+  SV_CYAN,
+} from "@/lib/theme";
 
 const ZONE_LABELS: Record<CommunityZone, string> = {
   career: "Career",
@@ -37,7 +62,6 @@ export default function Zone() {
   const { data: me } = useGetUser(userId ?? "", {
     query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId ?? "") },
   });
-  const college = me?.college;
 
   if (!zone || !isZone(zone)) {
     return (
@@ -50,13 +74,17 @@ export default function Zone() {
     );
   }
 
-  return <ZoneInner zone={zone} college={college} />;
+  return <ZoneInner zone={zone} me={me} />;
 }
 
-function ZoneInner({ zone, college }: { zone: CommunityZone; college?: string }) {
+function ZoneInner({ zone, me }: { zone: CommunityZone; me?: User }) {
   const hue = ZONE_HUE[zone] ?? SV_CYAN;
+  const college = me?.college;
   const users = useListUsers({ zone, ...(college ? { college } : {}) });
   const activity = useGetZoneActivity();
+  const posts = useListZonePosts(zone, {
+    query: { queryKey: getListZonePostsQueryKey(zone) },
+  });
   const z = activity.data?.find((a) => a.zone === zone);
   const TrendI = z ? trendIcon[z.trendDirection] : Minus;
 
@@ -103,6 +131,35 @@ function ZoneInner({ zone, college }: { zone: CommunityZone; college?: string })
         )}
       </section>
 
+      {me && <PostComposer zone={zone} hue={hue} me={me} />}
+
+      <section>
+        <h2
+          className="mb-4 font-mono text-xs font-black uppercase tracking-[0.3em]"
+          style={{ color: hue }}
+        >
+          / what people are doing
+        </h2>
+        {posts.isLoading && (
+          <p className="font-mono text-xs uppercase tracking-widest text-white/50">
+            // loading...
+          </p>
+        )}
+        {posts.data?.length === 0 && (
+          <div
+            className="border-2 border-dashed p-8 text-center font-mono text-xs uppercase tracking-widest text-white/50"
+            style={{ borderColor: SV_GRID }}
+          >
+            // no posts yet. drop the first signal.
+          </div>
+        )}
+        <div className="space-y-3">
+          {posts.data?.map((p) => (
+            <PostCard key={p.id} post={p} hue={hue} viewerId={me?.id ?? ""} zone={zone} />
+          ))}
+        </div>
+      </section>
+
       <section>
         <h2
           className="mb-4 font-mono text-xs font-black uppercase tracking-[0.3em]"
@@ -125,9 +182,10 @@ function ZoneInner({ zone, college }: { zone: CommunityZone; college?: string })
         )}
         <div className="grid gap-3 md:grid-cols-2">
           {users.data?.map((u: User) => (
-            <div
+            <Link
               key={u.id}
-              className="flex items-start gap-3 border-2 p-4"
+              href={`/user/${u.id}`}
+              className="flex items-start gap-3 border-2 p-4 transition-all hover:translate-x-[-2px] hover:translate-y-[-2px]"
               style={{
                 borderColor: SV_GRID,
                 backgroundColor: SV_INK,
@@ -150,11 +208,231 @@ function ZoneInner({ zone, college }: { zone: CommunityZone; college?: string })
                 </p>
                 <p className="mt-1.5 text-sm italic text-white/80">"{u.intent}"</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
     </div>
+  );
+}
+
+function PostComposer({
+  zone,
+  hue,
+  me,
+}: {
+  zone: CommunityZone;
+  hue: string;
+  me: User;
+}) {
+  const [body, setBody] = useState("");
+  const [tag, setTag] = useState("");
+  const qc = useQueryClient();
+  const create = useCreatePost({
+    mutation: {
+      onSuccess: () => {
+        setBody("");
+        setTag("");
+        qc.invalidateQueries({ queryKey: getListZonePostsQueryKey(zone) });
+      },
+    },
+  });
+
+  const submit = () => {
+    const text = body.trim();
+    if (!text || create.isPending) return;
+    create.mutate({
+      data: {
+        authorId: me.id,
+        zone,
+        body: text,
+        ...(tag.trim() ? { activityTag: tag.trim() } : {}),
+      },
+    });
+  };
+
+  return (
+    <section
+      className="border-2 p-4 md:p-5"
+      style={{
+        borderColor: hue,
+        backgroundColor: SV_INK,
+        boxShadow: `5px 5px 0 0 ${SV_GRID}`,
+      }}
+    >
+      <div className="flex items-start gap-3">
+        <UserAvatar user={me} size="md" square />
+        <div className="flex-1">
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder={`What are you doing in ${ZONE_LABELS[zone].toLowerCase()} right now?`}
+            rows={3}
+            className="w-full resize-none border-2 bg-transparent p-3 font-mono text-sm text-white placeholder:text-white/40 focus:outline-none"
+            style={{ borderColor: SV_GRID }}
+          />
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <input
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
+              placeholder="activity tag (optional)"
+              className="w-48 border-2 bg-transparent px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-white placeholder:text-white/30 focus:outline-none"
+              style={{ borderColor: SV_GRID, color: SV_ACID }}
+            />
+            <span className="font-mono text-[10px] uppercase tracking-widest text-white/40">
+              · {body.length}/500
+            </span>
+            <button
+              type="button"
+              onClick={submit}
+              disabled={!body.trim() || create.isPending}
+              className="ml-auto inline-flex items-center gap-1.5 border-2 px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-[0.3em] disabled:opacity-40"
+              style={{
+                borderColor: hue,
+                backgroundColor: hue,
+                color: SV_INK,
+                boxShadow: `3px 3px 0 0 ${SV_GRID}`,
+              }}
+            >
+              <Send className="h-3 w-3" />
+              {create.isPending ? "posting..." : "post"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PostCard({
+  post,
+  hue,
+  viewerId,
+  zone,
+}: {
+  post: Post;
+  hue: string;
+  viewerId: string;
+  zone: CommunityZone;
+}) {
+  const qc = useQueryClient();
+  const reacted = !!viewerId && post.reactorIds.includes(viewerId);
+  const joined = !!viewerId && post.joinerIds.includes(viewerId);
+
+  const invalidate = () =>
+    qc.invalidateQueries({ queryKey: getListZonePostsQueryKey(zone) });
+
+  const react = useTogglePostReaction({
+    mutation: { onSuccess: invalidate },
+  });
+  const join = useTogglePostJoin({ mutation: { onSuccess: invalidate } });
+
+  const onReact = () => {
+    if (!viewerId || react.isPending) return;
+    react.mutate({ postId: post.id, data: { userId: viewerId, kind: "fire" } });
+  };
+  const onJoin = () => {
+    if (!viewerId || join.isPending) return;
+    join.mutate({ postId: post.id, data: { userId: viewerId } });
+  };
+
+  const minutes = Math.max(
+    1,
+    Math.round((Date.now() - new Date(post.createdAt).getTime()) / 60000),
+  );
+  const ago =
+    minutes < 60 ? `${minutes}m` : minutes < 1440 ? `${Math.round(minutes / 60)}h` : `${Math.round(minutes / 1440)}d`;
+
+  return (
+    <article
+      className="border-2 p-4 md:p-5"
+      style={{
+        borderColor: SV_GRID,
+        backgroundColor: SV_INK,
+        boxShadow: `4px 4px 0 0 ${SV_GRID}`,
+      }}
+    >
+      <div className="flex items-start gap-3">
+        <Link href={`/user/${post.author.id}`}>
+          <UserAvatar user={post.author} size="md" square />
+        </Link>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/user/${post.author.id}`}
+              className="font-black hover:underline"
+            >
+              {post.author.name}
+            </Link>
+            <span
+              className="font-mono text-[9px] uppercase tracking-[0.25em]"
+              style={{ color: hue }}
+            >
+              {post.author.major}
+            </span>
+            <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/40">
+              · {ago} ago
+            </span>
+            {post.activityTag && (
+              <span
+                className="ml-auto border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                style={{ borderColor: SV_ACID, color: SV_ACID }}
+              >
+                {post.activityTag}
+              </span>
+            )}
+          </div>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/90">
+            {post.body}
+          </p>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={onReact}
+              disabled={!viewerId || react.isPending}
+              className="inline-flex items-center gap-1.5 border-2 px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-[0.25em] transition-all disabled:opacity-40"
+              style={{
+                borderColor: SV_HOT,
+                backgroundColor: reacted ? SV_HOT : "transparent",
+                color: reacted ? SV_INK : SV_HOT,
+              }}
+            >
+              <Flame className="h-3 w-3" />
+              {post.reactionCount} fire
+            </button>
+            <button
+              type="button"
+              onClick={onJoin}
+              disabled={!viewerId || join.isPending}
+              className="inline-flex items-center gap-1.5 border-2 px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-[0.25em] transition-all disabled:opacity-40"
+              style={{
+                borderColor: SV_GREEN,
+                backgroundColor: joined ? SV_GREEN : "transparent",
+                color: joined ? SV_INK : SV_GREEN,
+              }}
+            >
+              <UserPlus className="h-3 w-3" />
+              {joined ? "joined" : "join"} · {post.joinCount}
+            </button>
+            {post.joiners.length > 0 && (
+              <div className="ml-1 flex -space-x-2">
+                {post.joiners.slice(0, 5).map((j) => (
+                  <Link key={j.id} href={`/user/${j.id}`}>
+                    <UserAvatar
+                      user={j}
+                      size="xs"
+                      ring={SV_INK}
+                      className="ring-2"
+                    />
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
   );
 }
 

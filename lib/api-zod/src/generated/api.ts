@@ -1037,6 +1037,474 @@ export const GetCollegeSnapshotResponse = zod.object({
 });
 
 /**
+ * @summary List recent posts in a zone
+ */
+export const ListZonePostsParams = zod.object({
+  zone: zod.enum([
+    "career",
+    "startup",
+    "study",
+    "social",
+    "creative",
+    "fitness",
+    "research",
+  ]),
+});
+
+export const ListZonePostsResponseItem = zod.object({
+  id: zod.string(),
+  author: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    college: zod.string(),
+    major: zod.string(),
+    intent: zod.string(),
+    timeframe: zod.enum(["now", "soon", "later"]),
+    energyLevel: zod.enum(["browsing", "exploring", "building"]),
+    zone: zod.enum([
+      "career",
+      "startup",
+      "study",
+      "social",
+      "creative",
+      "fitness",
+      "research",
+    ]),
+    avatarColor: zod.string(),
+    avatarUrl: zod.string().nullish().describe("Profile photo URL (real face)"),
+    lookingFor: zod
+      .string()
+      .nullish()
+      .describe(
+        "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+      ),
+    skills: zod
+      .string()
+      .nullish()
+      .describe("Comma-separated skill\/interest tags"),
+    availability: zod
+      .string()
+      .nullish()
+      .describe(
+        "When they are free (mornings, evenings, weekends, late-nights)",
+      ),
+    createdAt: zod.string(),
+  }),
+  zone: zod.enum([
+    "career",
+    "startup",
+    "study",
+    "social",
+    "creative",
+    "fitness",
+    "research",
+  ]),
+  body: zod.string(),
+  activityTag: zod.string().nullish(),
+  imageUrl: zod.string().nullish(),
+  reactionCount: zod.number(),
+  joinCount: zod.number(),
+  reactorIds: zod.array(zod.string()),
+  joinerIds: zod.array(zod.string()),
+  joiners: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      college: zod.string(),
+      major: zod.string(),
+      intent: zod.string(),
+      timeframe: zod.enum(["now", "soon", "later"]),
+      energyLevel: zod.enum(["browsing", "exploring", "building"]),
+      zone: zod.enum([
+        "career",
+        "startup",
+        "study",
+        "social",
+        "creative",
+        "fitness",
+        "research",
+      ]),
+      avatarColor: zod.string(),
+      avatarUrl: zod
+        .string()
+        .nullish()
+        .describe("Profile photo URL (real face)"),
+      lookingFor: zod
+        .string()
+        .nullish()
+        .describe(
+          "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+        ),
+      skills: zod
+        .string()
+        .nullish()
+        .describe("Comma-separated skill\/interest tags"),
+      availability: zod
+        .string()
+        .nullish()
+        .describe(
+          "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      createdAt: zod.string(),
+    }),
+  ),
+  createdAt: zod.string(),
+});
+export const ListZonePostsResponse = zod.array(ListZonePostsResponseItem);
+
+/**
+ * @summary List posts authored by a user (Instagram-like profile feed)
+ */
+export const ListUserPostsParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const ListUserPostsResponseItem = zod.object({
+  id: zod.string(),
+  author: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    college: zod.string(),
+    major: zod.string(),
+    intent: zod.string(),
+    timeframe: zod.enum(["now", "soon", "later"]),
+    energyLevel: zod.enum(["browsing", "exploring", "building"]),
+    zone: zod.enum([
+      "career",
+      "startup",
+      "study",
+      "social",
+      "creative",
+      "fitness",
+      "research",
+    ]),
+    avatarColor: zod.string(),
+    avatarUrl: zod.string().nullish().describe("Profile photo URL (real face)"),
+    lookingFor: zod
+      .string()
+      .nullish()
+      .describe(
+        "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+      ),
+    skills: zod
+      .string()
+      .nullish()
+      .describe("Comma-separated skill\/interest tags"),
+    availability: zod
+      .string()
+      .nullish()
+      .describe(
+        "When they are free (mornings, evenings, weekends, late-nights)",
+      ),
+    createdAt: zod.string(),
+  }),
+  zone: zod.enum([
+    "career",
+    "startup",
+    "study",
+    "social",
+    "creative",
+    "fitness",
+    "research",
+  ]),
+  body: zod.string(),
+  activityTag: zod.string().nullish(),
+  imageUrl: zod.string().nullish(),
+  reactionCount: zod.number(),
+  joinCount: zod.number(),
+  reactorIds: zod.array(zod.string()),
+  joinerIds: zod.array(zod.string()),
+  joiners: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      college: zod.string(),
+      major: zod.string(),
+      intent: zod.string(),
+      timeframe: zod.enum(["now", "soon", "later"]),
+      energyLevel: zod.enum(["browsing", "exploring", "building"]),
+      zone: zod.enum([
+        "career",
+        "startup",
+        "study",
+        "social",
+        "creative",
+        "fitness",
+        "research",
+      ]),
+      avatarColor: zod.string(),
+      avatarUrl: zod
+        .string()
+        .nullish()
+        .describe("Profile photo URL (real face)"),
+      lookingFor: zod
+        .string()
+        .nullish()
+        .describe(
+          "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+        ),
+      skills: zod
+        .string()
+        .nullish()
+        .describe("Comma-separated skill\/interest tags"),
+      availability: zod
+        .string()
+        .nullish()
+        .describe(
+          "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      createdAt: zod.string(),
+    }),
+  ),
+  createdAt: zod.string(),
+});
+export const ListUserPostsResponse = zod.array(ListUserPostsResponseItem);
+
+/**
+ * @summary Create a new post in a zone
+ */
+export const createPostBodyBodyMax = 500;
+
+export const CreatePostBody = zod.object({
+  authorId: zod.string(),
+  zone: zod.enum([
+    "career",
+    "startup",
+    "study",
+    "social",
+    "creative",
+    "fitness",
+    "research",
+  ]),
+  body: zod.string().min(1).max(createPostBodyBodyMax),
+  activityTag: zod.string().nullish(),
+  imageUrl: zod.string().nullish(),
+});
+
+/**
+ * @summary Toggle a reaction (fire/heart/clap) on a post
+ */
+export const TogglePostReactionParams = zod.object({
+  postId: zod.coerce.string(),
+});
+
+export const TogglePostReactionBody = zod.object({
+  userId: zod.string(),
+  kind: zod.enum(["fire", "heart", "clap"]),
+});
+
+export const TogglePostReactionResponse = zod.object({
+  id: zod.string(),
+  author: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    college: zod.string(),
+    major: zod.string(),
+    intent: zod.string(),
+    timeframe: zod.enum(["now", "soon", "later"]),
+    energyLevel: zod.enum(["browsing", "exploring", "building"]),
+    zone: zod.enum([
+      "career",
+      "startup",
+      "study",
+      "social",
+      "creative",
+      "fitness",
+      "research",
+    ]),
+    avatarColor: zod.string(),
+    avatarUrl: zod.string().nullish().describe("Profile photo URL (real face)"),
+    lookingFor: zod
+      .string()
+      .nullish()
+      .describe(
+        "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+      ),
+    skills: zod
+      .string()
+      .nullish()
+      .describe("Comma-separated skill\/interest tags"),
+    availability: zod
+      .string()
+      .nullish()
+      .describe(
+        "When they are free (mornings, evenings, weekends, late-nights)",
+      ),
+    createdAt: zod.string(),
+  }),
+  zone: zod.enum([
+    "career",
+    "startup",
+    "study",
+    "social",
+    "creative",
+    "fitness",
+    "research",
+  ]),
+  body: zod.string(),
+  activityTag: zod.string().nullish(),
+  imageUrl: zod.string().nullish(),
+  reactionCount: zod.number(),
+  joinCount: zod.number(),
+  reactorIds: zod.array(zod.string()),
+  joinerIds: zod.array(zod.string()),
+  joiners: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      college: zod.string(),
+      major: zod.string(),
+      intent: zod.string(),
+      timeframe: zod.enum(["now", "soon", "later"]),
+      energyLevel: zod.enum(["browsing", "exploring", "building"]),
+      zone: zod.enum([
+        "career",
+        "startup",
+        "study",
+        "social",
+        "creative",
+        "fitness",
+        "research",
+      ]),
+      avatarColor: zod.string(),
+      avatarUrl: zod
+        .string()
+        .nullish()
+        .describe("Profile photo URL (real face)"),
+      lookingFor: zod
+        .string()
+        .nullish()
+        .describe(
+          "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+        ),
+      skills: zod
+        .string()
+        .nullish()
+        .describe("Comma-separated skill\/interest tags"),
+      availability: zod
+        .string()
+        .nullish()
+        .describe(
+          "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      createdAt: zod.string(),
+    }),
+  ),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Toggle joining the activity in a post
+ */
+export const TogglePostJoinParams = zod.object({
+  postId: zod.coerce.string(),
+});
+
+export const TogglePostJoinBody = zod.object({
+  userId: zod.string(),
+});
+
+export const TogglePostJoinResponse = zod.object({
+  id: zod.string(),
+  author: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    college: zod.string(),
+    major: zod.string(),
+    intent: zod.string(),
+    timeframe: zod.enum(["now", "soon", "later"]),
+    energyLevel: zod.enum(["browsing", "exploring", "building"]),
+    zone: zod.enum([
+      "career",
+      "startup",
+      "study",
+      "social",
+      "creative",
+      "fitness",
+      "research",
+    ]),
+    avatarColor: zod.string(),
+    avatarUrl: zod.string().nullish().describe("Profile photo URL (real face)"),
+    lookingFor: zod
+      .string()
+      .nullish()
+      .describe(
+        "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+      ),
+    skills: zod
+      .string()
+      .nullish()
+      .describe("Comma-separated skill\/interest tags"),
+    availability: zod
+      .string()
+      .nullish()
+      .describe(
+        "When they are free (mornings, evenings, weekends, late-nights)",
+      ),
+    createdAt: zod.string(),
+  }),
+  zone: zod.enum([
+    "career",
+    "startup",
+    "study",
+    "social",
+    "creative",
+    "fitness",
+    "research",
+  ]),
+  body: zod.string(),
+  activityTag: zod.string().nullish(),
+  imageUrl: zod.string().nullish(),
+  reactionCount: zod.number(),
+  joinCount: zod.number(),
+  reactorIds: zod.array(zod.string()),
+  joinerIds: zod.array(zod.string()),
+  joiners: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      college: zod.string(),
+      major: zod.string(),
+      intent: zod.string(),
+      timeframe: zod.enum(["now", "soon", "later"]),
+      energyLevel: zod.enum(["browsing", "exploring", "building"]),
+      zone: zod.enum([
+        "career",
+        "startup",
+        "study",
+        "social",
+        "creative",
+        "fitness",
+        "research",
+      ]),
+      avatarColor: zod.string(),
+      avatarUrl: zod
+        .string()
+        .nullish()
+        .describe("Profile photo URL (real face)"),
+      lookingFor: zod
+        .string()
+        .nullish()
+        .describe(
+          "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+        ),
+      skills: zod
+        .string()
+        .nullish()
+        .describe("Comma-separated skill\/interest tags"),
+      availability: zod
+        .string()
+        .nullish()
+        .describe(
+          "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      createdAt: zod.string(),
+    }),
+  ),
+  createdAt: zod.string(),
+});
+
+/**
  * @summary Live activity counts per community zone
  */
 export const GetZoneActivityResponseItem = zod.object({

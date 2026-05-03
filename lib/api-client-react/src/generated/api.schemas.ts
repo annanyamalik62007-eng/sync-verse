@@ -238,6 +238,51 @@ export interface CollegeSnapshot {
   topMajors: MajorCount[];
 }
 
+export interface Post {
+  id: string;
+  author: User;
+  zone: CommunityZone;
+  body: string;
+  activityTag?: string | null;
+  imageUrl?: string | null;
+  reactionCount: number;
+  joinCount: number;
+  reactorIds: string[];
+  joinerIds: string[];
+  joiners: User[];
+  createdAt: string;
+}
+
+export interface CreatePostInput {
+  authorId: string;
+  zone: CommunityZone;
+  /**
+   * @minLength 1
+   * @maxLength 500
+   */
+  body: string;
+  activityTag?: string | null;
+  imageUrl?: string | null;
+}
+
+export type ReactionInputKind =
+  (typeof ReactionInputKind)[keyof typeof ReactionInputKind];
+
+export const ReactionInputKind = {
+  fire: "fire",
+  heart: "heart",
+  clap: "clap",
+} as const;
+
+export interface ReactionInput {
+  userId: string;
+  kind: ReactionInputKind;
+}
+
+export interface JoinInput {
+  userId: string;
+}
+
 export type ListUsersParams = {
   zone?: CommunityZone;
   college?: string;

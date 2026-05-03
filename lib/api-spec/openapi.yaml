@@ -26,6 +26,8 @@ tags:
     description: Per-college events and RSVPs
   - name: campus
     description: College and major hubs
+  - name: posts
+    description: Community posts within zones with reactions and joins
 paths:
   /healthz:
     get:
@@ -423,6 +425,117 @@ paths:
               schema:
                 $ref: "#/components/schemas/CollegeSnapshot"
 
+  /zones/{zone}/posts:
+    get:
+      operationId: listZonePosts
+      tags: [posts]
+      summary: List recent posts in a zone
+      parameters:
+        - in: path
+          name: zone
+          required: true
+          schema:
+            $ref: "#/components/schemas/CommunityZone"
+      responses:
+        "200":
+          description: Posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+
+  /users/{userId}/posts:
+    get:
+      operationId: listUserPosts
+      tags: [posts]
+      summary: List posts authored by a user (Instagram-like profile feed)
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+
+  /posts:
+    post:
+      operationId: createPost
+      tags: [posts]
+      summary: Create a new post in a zone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePostInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /posts/{postId}/react:
+    post:
+      operationId: togglePostReaction
+      tags: [posts]
+      summary: Toggle a reaction (fire/heart/clap) on a post
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReactionInput"
+      responses:
+        "200":
+          description: Updated post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /posts/{postId}/join:
+    post:
+      operationId: togglePostJoin
+      tags: [posts]
+      summary: Toggle joining the activity in a post
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinInput"
+      responses:
+        "200":
+          description: Updated post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
   /insights/zones:
     get:
       operationId: getZoneActivity
@@ -803,3 +916,77 @@ components:
         count:
           type: integer
       required: [major, count]
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+        author:
+          $ref: "#/components/schemas/User"
+        zone:
+          $ref: "#/components/schemas/CommunityZone"
+        body:
+          type: string
+        activityTag:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+        reactionCount:
+          type: integer
+        joinCount:
+          type: integer
+        reactorIds:
+          type: array
+          items:
+            type: string
+        joinerIds:
+          type: array
+          items:
+            type: string
+        joiners:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        createdAt:
+          type: string
+      required:
+        [id, author, zone, body, reactionCount, joinCount, reactorIds, joinerIds, joiners, createdAt]
+
+    CreatePostInput:
+      type: object
+      properties:
+        authorId:
+          type: string
+        zone:
+          $ref: "#/components/schemas/CommunityZone"
+        body:
+          type: string
+          minLength: 1
+          maxLength: 500
+        activityTag:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+      required: [authorId, zone, body]
+
+    ReactionInput:
+      type: object
+      properties:
+        userId:
+          type: string
+        kind:
+          type: string
+          enum: [fire, heart, clap]
+      required: [userId, kind]
+
+    JoinInput:
+      type: object
+      properties:
+        userId:
+          type: string
+      required: [userId]
