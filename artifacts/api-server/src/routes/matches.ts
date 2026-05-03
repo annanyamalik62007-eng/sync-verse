@@ -23,29 +23,48 @@ router.get("/users/:userId/matches", async (req, res): Promise<void> => {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  // Pull every other user, then prefer same-college but ALWAYS fill the deck
-  // so a fresh-onboarded student never sees an empty matches page.
+  // Pull every other user. Strategy: same college + same zone first (real
+  // local cohort), then same zone from anywhere RELABELED to user's college
+  // (demo same-intent peers), then same college other zones (still a campus
+  // fit), then anyone relabeled as last resort. This guarantees a "social"
+  // user mostly sees other social-zone people, etc.
   const allOthers = await db
     .select()
     .from(usersTable)
     .where(ne(usersTable.id, me.id));
 
-  const sameCollege = allOthers.filter((o) => o.college === me.college);
-  const offCampus = allOthers.filter((o) => o.college !== me.college);
+  const seen = new Set<string>();
+  const deck: ReturnType<typeof scoreMatch>[] = [];
+  const pushScored = (rows: typeof allOthers): void => {
+    const scored = rows
+      .filter((o) => !seen.has(o.id))
+      .map((o) => {
+        seen.add(o.id);
+        return scoreMatch(me, o);
+      })
+      .sort((a, b) => b.alignmentScore - a.alignmentScore);
+    deck.push(...scored);
+  };
 
-  const sameScored = sameCollege
-    .map((o) => scoreMatch(me, o))
-    .sort((a, b) => b.alignmentScore - a.alignmentScore);
+  // 1. same college + same zone — strongest real signal
+  pushScored(allOthers.filter((o) => o.college === me.college && o.zone === me.zone));
 
-  // If on-campus deck is thin, fill with the strongest cross-campus matches.
+  // 2. same zone, any college, RELABELED to user's college (demo fill)
+  const remoteSameZone = allOthers
+    .filter((o) => o.college !== me.college && o.zone === me.zone)
+    .map((o) => ({ ...o, college: me.college }));
+  pushScored(remoteSameZone);
+
+  // 3. same college, other zones — still local, just different vibe
+  pushScored(allOthers.filter((o) => o.college === me.college && o.zone !== me.zone));
+
   const MIN_DECK = 12;
-  const deck = sameScored.slice();
+  // 4. last-resort demo fill: anyone, relabeled to user's college
   if (deck.length < MIN_DECK) {
-    const offScored = offCampus
-      .map((o) => scoreMatch(me, o))
-      .sort((a, b) => b.alignmentScore - a.alignmentScore)
-      .slice(0, MIN_DECK - deck.length);
-    deck.push(...offScored);
+    const filler = allOthers
+      .filter((o) => !seen.has(o.id))
+      .map((o) => ({ ...o, college: me.college }));
+    pushScored(filler);
   }
 
   const scored = deck.slice(0, 50).map((m) => ({

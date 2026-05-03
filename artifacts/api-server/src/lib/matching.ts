@@ -79,16 +79,22 @@ export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
       ? 0
       : Math.min(10 + (sharedSkills.length - 1) * 2, 18);
 
+  // Zone is the strongest signal of "what the user is here for" (socialise vs
+  // build vs study). We weight it heavily AND penalize cross-zone matches so
+  // someone looking to socialise primarily matches with other socialisers.
+  // A strong shared intent + lookingFor can still bridge zones when warranted.
+  const crossZonePenalty = sameZone ? 0 : 18;
   const score =
-    intentOverlap * 30 +
-    sameZone * 22 +
+    intentOverlap * 26 +
+    sameZone * 35 +
+    sameLookingFor * 14 +
     timeAlignment * 12 +
     energyAlignment * 8 +
     sameCollege * 8 +
     sameMajor * 4 +
-    sameLookingFor * 8 +
     sharedSkillBonus +
-    sameAvailability * 5;
+    sameAvailability * 5 -
+    crossZonePenalty;
 
   const reasons: string[] = [];
   if (sharedTokens.length > 0) {
