@@ -1726,3 +1726,40 @@ export const GetZoneActivityResponseItem = zod.object({
   trendDirection: zod.enum(["up", "steady", "down"]),
 });
 export const GetZoneActivityResponse = zod.array(GetZoneActivityResponseItem);
+
+/**
+ * @summary Generate a single AI icebreaker between two matched users
+ */
+export const GenerateIcebreakerBody = zod.object({
+  meId: zod.string(),
+  otherId: zod.string(),
+});
+
+export const GenerateIcebreakerResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Generate 3 icebreaker chip suggestions for a chat
+ */
+export const GenerateIcebreakerSuggestionsBody = zod.object({
+  meId: zod.string(),
+  otherId: zod.string(),
+});
+
+export const GenerateIcebreakerSuggestionsResponse = zod.object({
+  suggestions: zod.array(zod.string()),
+});
+
+/**
+ * @summary Generate a personalized squad invitation message for a recipient
+ */
+export const GenerateSquadPitchBody = zod.object({
+  fromUserId: zod.string(),
+  toUserId: zod.string(),
+  squadIntent: zod.string(),
+});
+
+export const GenerateSquadPitchResponse = zod.object({
+  message: zod.string(),
+});

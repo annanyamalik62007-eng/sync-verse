@@ -28,6 +28,8 @@ tags:
     description: College and major hubs
   - name: posts
     description: Community posts within zones with reactions and joins
+  - name: ai
+    description: Claude-powered icebreakers and squad pitches
 paths:
   /healthz:
     get:
@@ -574,6 +576,63 @@ paths:
                 items:
                   $ref: "#/components/schemas/ZoneActivity"
 
+  /ai/icebreaker:
+    post:
+      operationId: generateIcebreaker
+      tags: [ai]
+      summary: Generate a single AI icebreaker between two matched users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IcebreakerInput"
+      responses:
+        "200":
+          description: Generated icebreaker
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IcebreakerResponse"
+
+  /ai/icebreaker-suggestions:
+    post:
+      operationId: generateIcebreakerSuggestions
+      tags: [ai]
+      summary: Generate 3 icebreaker chip suggestions for a chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IcebreakerInput"
+      responses:
+        "200":
+          description: 3 suggestion chips
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IcebreakerSuggestionsResponse"
+
+  /ai/squad-pitch:
+    post:
+      operationId: generateSquadPitch
+      tags: [ai]
+      summary: Generate a personalized squad invitation message for a recipient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SquadPitchInput"
+      responses:
+        "200":
+          description: Generated squad pitch
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SquadPitchResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -1049,3 +1108,46 @@ components:
         userId:
           type: string
       required: [userId]
+
+    IcebreakerInput:
+      type: object
+      properties:
+        meId:
+          type: string
+        otherId:
+          type: string
+      required: [meId, otherId]
+
+    IcebreakerResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    IcebreakerSuggestionsResponse:
+      type: object
+      properties:
+        suggestions:
+          type: array
+          items:
+            type: string
+      required: [suggestions]
+
+    SquadPitchInput:
+      type: object
+      properties:
+        fromUserId:
+          type: string
+        toUserId:
+          type: string
+        squadIntent:
+          type: string
+      required: [fromUserId, toUserId, squadIntent]
+
+    SquadPitchResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]

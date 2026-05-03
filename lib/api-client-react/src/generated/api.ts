@@ -29,6 +29,9 @@ import type {
   GetFomoTriggersParams,
   GetMajorHubParams,
   HealthStatus,
+  IcebreakerInput,
+  IcebreakerResponse,
+  IcebreakerSuggestionsResponse,
   JoinInput,
   JoinSquadInput,
   ListEventsParams,
@@ -44,6 +47,8 @@ import type {
   SendMessageInput,
   Signal,
   Squad,
+  SquadPitchInput,
+  SquadPitchResponse,
   UpdateUserInput,
   User,
   ZoneActivity,
@@ -2336,3 +2341,265 @@ export function useGetZoneActivity<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Generate a single AI icebreaker between two matched users
+ */
+export const getGenerateIcebreakerUrl = () => {
+  return `/api/ai/icebreaker`;
+};
+
+export const generateIcebreaker = async (
+  icebreakerInput: IcebreakerInput,
+  options?: RequestInit,
+): Promise<IcebreakerResponse> => {
+  return customFetch<IcebreakerResponse>(getGenerateIcebreakerUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(icebreakerInput),
+  });
+};
+
+export const getGenerateIcebreakerMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateIcebreaker>>,
+    TError,
+    { data: BodyType<IcebreakerInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof generateIcebreaker>>,
+  TError,
+  { data: BodyType<IcebreakerInput> },
+  TContext
+> => {
+  const mutationKey = ["generateIcebreaker"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof generateIcebreaker>>,
+    { data: BodyType<IcebreakerInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return generateIcebreaker(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GenerateIcebreakerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof generateIcebreaker>>
+>;
+export type GenerateIcebreakerMutationBody = BodyType<IcebreakerInput>;
+export type GenerateIcebreakerMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Generate a single AI icebreaker between two matched users
+ */
+export const useGenerateIcebreaker = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateIcebreaker>>,
+    TError,
+    { data: BodyType<IcebreakerInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof generateIcebreaker>>,
+  TError,
+  { data: BodyType<IcebreakerInput> },
+  TContext
+> => {
+  return useMutation(getGenerateIcebreakerMutationOptions(options));
+};
+
+/**
+ * @summary Generate 3 icebreaker chip suggestions for a chat
+ */
+export const getGenerateIcebreakerSuggestionsUrl = () => {
+  return `/api/ai/icebreaker-suggestions`;
+};
+
+export const generateIcebreakerSuggestions = async (
+  icebreakerInput: IcebreakerInput,
+  options?: RequestInit,
+): Promise<IcebreakerSuggestionsResponse> => {
+  return customFetch<IcebreakerSuggestionsResponse>(
+    getGenerateIcebreakerSuggestionsUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(icebreakerInput),
+    },
+  );
+};
+
+export const getGenerateIcebreakerSuggestionsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateIcebreakerSuggestions>>,
+    TError,
+    { data: BodyType<IcebreakerInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof generateIcebreakerSuggestions>>,
+  TError,
+  { data: BodyType<IcebreakerInput> },
+  TContext
+> => {
+  const mutationKey = ["generateIcebreakerSuggestions"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof generateIcebreakerSuggestions>>,
+    { data: BodyType<IcebreakerInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return generateIcebreakerSuggestions(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GenerateIcebreakerSuggestionsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof generateIcebreakerSuggestions>>
+>;
+export type GenerateIcebreakerSuggestionsMutationBody =
+  BodyType<IcebreakerInput>;
+export type GenerateIcebreakerSuggestionsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Generate 3 icebreaker chip suggestions for a chat
+ */
+export const useGenerateIcebreakerSuggestions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateIcebreakerSuggestions>>,
+    TError,
+    { data: BodyType<IcebreakerInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof generateIcebreakerSuggestions>>,
+  TError,
+  { data: BodyType<IcebreakerInput> },
+  TContext
+> => {
+  return useMutation(getGenerateIcebreakerSuggestionsMutationOptions(options));
+};
+
+/**
+ * @summary Generate a personalized squad invitation message for a recipient
+ */
+export const getGenerateSquadPitchUrl = () => {
+  return `/api/ai/squad-pitch`;
+};
+
+export const generateSquadPitch = async (
+  squadPitchInput: SquadPitchInput,
+  options?: RequestInit,
+): Promise<SquadPitchResponse> => {
+  return customFetch<SquadPitchResponse>(getGenerateSquadPitchUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(squadPitchInput),
+  });
+};
+
+export const getGenerateSquadPitchMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateSquadPitch>>,
+    TError,
+    { data: BodyType<SquadPitchInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof generateSquadPitch>>,
+  TError,
+  { data: BodyType<SquadPitchInput> },
+  TContext
+> => {
+  const mutationKey = ["generateSquadPitch"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof generateSquadPitch>>,
+    { data: BodyType<SquadPitchInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return generateSquadPitch(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GenerateSquadPitchMutationResult = NonNullable<
+  Awaited<ReturnType<typeof generateSquadPitch>>
+>;
+export type GenerateSquadPitchMutationBody = BodyType<SquadPitchInput>;
+export type GenerateSquadPitchMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Generate a personalized squad invitation message for a recipient
+ */
+export const useGenerateSquadPitch = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateSquadPitch>>,
+    TError,
+    { data: BodyType<SquadPitchInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof generateSquadPitch>>,
+  TError,
+  { data: BodyType<SquadPitchInput> },
+  TContext
+> => {
+  return useMutation(getGenerateSquadPitchMutationOptions(options));
+};

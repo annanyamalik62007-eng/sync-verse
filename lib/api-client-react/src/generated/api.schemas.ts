@@ -328,6 +328,29 @@ export interface JoinInput {
   userId: string;
 }
 
+export interface IcebreakerInput {
+  meId: string;
+  otherId: string;
+}
+
+export interface IcebreakerResponse {
+  message: string;
+}
+
+export interface IcebreakerSuggestionsResponse {
+  suggestions: string[];
+}
+
+export interface SquadPitchInput {
+  fromUserId: string;
+  toUserId: string;
+  squadIntent: string;
+}
+
+export interface SquadPitchResponse {
+  message: string;
+}
+
 export type ListUsersParams = {
   zone?: CommunityZone;
   college?: string;

@@ -12,8 +12,9 @@ import {
   type CommunityZone,
 } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
-import { Activity, Flame, TrendingUp, Users, Zap, Clock, ArrowRight } from "lucide-react";
+import { Activity, Flame, TrendingUp, Users, Zap, Clock, ArrowRight, Edit3, Radio } from "lucide-react";
 import { SV_INK, SV_HOT, SV_CYAN, SV_ACID, SV_GREEN, SV_GRID, ZONE_HUE } from "@/lib/theme";
+import { UserAvatar } from "@/components/user-avatar";
 
 const intensityHue: Record<string, string> = {
   high: SV_HOT,
@@ -56,71 +57,99 @@ export default function Feed() {
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8">
-      {/* What is SYNCVERSE — primer for new users */}
-      <section
-        className="relative overflow-hidden rounded-3xl border p-6 md:p-7"
-        style={{
-          borderColor: "rgba(255,255,255,0.08)",
-          background: `linear-gradient(135deg, rgba(255,0,153,0.08), rgba(0,229,255,0.06))`,
-        }}
-      >
-        <div className="flex items-start gap-3">
-          <div
-            className="mt-1 inline-flex h-2 w-2 shrink-0 animate-pulse rounded-full"
-            style={{ backgroundColor: "#FF0099", boxShadow: "0 0 12px #FF0099" }}
-          />
-          <div className="flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/60">
-              What is SYNCVERSE
-            </p>
-            <h2 className="mt-1 text-lg font-bold leading-snug md:text-xl">
-              Anonymous campus signal — find the people on{" "}
-              <span style={{ color: "#FF0099" }}>{user?.college ?? "your campus"}</span>{" "}
-              building, studying, or hyped on what you're hyped on{" "}
-              <span style={{ color: "#FFFF00" }}>right now</span>.
-            </h2>
-            <ul className="mt-3 grid gap-2 text-sm text-white/75 md:grid-cols-3">
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full bg-white/40" />
-                <span>Post what you're on. We sync you with the rest.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full bg-white/40" />
-                <span>Anonymous by default. No DMs, no inbox games.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full bg-white/40" />
-                <span>Shared signals = matches, squads, events.</span>
-              </li>
-            </ul>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Link
-                href="/matches"
-                className="rounded-full px-4 py-1.5 text-xs font-bold"
-                style={{ backgroundColor: "#FF0099", color: "#0A0A0F" }}
+      {/* YOUR SIGNAL TODAY — replaces explainer for onboarded users */}
+      {user && (
+        <section
+          className="relative overflow-hidden rounded-3xl border p-5 md:p-6"
+          style={{
+            borderColor: `${ZONE_HUE[user.zone] ?? SV_CYAN}55`,
+            background: `linear-gradient(135deg, ${ZONE_HUE[user.zone] ?? SV_CYAN}15 0%, transparent 60%), rgba(255,255,255,0.02)`,
+            boxShadow: `0 16px 50px -25px ${ZONE_HUE[user.zone] ?? SV_CYAN}88`,
+          }}
+        >
+          <div className="flex items-start gap-4">
+            <div className="relative shrink-0">
+              <div
+                className="rounded-full p-[2px]"
+                style={{
+                  background: `conic-gradient(from 200deg, ${ZONE_HUE[user.zone] ?? SV_CYAN}, ${SV_HOT}, ${ZONE_HUE[user.zone] ?? SV_CYAN})`,
+                }}
               >
-                See your matches
-              </Link>
-              <Link
-                href="/events"
-                className="rounded-full border px-4 py-1.5 text-xs font-bold"
-                style={{ borderColor: "rgba(0,229,255,0.5)", color: "#00E5FF" }}
+                <div className="rounded-full p-[2px]" style={{ backgroundColor: SV_INK }}>
+                  <UserAvatar user={user} size="lg" />
+                </div>
+              </div>
+              <span
+                className="absolute -bottom-0.5 -right-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full ring-2"
+                style={{
+                  ["--tw-ring-color" as string]: SV_INK,
+                  backgroundColor: SV_GREEN,
+                  boxShadow: `0 0 10px ${SV_GREEN}`,
+                } as React.CSSProperties}
               >
-                Browse events
-              </Link>
-              {userId && (
-                <Link
-                  href={`/user/${userId}`}
-                  className="rounded-full border px-4 py-1.5 text-xs font-bold text-white/70"
-                  style={{ borderColor: "rgba(255,255,255,0.18)" }}
-                >
-                  Edit profile
-                </Link>
-              )}
+                <span
+                  className="absolute inline-flex h-full w-full animate-ping rounded-full"
+                  style={{ backgroundColor: SV_GREEN, opacity: 0.55 }}
+                />
+              </span>
             </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <Radio className="h-3 w-3" style={{ color: SV_GREEN }} />
+                <p
+                  className="font-mono text-[10px] font-bold uppercase tracking-[0.3em]"
+                  style={{ color: SV_GREEN }}
+                >
+                  your signal today
+                </p>
+              </div>
+              <p className="mt-2 text-base font-bold italic leading-snug md:text-lg">
+                "{user.intent}"
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span
+                  className="rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em]"
+                  style={{
+                    borderColor: `${ZONE_HUE[user.zone] ?? SV_CYAN}66`,
+                    color: ZONE_HUE[user.zone] ?? SV_CYAN,
+                    backgroundColor: `${ZONE_HUE[user.zone] ?? SV_CYAN}10`,
+                  }}
+                >
+                  / {user.zone}
+                </span>
+                <span
+                  className="rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em]"
+                  style={{ borderColor: `${SV_ACID}55`, color: SV_ACID, backgroundColor: `${SV_ACID}10` }}
+                >
+                  {user.timeframe}
+                </span>
+                <span
+                  className="rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em]"
+                  style={{ borderColor: `${SV_HOT}55`, color: SV_HOT, backgroundColor: `${SV_HOT}10` }}
+                >
+                  {user.energyLevel} energy
+                </span>
+                {user.lookingFor && (
+                  <span
+                    className="rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em]"
+                    style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)" }}
+                  >
+                    seeking: {user.lookingFor}
+                  </span>
+                )}
+              </div>
+            </div>
+            <Link
+              href={`/user/${user.id}`}
+              className="shrink-0 rounded-full border p-2 text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+              style={{ borderColor: "rgba(255,255,255,0.15)" }}
+              aria-label="edit signal"
+            >
+              <Edit3 className="h-4 w-4" />
+            </Link>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Hero — soft gradient orb */}
       <section

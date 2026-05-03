@@ -8,11 +8,12 @@ import {
   getListMessagesBetweenQueryKey,
   useSendMessage,
   getListThreadsForUserQueryKey,
+  useGenerateIcebreakerSuggestions,
 } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
-import { ArrowLeft, Send, Phone, Video, Info, Smile, Image as ImageIcon, Heart, Mic } from "lucide-react";
+import { ArrowLeft, Send, Phone, Video, Info, Smile, Image as ImageIcon, Heart, Mic, Sparkles, Loader2 } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
-import { SV_INK, SV_HOT, SV_CYAN, ZONE_HUE } from "@/lib/theme";
+import { SV_INK, SV_HOT, SV_CYAN, SV_GREEN, ZONE_HUE } from "@/lib/theme";
 
 export default function Chat() {
   const params = useParams<{ userId: string }>();
@@ -52,6 +53,29 @@ export default function Chat() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages.data?.length]);
+
+  // Generate AI icebreaker chips ONCE when chat is empty
+  const [chips, setChips] = useState<string[]>([]);
+  const chipsRequestedRef = useRef(false);
+  const suggestMutation = useGenerateIcebreakerSuggestions({
+    mutation: {
+      onSuccess: (res) => setChips(res.suggestions),
+    },
+  });
+
+  useEffect(() => {
+    if (
+      !chipsRequestedRef.current &&
+      meId &&
+      otherId &&
+      messages.data &&
+      messages.data.length === 0 &&
+      other.data
+    ) {
+      chipsRequestedRef.current = true;
+      suggestMutation.mutate({ data: { meId, otherId } });
+    }
+  }, [meId, otherId, messages.data, other.data, suggestMutation]);
 
   const send = () => {
     const trimmed = text.trim();
@@ -185,6 +209,48 @@ export default function Chat() {
           );
         })}
       </div>
+
+      {/* AI icebreaker chips — only on empty thread */}
+      {messages.data && messages.data.length === 0 && other.data && (
+        <div className="px-1 pb-2 pt-1">
+          <div className="mb-2 flex items-center gap-2">
+            <Sparkles className="h-3 w-3" style={{ color: SV_GREEN }} />
+            <span
+              className="font-mono text-[10px] uppercase tracking-[0.3em]"
+              style={{ color: SV_GREEN }}
+            >
+              ai openers tuned to your shared signals
+            </span>
+            {suggestMutation.isPending && (
+              <Loader2 className="h-3 w-3 animate-spin text-white/40" />
+            )}
+          </div>
+          {chips.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {chips.map((chip, i) => (
+                <button
+                  key={i}
+                  onClick={() => setText(chip)}
+                  className="max-w-full rounded-full border px-3 py-1.5 text-left text-xs leading-snug text-white/85 transition-colors hover:bg-white/5"
+                  style={{
+                    borderColor: `${SV_GREEN}55`,
+                    backgroundColor: `${SV_GREEN}08`,
+                  }}
+                  title="tap to use"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          ) : (
+            !suggestMutation.isPending && (
+              <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/30">
+                claude is reading your signals...
+              </div>
+            )
+          )}
+        </div>
+      )}
 
       {/* IG composer */}
       <div className="px-1 py-3">
