@@ -1883,35 +1883,26 @@ export default function Onboarding() {
   const canStep1 = !!form.zone;
   const canStep2 = form.intent.trim().length >= 3;
 
-  if (existingUserId && !showForm) {
+  if (!showForm) {
     return (
-      <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card">
-        <CardContent className="p-6 md:p-8">
-          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-                <Activity className="h-3 w-3 animate-pulse" /> You're already in
-              </div>
-              <h2 className="mt-2 text-2xl font-black tracking-tighter md:text-4xl">
-                Welcome back to SYNCVERSE
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your intent is live. Jump back into the feed.
-              </p>
+      <>
+        {existingUserId && (
+          <div className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-white/5 bg-black/80 px-4 py-2.5 backdrop-blur-md">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-white/70">
+              <Activity className="h-3 w-3 animate-pulse text-pink-500" />
+              You're already synced in
             </div>
-            <Link href="/feed">
-              <Button size="lg">
-                Open feed <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+            <Link
+              href="/feed"
+              className="inline-flex items-center gap-1.5 rounded-full bg-pink-500 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-widest text-black hover:bg-pink-400"
+            >
+              Open feed <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
-        </CardContent>
-      </Card>
+        )}
+        <LandingHero onStart={() => setShowForm(true)} />
+      </>
     );
-  }
-
-  if (!showForm) {
-    return <LandingHero onStart={() => setShowForm(true)} />;
   }
 
   const exampleIntent = ZONE_META[form.zone].example;
