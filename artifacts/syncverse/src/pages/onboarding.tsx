@@ -5,8 +5,11 @@ import {
   useCreateUser,
   useGetCommunityInsights,
   useListUsers,
+  useListZonePosts,
   getGetCommunityInsightsQueryKey,
   getListUsersQueryKey,
+  getListZonePostsQueryKey,
+  type Post,
 } from "@workspace/api-client-react";
 import {
   CommunityZone,
@@ -252,8 +255,58 @@ function LandingHero({ onStart }: { onStart: () => void }) {
     { query: { queryKey: getListUsersQueryKey({}) } },
   );
   const totalActive = insights.data?.totalActiveNow ?? 0;
-  const topZones = insights.data?.mostActiveZones.slice(0, 5) ?? [];
   const trending = insights.data?.trendingActivities.slice(0, 5) ?? [];
+
+  // Pull posts from a few popular zones in parallel so we can render
+  // a college-grouped community preview that feels alive.
+  const startupPosts = useListZonePosts("startup", {
+    query: { queryKey: getListZonePostsQueryKey("startup") },
+  });
+  const studyPosts = useListZonePosts("study", {
+    query: { queryKey: getListZonePostsQueryKey("study") },
+  });
+  const socialPosts = useListZonePosts("social", {
+    query: { queryKey: getListZonePostsQueryKey("social") },
+  });
+  const careerPosts = useListZonePosts("career", {
+    query: { queryKey: getListZonePostsQueryKey("career") },
+  });
+  const allPosts: Post[] = [
+    ...(startupPosts.data ?? []),
+    ...(studyPosts.data ?? []),
+    ...(socialPosts.data ?? []),
+    ...(careerPosts.data ?? []),
+  ];
+  const postsByCollege = new Map<string, Post[]>();
+  for (const p of allPosts) {
+    const c = p.author.college;
+    if (!postsByCollege.has(c)) postsByCollege.set(c, []);
+    postsByCollege.get(c)!.push(p);
+  }
+  for (const [, list] of postsByCollege) {
+    list.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }
+  const collegeCommunities = Array.from(postsByCollege.entries())
+    .map(([college, posts]) => {
+      const members = (allUsers.data ?? []).filter((u) => u.college === college);
+      const majors = new Map<string, number>();
+      for (const m of members) majors.set(m.major, (majors.get(m.major) ?? 0) + 1);
+      const topMajors = Array.from(majors.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([m]) => m);
+      return {
+        college,
+        members: members.length,
+        topMajors,
+        posts: posts.slice(0, 3),
+      };
+    })
+    .sort((a, b) => b.members - a.members)
+    .slice(0, 4);
 
   // Group seeded users by college, take a few from each so the picker stays compact
   const demoByCollege = new Map<string, typeof allUsers.data>();
@@ -302,8 +355,6 @@ function LandingHero({ onStart }: { onStart: () => void }) {
     );
     for (const s of skillsA) if (skillsB.has(s)) sharedSignals.push(s);
   }
-  const facesWall = (allUsers.data ?? []).slice(0, 18);
-
   const useDemo = (id: string) => {
     setCurrentUserId(id);
     setLocation("/feed");
@@ -650,169 +701,182 @@ function LandingHero({ onStart }: { onStart: () => void }) {
         </section>
       )}
 
-      {/* FACES WALL */}
-      {facesWall.length > 0 && (
-        <section
-          className="relative border-t"
-          style={{ borderColor: "#1a1a22", backgroundColor: SV_INK }}
-        >
-          <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-20">
-            <div className="mb-8 flex items-end justify-between gap-4">
-              <h2 className="text-3xl font-black italic leading-none tracking-tighter md:text-5xl">
-                live <span style={{ color: SV_HOT }}>faces</span> on campus
-              </h2>
+      {/* COLLEGE COMMUNITIES — real posts grouped by school */}
+      <section
+        className="relative border-t"
+        style={{ borderColor: "#1a1a22", backgroundColor: SV_INK }}
+      >
+        <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-24">
+          <div className="mb-10 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
               <div
-                className="hidden font-mono text-[10px] uppercase tracking-[0.3em] md:block"
+                className="font-mono text-xs uppercase tracking-[0.3em]"
                 style={{ color: SV_ACID }}
               >
-                tap a face to drop into their feed
+                / communities
               </div>
+              <h2 className="mt-2 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+                colleges <span style={{ color: SV_HOT }}>posting</span>
+                <br />
+                by major + interest
+              </h2>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 md:gap-3">
-              {facesWall.map((u) => {
-                const meta = ZONE_META[u.zone as CommunityZone];
-                const hue = ZONE_HUE[u.zone as CommunityZone] ?? SV_CYAN;
+            <p className="max-w-md text-sm text-white/60">
+              every campus runs its own room. inside, students drop posts about
+              what they're working on, react with fire, and join the ones they
+              wanna ship together. no global feed. just your school, your major,
+              your people.
+            </p>
+          </div>
+
+          {collegeCommunities.length === 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-72 animate-pulse border-2"
+                  style={{ borderColor: "#1a1a22", backgroundColor: "#11111A" }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {collegeCommunities.map((c, idx) => {
+                const accents = [SV_HOT, SV_CYAN, SV_ACID, SV_GREEN];
+                const accent = accents[idx % accents.length];
                 return (
-                  <button
-                    key={u.id}
-                    onClick={() => useDemo(u.id)}
-                    className="group relative aspect-square overflow-hidden border-2 transition-transform hover:-translate-y-1"
-                    style={{ borderColor: "#1a1a22" }}
+                  <motion.div
+                    key={c.college}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 * idx }}
+                    className="border-2"
+                    style={{ borderColor: accent, backgroundColor: "#0c0c14" }}
                   >
-                    <UserAvatar user={u} fill />
+                    {/* College header strip */}
                     <div
-                      className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent p-2"
+                      className="flex items-center justify-between gap-3 px-5 py-3"
+                      style={{ backgroundColor: accent, color: SV_INK }}
                     >
-                      <div className="truncate text-[10px] font-black uppercase tracking-tight text-white">
-                        {u.name.split(" ")[0]}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Users className="h-4 w-4 shrink-0" />
+                        <div className="truncate font-black italic uppercase tracking-tight md:text-lg">
+                          {c.college}
+                        </div>
                       </div>
-                      <div
-                        className="truncate font-mono text-[8px] uppercase tracking-widest"
-                        style={{ color: hue }}
-                      >
-                        {meta?.label ?? u.zone}
+                      <div className="font-mono text-[10px] uppercase tracking-widest">
+                        {c.members} students live
                       </div>
                     </div>
-                  </button>
+
+                    {/* Top majors row */}
+                    {c.topMajors.length > 0 && (
+                      <div
+                        className="flex flex-wrap gap-1.5 border-b px-5 py-3"
+                        style={{ borderColor: "#1a1a22" }}
+                      >
+                        {c.topMajors.map((m) => (
+                          <span
+                            key={m}
+                            className="border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white/70"
+                            style={{ borderColor: "#1a1a22" }}
+                          >
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Posts list */}
+                    <div className="divide-y" style={{ borderColor: "#1a1a22" }}>
+                      {c.posts.length === 0 ? (
+                        <div className="px-5 py-6 font-mono text-xs uppercase tracking-widest text-white/40">
+                          no posts yet — be the first
+                        </div>
+                      ) : (
+                        c.posts.map((p) => {
+                          const hue =
+                            ZONE_HUE[p.zone as CommunityZone] ?? SV_CYAN;
+                          const meta = ZONE_META[p.zone as CommunityZone];
+                          return (
+                            <button
+                              key={p.id}
+                              onClick={() => useDemo(p.author.id)}
+                              className="flex w-full items-start gap-3 px-5 py-4 text-left transition-colors hover:bg-white/5"
+                              style={{ borderColor: "#1a1a22" }}
+                            >
+                              <UserAvatar user={p.author} size="md" />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                  <span className="text-sm font-black uppercase tracking-tight text-white">
+                                    {p.author.name}
+                                  </span>
+                                  <span
+                                    className="font-mono text-[10px] uppercase tracking-widest"
+                                    style={{ color: hue }}
+                                  >
+                                    {p.author.major}
+                                  </span>
+                                  <span
+                                    className="border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                                    style={{ borderColor: hue, color: hue }}
+                                  >
+                                    {meta?.label ?? p.zone}
+                                  </span>
+                                </div>
+                                <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-white/80">
+                                  {p.body}
+                                </p>
+                                <div className="mt-2 flex items-center gap-4 font-mono text-[10px] uppercase tracking-widest text-white/50">
+                                  <span className="inline-flex items-center gap-1">
+                                    <Flame
+                                      className="h-3 w-3"
+                                      style={{ color: SV_HOT }}
+                                    />
+                                    {p.reactionCount} fire
+                                  </span>
+                                  <span className="inline-flex items-center gap-1">
+                                    <Sparkles
+                                      className="h-3 w-3"
+                                      style={{ color: SV_GREEN }}
+                                    />
+                                    {p.joinCount} joined
+                                  </span>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Footer cta */}
+                    <button
+                      onClick={() => {
+                        if (c.posts[0]) useDemo(c.posts[0].author.id);
+                      }}
+                      className="flex w-full items-center justify-between gap-2 border-t px-5 py-3 font-mono text-[10px] uppercase tracking-widest transition-colors hover:bg-white/5"
+                      style={{ borderColor: "#1a1a22", color: accent }}
+                    >
+                      <span>drop into the {c.college.split(" ")[0]} room</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </button>
+                  </motion.div>
                 );
               })}
             </div>
-          </div>
-        </section>
-      )}
+          )}
 
-      {/* BENTO VIBE GRID */}
-      <section className="relative border-t" style={{ borderColor: "#1a1a22" }}>
-        <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-24">
-          <div className="mb-8 flex items-end justify-between gap-4">
-            <h2 className="text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
-              what's <span style={{ color: SV_HOT }}>hitting</span>
-              <br />
-              on campus
-            </h2>
-            <div className="hidden text-right font-mono text-xs uppercase tracking-widest text-white/50 md:block">
-              auto-refresh
-              <br />
-              every 8s
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-6 md:gap-4">
-            {/* Total counter mega tile */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative col-span-2 overflow-hidden md:col-span-3 md:row-span-2"
-              style={{ backgroundColor: SV_HOT, color: SV_INK }}
+          {/* live counter pill */}
+          <div className="mt-8 flex flex-wrap items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] text-white/60">
+            <span
+              className="inline-flex items-center gap-2 border px-3 py-1.5"
+              style={{ borderColor: SV_GREEN, color: SV_GREEN }}
             >
-              <div className="relative p-6 md:p-10">
-                <div className="font-mono text-xs uppercase tracking-[0.3em]">
-                  total students locked in
-                </div>
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={totalActive}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 1.1 }}
-                    className="mt-2 text-[28vw] font-black italic leading-[0.82] tracking-[-0.07em] md:text-[12vw]"
-                  >
-                    {totalActive.toString().padStart(3, "0")}
-                  </motion.div>
-                </AnimatePresence>
-                <div className="mt-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest">
-                  <Radio className="h-3 w-3 sv-blink" />
-                  broadcasting now
-                </div>
-                <div className="mt-6 max-w-xs text-sm font-bold leading-tight">
-                  every one of them is on something. one of them is on ur thing.
-                </div>
-              </div>
-              <Asterisk className="pointer-events-none absolute -bottom-12 -right-12 h-56 w-56 opacity-10 sv-spin-slow" />
-            </motion.div>
-
-            {/* Top zone tiles */}
-            {topZones.length === 0
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="col-span-1 h-32 animate-pulse md:col-span-3 md:h-auto"
-                    style={{ backgroundColor: "#11111A" }}
-                  />
-                ))
-              : topZones.slice(0, 4).map((z, i) => {
-                  const meta = ZONE_META[z.zone as CommunityZone];
-                  const Icon = meta?.icon ?? Sparkles;
-                  const hue = ZONE_HUE[z.zone as CommunityZone] ?? SV_CYAN;
-                  const big = i === 0;
-                  return (
-                    <motion.div
-                      key={z.zone}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.05 * i }}
-                      className={`group relative overflow-hidden border-2 transition-transform hover:-translate-y-1 ${
-                        big ? "col-span-2 md:col-span-3" : "col-span-1 md:col-span-3"
-                      }`}
-                      style={{ borderColor: hue, backgroundColor: SV_INK }}
-                    >
-                      <div className="relative p-5 md:p-6">
-                        <div className="flex items-start justify-between gap-2">
-                          <div
-                            className="inline-flex items-center gap-1.5 px-2 py-1 font-mono text-[10px] uppercase tracking-widest"
-                            style={{ backgroundColor: hue, color: SV_INK }}
-                          >
-                            <Icon className="h-3 w-3" />
-                            {meta?.label ?? z.zone}
-                          </div>
-                          <span
-                            className="font-mono text-[10px] uppercase tracking-widest"
-                            style={{ color: hue }}
-                          >
-                            #{(i + 1).toString().padStart(2, "0")}
-                          </span>
-                        </div>
-                        <div
-                          className="mt-3 text-5xl font-black italic leading-none tracking-tighter md:text-7xl"
-                          style={{ color: hue }}
-                        >
-                          {z.activeUsers}
-                        </div>
-                        <div className="mt-2 flex items-center justify-between text-xs text-white/60">
-                          <span className="font-mono uppercase tracking-widest">
-                            in zone
-                          </span>
-                          <span
-                            className="font-mono font-black uppercase tracking-widest"
-                            style={{ color: SV_GREEN }}
-                          >
-                            +{z.livingNow} live
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+              <Radio className="h-3 w-3 sv-blink" />
+              {totalActive} students broadcasting now
+            </span>
+            <span>across {collegeCommunities.length || "—"} campuses</span>
           </div>
         </div>
       </section>
