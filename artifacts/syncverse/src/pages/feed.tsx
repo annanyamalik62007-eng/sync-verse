@@ -7,10 +7,12 @@ import {
   useListEvents,
   useGetMajorHub,
   useListActiveMajors,
+  useGetMatchesForUser,
   getGetUserQueryKey,
   getListEventsQueryKey,
   getGetMajorHubQueryKey,
   getListActiveMajorsQueryKey,
+  getGetMatchesForUserQueryKey,
   type Signal,
   type FomoTrigger,
   type ZoneActivity,
@@ -18,10 +20,11 @@ import {
   type CommunityZone,
   type CampusEvent,
   type ActiveMajor,
+  type Match,
   type User,
 } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
-import { Activity, Flame, TrendingUp, Users, Zap, Clock, ArrowRight, Edit3, Radio, Calendar, MapPin, GraduationCap, ArrowUpRight, Sparkles } from "lucide-react";
+import { Activity, Flame, TrendingUp, Users, Zap, Clock, ArrowRight, Edit3, Radio, Calendar, MapPin, GraduationCap, ArrowUpRight, Sparkles, MessageCircle, Heart } from "lucide-react";
 import { SV_INK, SV_HOT, SV_CYAN, SV_ACID, SV_GREEN, SV_GRID, ZONE_HUE } from "@/lib/theme";
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -98,6 +101,12 @@ export default function Feed() {
   const activeMajors = useListActiveMajors({
     query: { queryKey: getListActiveMajorsQueryKey() },
   });
+  const matches = useGetMatchesForUser(userId ?? "", {
+    query: {
+      enabled: !!userId,
+      queryKey: getGetMatchesForUserQueryKey(userId ?? ""),
+    },
+  });
 
   const totalActive = insights.data?.totalActiveNow ?? 0;
   const upcomingEvents = (events.data ?? [])
@@ -111,6 +120,9 @@ export default function Feed() {
     !!college && upcomingEvents.some((e) => e.college !== college);
   const peersSpanCampuses =
     !!college && majorPeers.some((p) => p.college !== college);
+  const topMatches = (matches.data ?? []).slice(0, 6);
+  const matchesSpanCampuses =
+    !!college && topMatches.some((m: Match) => m.user.college !== college);
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8">
@@ -254,6 +266,130 @@ export default function Feed() {
           </Link>
         </div>
       </section>
+
+      {/* PEOPLE WHO MATCH YOU — top live matches with text CTA */}
+      {user && topMatches.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between gap-2 px-1">
+            <SectionHeader
+              hue={SV_HOT}
+              tag={
+                matchesSpanCampuses
+                  ? `${topMatches.length} people sync with you across campuses`
+                  : `${topMatches.length} people sync with you right now`
+              }
+              icon={Heart}
+              compact
+            />
+            <Link
+              href="/matches"
+              className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/40 hover:text-white/80"
+            >
+              all matches →
+            </Link>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {topMatches.map((m: Match) => {
+              const hue = ZONE_HUE[m.user.zone] ?? SV_HOT;
+              const score = m.alignmentScore;
+              const tier =
+                score >= 85 ? "near-perfect" : score >= 70 ? "strong" : "good";
+              const tierHue =
+                score >= 85 ? SV_HOT : score >= 70 ? SV_ACID : SV_CYAN;
+              return (
+                <div
+                  key={m.user.id}
+                  className="group relative overflow-hidden rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:bg-white/[0.04]"
+                  style={{
+                    borderColor: `${tierHue}33`,
+                    background: `linear-gradient(135deg, ${tierHue}10 0%, transparent 70%), rgba(255,255,255,0.02)`,
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <Link href={`/user/${m.user.id}`} className="shrink-0">
+                      <UserAvatar user={m.user} size="md" ring={tierHue} />
+                    </Link>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <Link href={`/user/${m.user.id}`} className="min-w-0">
+                          <span className="block truncate text-sm font-bold hover:underline">
+                            {m.user.name}
+                          </span>
+                        </Link>
+                        <span
+                          className="shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest"
+                          style={{ backgroundColor: tierHue, color: SV_INK }}
+                        >
+                          {score}% {tier}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <ZoneChip zone={m.user.zone} />
+                        {college && m.user.college !== college && (
+                          <span
+                            className="rounded-full border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                            style={{
+                              borderColor: "rgba(255,255,255,0.15)",
+                              color: "rgba(255,255,255,0.55)",
+                            }}
+                          >
+                            {m.user.college}
+                          </span>
+                        )}
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-white/40">
+                          {m.user.major}
+                        </span>
+                      </div>
+                      <p className="mt-2 line-clamp-2 text-xs italic leading-snug text-white/75">
+                        "{m.user.intent}"
+                      </p>
+                    </div>
+                  </div>
+                  {m.sharedSignals.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {m.sharedSignals.slice(0, 5).map((s, i) => (
+                        <span
+                          key={`${m.user.id}-sig-${i}`}
+                          className="rounded-full border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                          style={{
+                            borderColor: `${hue}55`,
+                            color: hue,
+                            backgroundColor: `${hue}10`,
+                          }}
+                        >
+                          + {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">
+                      {m.user.timeframe} · {m.user.energyLevel} energy
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <Link
+                        href={`/user/${m.user.id}`}
+                        className="rounded-full border px-2.5 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-white/70 hover:bg-white/5 hover:text-white"
+                        style={{ borderColor: "rgba(255,255,255,0.15)" }}
+                      >
+                        view
+                      </Link>
+                      <Link
+                        href={`/messages/${m.user.id}`}
+                        className="inline-flex items-center gap-1 rounded-full px-3 py-1 font-mono text-[10px] font-black uppercase tracking-widest"
+                        style={{ backgroundColor: tierHue, color: SV_INK }}
+                      >
+                        <MessageCircle className="h-3 w-3" />
+                        text
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* HAPPENING ON CAMPUS — events */}
       {upcomingEvents.length > 0 && (
