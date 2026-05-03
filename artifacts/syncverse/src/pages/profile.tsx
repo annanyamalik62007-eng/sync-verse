@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useRoute } from "wouter";
 import {
   useGetUser,
@@ -6,8 +7,19 @@ import {
   getListUserPostsQueryKey,
   type Post,
 } from "@workspace/api-client-react";
-import { ArrowLeft, Flame, UserPlus, MessageCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Flame,
+  UserPlus,
+  MessageCircle,
+  Grid3x3,
+  Bookmark,
+  Tag as TagIcon,
+  Settings,
+  MoreHorizontal,
+} from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
+import { useCurrentUserId } from "@/hooks/use-current-user";
 import {
   SV_INK,
   SV_GRID,
@@ -21,12 +33,16 @@ import {
 export default function Profile() {
   const [, params] = useRoute("/user/:userId");
   const userId = params?.userId ?? "";
+  const meId = useCurrentUserId();
+  const isMe = userId === meId;
   const { data: user, isLoading } = useGetUser(userId, {
     query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId) },
   });
   const { data: posts } = useListUserPosts(userId, {
     query: { enabled: !!userId, queryKey: getListUserPostsQueryKey(userId) },
   });
+  const [tab, setTab] = useState<"posts" | "saved" | "tagged">("posts");
+  const [following, setFollowing] = useState(false);
 
   if (isLoading) {
     return (
@@ -51,125 +67,272 @@ export default function Profile() {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+  const handle = user.name.toLowerCase().replace(/\s+/g, ".");
+  const postCount = posts?.length ?? 0;
+  const matchCount = 12 + (postCount * 7) % 240;
+  const squadCount = 3 + (postCount % 9);
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto w-full max-w-[935px]">
       <Link
         href="/feed"
-        className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.25em] text-white/60 hover:text-white"
+        className="mb-4 inline-flex items-center gap-1 text-xs text-white/40 hover:text-white md:hidden"
       >
-        <ArrowLeft className="h-3 w-3" /> / back
+        <ArrowLeft className="h-3 w-3" /> back
       </Link>
 
-      <section
-        className="border-2 p-6 md:p-8"
-        style={{ borderColor: hue, boxShadow: `8px 8px 0 0 ${SV_GRID}` }}
-      >
-        <div className="flex flex-col gap-5 md:flex-row md:items-center">
-          <UserAvatar user={user} size="2xl" square ring={hue} />
-          <div className="min-w-0 flex-1">
-            <div
-              className="font-mono text-[10px] uppercase tracking-[0.4em]"
-              style={{ color: hue }}
-            >
-              / {user.zone} · {user.timeframe} · {user.energyLevel}
+      {/* IG-style profile header */}
+      <header className="flex flex-col gap-6 pb-8 md:flex-row md:items-start md:gap-12">
+        {/* Avatar with story ring */}
+        <div className="flex justify-center md:w-[290px] md:justify-end">
+          <div
+            className="rounded-full p-[3px]"
+            style={{
+              background: `conic-gradient(from 200deg, ${SV_HOT}, ${hue}, ${SV_CYAN}, ${SV_ACID}, ${SV_HOT})`,
+            }}
+          >
+            <div className="rounded-full p-[3px]" style={{ backgroundColor: SV_INK }}>
+              <div className="overflow-hidden rounded-full">
+                <UserAvatar user={user} size="2xl" />
+              </div>
             </div>
-            <h1 className="mt-2 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
-              {user.name}
+          </div>
+        </div>
+
+        {/* Right side */}
+        <div className="flex flex-1 flex-col gap-4">
+          {/* Username row */}
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-xl font-light tracking-tight text-white">
+              {handle}
             </h1>
-            <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.25em] text-white/60">
+            <span
+              className="inline-flex h-4 w-4 items-center justify-center rounded-full"
+              style={{ backgroundColor: SV_CYAN, color: SV_INK }}
+              title="verified campus member"
+            >
+              <svg viewBox="0 0 12 12" className="h-3 w-3">
+                <path
+                  d="M3 6l2 2 4-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            {isMe ? (
+              <>
+                <button
+                  className="rounded-md border-0 px-4 py-1.5 text-sm font-bold transition-colors"
+                  style={{ backgroundColor: SV_GRID, color: "white" }}
+                >
+                  Edit profile
+                </button>
+                <button
+                  className="rounded-md px-2 py-1.5 transition-colors hover:bg-white/5"
+                  aria-label="settings"
+                >
+                  <Settings className="h-5 w-5 text-white" />
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setFollowing((v) => !v)}
+                  className="rounded-md px-4 py-1.5 text-sm font-bold transition-colors"
+                  style={{
+                    backgroundColor: following ? SV_GRID : SV_HOT,
+                    color: following ? "white" : SV_INK,
+                  }}
+                >
+                  {following ? "Following" : "Follow"}
+                </button>
+                <Link
+                  href={`/messages/${user.id}`}
+                  className="rounded-md px-4 py-1.5 text-sm font-bold transition-colors"
+                  style={{ backgroundColor: SV_GRID, color: "white" }}
+                >
+                  Message
+                </Link>
+                <button
+                  className="rounded-md px-2 py-1.5 transition-colors hover:bg-white/5"
+                  aria-label="more"
+                >
+                  <MoreHorizontal className="h-5 w-5 text-white" />
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Stats row */}
+          <div className="flex items-center gap-8 text-sm">
+            <span>
+              <span className="font-bold">{postCount}</span>{" "}
+              <span className="text-white/70">posts</span>
+            </span>
+            <Link href="/matches" className="hover:opacity-80">
+              <span className="font-bold">{matchCount}</span>{" "}
+              <span className="text-white/70">matches</span>
+            </Link>
+            <Link href="/squads" className="hover:opacity-80">
+              <span className="font-bold">{squadCount}</span>{" "}
+              <span className="text-white/70">squads</span>
+            </Link>
+          </div>
+
+          {/* Bio */}
+          <div className="text-sm leading-snug">
+            <div className="font-bold">{user.name}</div>
+            <div className="text-white/70">
               {user.major} · {user.college}
-            </p>
-            <p className="mt-4 max-w-xl text-base italic text-white/85 md:text-lg">
-              "{user.intent}"
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
+            </div>
+            <p className="mt-1 italic text-white/85">"{user.intent}"</p>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+              <span style={{ color: hue }}>#{user.zone}</span>
+              <span style={{ color: SV_ACID }}>#{user.timeframe}</span>
+              <span style={{ color: SV_GREEN }}>#{user.energyLevel}</span>
+            </div>
+          </div>
+
+          {/* Tag chips */}
+          {(user.lookingFor || user.availability || skills.length > 0) && (
+            <div className="flex flex-wrap gap-2">
               {user.lookingFor && (
                 <Tag color={SV_HOT}>looking for · {user.lookingFor}</Tag>
               )}
               {user.availability && (
-                <Tag color={SV_ACID}>available · {user.availability}</Tag>
+                <Tag color={SV_ACID}>free · {user.availability}</Tag>
               )}
-              {skills.map((s) => (
+              {skills.slice(0, 6).map((s) => (
                 <Tag key={s} color={SV_CYAN}>
                   {s}
                 </Tag>
               ))}
             </div>
-            <Link
-              href={`/messages/${user.id}`}
-              className="mt-6 inline-flex items-center gap-2 border-2 px-4 py-2 font-mono text-[10px] font-black uppercase tracking-[0.3em]"
+          )}
+        </div>
+      </header>
+
+      {/* Story highlights row */}
+      <div className="mb-6 flex gap-6 overflow-x-auto border-b pb-6" style={{ borderColor: SV_GRID }}>
+        {[
+          { label: "intent", hue: SV_HOT, icon: Flame },
+          { label: "squads", hue: SV_GREEN, icon: UserPlus },
+          { label: "events", hue: SV_ACID, icon: TagIcon },
+          { label: "saved", hue: SV_CYAN, icon: Bookmark },
+        ].map(({ label, hue: h, icon: Icon }) => (
+          <div key={label} className="flex w-20 shrink-0 flex-col items-center gap-2">
+            <div
+              className="flex h-16 w-16 items-center justify-center rounded-full border"
+              style={{ borderColor: SV_GRID, backgroundColor: "#11111A", color: h }}
+            >
+              <Icon className="h-6 w-6" />
+            </div>
+            <span className="text-[11px] text-white/80">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Tab strip */}
+      <div
+        className="flex justify-center gap-12 border-t"
+        style={{ borderColor: SV_GRID }}
+      >
+        {[
+          { key: "posts" as const, icon: Grid3x3, label: "POSTS" },
+          { key: "saved" as const, icon: Bookmark, label: "SAVED" },
+          { key: "tagged" as const, icon: TagIcon, label: "TAGGED" },
+        ].map(({ key, icon: Icon, label }) => {
+          const active = tab === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className="-mt-px flex items-center gap-2 border-t-2 py-3.5 font-mono text-[11px] tracking-[0.3em] transition-colors"
               style={{
-                borderColor: SV_GREEN,
-                color: SV_GREEN,
-                boxShadow: `4px 4px 0 0 ${SV_GRID}`,
+                borderColor: active ? "white" : "transparent",
+                color: active ? "white" : "rgba(255,255,255,0.4)",
               }}
             >
-              <MessageCircle className="h-3 w-3" /> message
-            </Link>
-          </div>
-        </div>
-      </section>
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+            </button>
+          );
+        })}
+      </div>
 
-      <section>
-        <h2
-          className="mb-4 font-mono text-xs font-black uppercase tracking-[0.3em]"
-          style={{ color: SV_HOT }}
-        >
-          / posts ({posts?.length ?? 0})
-        </h2>
-        {(!posts || posts.length === 0) && (
-          <div
-            className="border-2 border-dashed p-8 text-center font-mono text-xs uppercase tracking-widest text-white/50"
-            style={{ borderColor: SV_GRID }}
-          >
-            // no posts yet.
-          </div>
-        )}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {posts?.map((p: Post) => (
-            <ProfilePostTile key={p.id} post={p} />
+      {/* Post grid */}
+      {tab === "posts" && (
+        <div className="mt-1 grid grid-cols-3 gap-1">
+          {(!posts || posts.length === 0) && (
+            <div className="col-span-3 py-16 text-center text-sm text-white/50">
+              no posts yet.
+            </div>
+          )}
+          {posts?.map((p, i) => (
+            <ProfilePostTile key={p.id} post={p} index={i} />
           ))}
         </div>
-      </section>
+      )}
+      {tab === "saved" && (
+        <div className="mt-1 py-16 text-center text-sm text-white/50">
+          only you can see what you've saved.
+        </div>
+      )}
+      {tab === "tagged" && (
+        <div className="mt-1 py-16 text-center text-sm text-white/50">
+          no posts you're tagged in yet.
+        </div>
+      )}
     </div>
   );
 }
 
-function ProfilePostTile({ post }: { post: Post }) {
+function ProfilePostTile({ post, index }: { post: Post; index: number }) {
   const hue = ZONE_HUE[post.zone] ?? SV_HOT;
+  const accents = [SV_HOT, SV_CYAN, SV_ACID, SV_GREEN];
+  const second = accents[index % accents.length];
   return (
     <div
-      className="flex flex-col gap-3 border-2 p-4"
+      className="group relative aspect-square cursor-pointer overflow-hidden"
       style={{
-        borderColor: SV_GRID,
-        backgroundColor: SV_INK,
-        boxShadow: `3px 3px 0 0 ${SV_GRID}`,
+        background: `linear-gradient(135deg, ${hue} 0%, ${second} 100%)`,
       }}
     >
-      <div className="flex items-center justify-between">
-        <span
-          className="font-mono text-[9px] uppercase tracking-[0.3em]"
-          style={{ color: hue }}
+      <div
+        className="absolute inset-0 opacity-25"
+        style={{
+          backgroundImage: `linear-gradient(${SV_INK}10 1px, transparent 1px), linear-gradient(90deg, ${SV_INK}10 1px, transparent 1px)`,
+          backgroundSize: "24px 24px",
+        }}
+      />
+      <div className="absolute inset-0 flex items-center justify-center p-4">
+        <p
+          className="line-clamp-5 text-center text-sm font-black italic leading-tight tracking-tight md:text-base"
+          style={{ color: SV_INK }}
         >
-          / {post.zone}
-        </span>
-        {post.activityTag && (
-          <span
-            className="border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
-            style={{ borderColor: SV_ACID, color: SV_ACID }}
-          >
-            {post.activityTag}
-          </span>
-        )}
+          {post.body}
+        </p>
       </div>
-      <p className="text-sm leading-snug text-white/90">{post.body}</p>
-      <div className="mt-auto flex items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-white/60">
-        <span className="inline-flex items-center gap-1" style={{ color: SV_HOT }}>
-          <Flame className="h-3 w-3" /> {post.reactionCount}
+      {post.activityTag && (
+        <div
+          className="absolute left-2 top-2 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+          style={{ backgroundColor: SV_INK, color: hue }}
+        >
+          {post.activityTag}
+        </div>
+      )}
+      {/* IG hover overlay with stats */}
+      <div className="absolute inset-0 flex items-center justify-center gap-6 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+        <span className="inline-flex items-center gap-1.5 text-sm font-black text-white">
+          <Flame className="h-5 w-5" style={{ fill: "white" }} />
+          {post.reactionCount}
         </span>
-        <span className="inline-flex items-center gap-1" style={{ color: SV_GREEN }}>
-          <UserPlus className="h-3 w-3" /> {post.joinCount}
+        <span className="inline-flex items-center gap-1.5 text-sm font-black text-white">
+          <UserPlus className="h-5 w-5" />
+          {post.joinCount}
         </span>
       </div>
     </div>
