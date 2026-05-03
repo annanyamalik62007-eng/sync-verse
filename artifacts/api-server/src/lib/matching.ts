@@ -130,13 +130,13 @@ export function pickAvatarColor(seed: string): string {
   return COLOR_PALETTE[h % COLOR_PALETTE.length]!;
 }
 
-export function pickAvatarUrl(seed: string, genderHint?: string | null): string {
+export function pickAvatarUrl(seed: string, _genderHint?: string | null): string {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  const bucket =
-    genderHint === "he" ? "men" : genderHint === "she" ? "women" : h % 2 === 0 ? "men" : "women";
-  const idx = h % 99;
-  return `https://randomuser.me/api/portraits/${bucket}/${idx}.jpg`;
+  // pravatar.cc serves crisp 300px portraits — randomuser.me caps at 128px and
+  // looks blurry once we render avatars at lg/xl/2xl sizes on cards & profiles.
+  const idx = (h % 70) + 1;
+  return `https://i.pravatar.cc/300?img=${idx}`;
 }
 
 export function timeAgoFrom(date: Date): string {

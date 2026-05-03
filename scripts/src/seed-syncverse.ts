@@ -47,11 +47,12 @@ function genderForName(name: string): "men" | "women" {
   if (last === "a" || last === "e") return "women";
   return hashSeed(name) % 2 === 0 ? "men" : "women";
 }
-function pickAvatarUrl(seed: string, name?: string): string {
+function pickAvatarUrl(seed: string, _name?: string): string {
   const h = hashSeed(seed);
-  const gender = name ? genderForName(name) : h % 2 === 0 ? "men" : "women";
-  const idx = h % 99;
-  return `https://randomuser.me/api/portraits/${gender}/${idx}.jpg`;
+  // pravatar.cc gives crisp 300px portraits at any render size — randomuser.me
+  // tops out at 128px and looks blurry on lg/xl/2xl avatar cards.
+  const idx = (h % 70) + 1;
+  return `https://i.pravatar.cc/300?img=${idx}`;
 }
 
 type Zone = "career" | "startup" | "study" | "social" | "creative" | "fitness" | "research";
