@@ -96,12 +96,15 @@ export default function Feed() {
   const totalActive = insights.data?.totalActiveNow ?? 0;
   const upcomingEvents = (events.data ?? [])
     .slice()
-    .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
     .filter((e) => new Date(e.startsAt).getTime() > Date.now() - 60 * 60 * 1000)
     .slice(0, 4);
   const majorPeers = (majorHub.data?.peers ?? [])
     .filter((p) => p.id !== userId)
     .slice(0, 6);
+  const eventsSpanCampuses =
+    !!college && upcomingEvents.some((e) => e.college !== college);
+  const peersSpanCampuses =
+    !!college && majorPeers.some((p) => p.college !== college);
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8">
@@ -250,7 +253,12 @@ export default function Feed() {
       {upcomingEvents.length > 0 && (
         <section>
           <div className="mb-3 flex items-center justify-between gap-2 px-1">
-            <SectionHeader hue={SV_ACID} tag="happening on campus" icon={Calendar} compact />
+            <SectionHeader
+              hue={SV_ACID}
+              tag={eventsSpanCampuses ? "happening across campuses" : "happening on campus"}
+              icon={Calendar}
+              compact
+            />
             <Link
               href="/events"
               className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/40 hover:text-white/80"
@@ -273,7 +281,20 @@ export default function Feed() {
                     }}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <ZoneChip zone={e.zone} />
+                      <div className="flex items-center gap-1.5">
+                        <ZoneChip zone={e.zone} />
+                        {college && e.college !== college && (
+                          <span
+                            className="rounded-full border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                            style={{
+                              borderColor: "rgba(255,255,255,0.15)",
+                              color: "rgba(255,255,255,0.55)",
+                            }}
+                          >
+                            {e.college}
+                          </span>
+                        )}
+                      </div>
                       <span
                         className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.2em]"
                         style={{ color: isLive ? SV_GREEN : hue }}
@@ -333,7 +354,11 @@ export default function Feed() {
           <div className="mb-3 flex items-center justify-between gap-2 px-1">
             <SectionHeader
               hue={SV_CYAN}
-              tag={`${majorPeers.length}+ in ${user.major.toLowerCase()} right now`}
+              tag={
+                peersSpanCampuses
+                  ? `${majorPeers.length}+ in ${user.major.toLowerCase()} across campuses`
+                  : `${majorPeers.length}+ in ${user.major.toLowerCase()} right now`
+              }
               icon={GraduationCap}
               compact
             />
@@ -384,6 +409,17 @@ export default function Feed() {
                             }}
                           >
                             wants {p.lookingFor}
+                          </span>
+                        )}
+                        {college && p.college !== college && (
+                          <span
+                            className="rounded-full border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                            style={{
+                              borderColor: "rgba(255,255,255,0.15)",
+                              color: "rgba(255,255,255,0.5)",
+                            }}
+                          >
+                            {p.college}
                           </span>
                         )}
                       </div>

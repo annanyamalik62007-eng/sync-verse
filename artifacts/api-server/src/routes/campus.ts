@@ -33,19 +33,27 @@ router.get("/majors/hub", async (req, res): Promise<void> => {
     return;
   }
   const { major, college } = parsed.data;
-  let peers: UserRow[] = await db
+  // Always return same-major peers from any campus, ordered with the user's
+  // own college first so they feel local but the feed is never empty.
+  const sameMajorAnyCollege: UserRow[] = await db
     .select()
     .from(usersTable)
-    .where(college ? and(eq(usersTable.major, major), eq(usersTable.college, college)) : eq(usersTable.major, major));
-  // Fallback: if a niche major+college combo has no peers, return same-major
-  // peers from any campus so the feed never shows an empty section.
-  if (peers.length === 0 && college) {
-    peers = await db.select().from(usersTable).where(eq(usersTable.major, major));
-  }
-  // Final fallback: if the major itself isn't seeded, return a small slice
-  // of same-college users so the user still sees nearby peers.
+    .where(eq(usersTable.major, major));
+  let peers: UserRow[] = college
+    ? [
+        ...sameMajorAnyCollege.filter((p) => p.college === college),
+        ...sameMajorAnyCollege.filter((p) => p.college !== college),
+      ]
+    : sameMajorAnyCollege;
+  // If the major itself isn't seeded at all, fall back to same-college users
+  // so the user still sees nearby people doing things.
   if (peers.length === 0 && college) {
     peers = await db.select().from(usersTable).where(eq(usersTable.college, college));
+  }
+  // Last-resort: if even college has nothing seeded, return any active users
+  // so the feed has signal regardless of what the user typed at onboarding.
+  if (peers.length === 0) {
+    peers = await db.select().from(usersTable).limit(12);
   }
 
   const zoneBreakdown = ZONES.map((z) => {
