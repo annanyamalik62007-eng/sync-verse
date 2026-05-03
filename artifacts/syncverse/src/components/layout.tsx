@@ -90,7 +90,7 @@ export function Layout({ children }: LayoutProps) {
         className="sticky top-0 z-50 flex h-14 items-center justify-between border-b px-4 md:hidden"
         style={{ borderColor: SV_GRID, backgroundColor: SV_INK }}
       >
-        <Link href="/feed" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2" aria-label="SYNCVERSE home">
           <Asterisk className="h-5 w-5 sv-spin-slow" style={{ color: SV_HOT }} />
           <span
             className="text-xl font-black italic tracking-tighter"
@@ -123,8 +123,9 @@ export function Layout({ children }: LayoutProps) {
         style={{ borderColor: SV_GRID, backgroundColor: SV_INK }}
       >
         <Link
-          href="/feed"
+          href="/"
           className="flex h-20 items-center gap-3 px-6"
+          aria-label="SYNCVERSE home"
         >
           <Asterisk className="h-7 w-7 sv-spin-slow" style={{ color: SV_HOT }} />
           <span
