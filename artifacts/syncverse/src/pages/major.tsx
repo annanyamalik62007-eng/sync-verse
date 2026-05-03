@@ -46,6 +46,11 @@ export default function Major() {
 
   const peers = (hub.data?.peers ?? []).filter((p) => p.id !== userId);
   const livingNow = peers.filter((p) => p.timeframe === "now");
+  const samePeers = college ? peers.filter((p) => p.college === college) : peers;
+  const otherPeers = college ? peers.filter((p) => p.college !== college) : [];
+  const orderedPeers = [...samePeers, ...otherPeers];
+  const collegesRepresented = new Set(peers.map((p) => p.college).filter(Boolean));
+  const peersSpanCampuses = collegesRepresented.size > 1;
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8">
@@ -60,14 +65,40 @@ export default function Major() {
           <span className="sv-outline-text" style={{ color: SV_CYAN }}>{major ?? "your major"}</span>
         </h1>
         <p className="mt-3 text-sm text-white/60">
-          {college ? `everyone studying ${major} at ${college} — what they're up to right now` : "loading..."}
+          {college
+            ? peersSpanCampuses
+              ? `everyone studying ${major} across ${collegesRepresented.size} campuses — what they're up to right now`
+              : `everyone studying ${major} at ${college} — what they're up to right now`
+            : "loading..."}
         </p>
       </header>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat icon={Users} hue={SV_HOT} label="same major" value={peers.length} sub="peers on syncverse" />
-        <Stat icon={Activity} hue={SV_GREEN} label="active now" value={livingNow.length} sub="in the moment" />
-        <Stat icon={Building2} hue={SV_ACID} label="campus total" value={snapshot.data?.totalActive ?? "—"} sub={`students at ${college ?? "—"}`} />
+        <Stat
+          icon={Users}
+          hue={SV_HOT}
+          label="in your major"
+          value={peers.length}
+          sub={peersSpanCampuses ? `across ${collegesRepresented.size} campuses` : "peers on syncverse"}
+        />
+        <Stat
+          icon={Activity}
+          hue={SV_GREEN}
+          label="living it now"
+          value={livingNow.length}
+          sub="in the moment"
+        />
+        <Stat
+          icon={Building2}
+          hue={SV_ACID}
+          label={college ? `at ${college}` : "your campus"}
+          value={samePeers.length}
+          sub={
+            otherPeers.length > 0
+              ? `+ ${otherPeers.length} from other campuses`
+              : "same major peers"
+          }
+        />
       </div>
 
       {hub.data?.topIntents && hub.data.topIntents.length > 0 && (
@@ -102,7 +133,7 @@ export default function Major() {
         <div className="mb-3 flex items-center gap-2 px-1">
           <Users className="h-3.5 w-3.5" style={{ color: SV_CYAN }} />
           <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]" style={{ color: SV_CYAN }}>
-            your major peers
+            your major peers — {peers.length} active
           </h2>
         </div>
         {hub.isLoading && (
@@ -117,50 +148,75 @@ export default function Major() {
           </div>
         )}
         <div className="space-y-3">
-          {peers.map((p) => {
+          {orderedPeers.map((p, idx) => {
             const hue = ZONE_HUE[p.zone] ?? SV_CYAN;
+            const isCrossCampus = !!college && p.college !== college;
+            const isFirstCrossCampus =
+              isCrossCampus && idx === samePeers.length;
             return (
-              <Link
-                key={p.id}
-                href={`/user/${p.id}`}
-                className="flex items-start gap-4 rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:bg-white/[0.03]"
-                style={{
-                  borderColor: "rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(255,255,255,0.02)",
-                }}
-              >
-                <div
-                  className="rounded-full p-[2px]"
+              <div key={p.id}>
+                {isFirstCrossCampus && (
+                  <div className="mb-3 mt-2 flex items-center gap-3 px-1">
+                    <div className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
+                    <span
+                      className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/40"
+                    >
+                      also studying {major} across the network
+                    </span>
+                    <div className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
+                  </div>
+                )}
+                <Link
+                  href={`/user/${p.id}`}
+                  className="flex items-start gap-4 rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:bg-white/[0.03]"
                   style={{
-                    background: `conic-gradient(from 200deg, ${hue}, ${SV_HOT}, ${hue})`,
+                    borderColor: "rgba(255,255,255,0.08)",
+                    backgroundColor: "rgba(255,255,255,0.02)",
                   }}
                 >
-                  <div className="rounded-full p-[2px]" style={{ backgroundColor: SV_INK }}>
-                    <div className="overflow-hidden rounded-full">
-                      <UserAvatar user={p} size="md" />
+                  <div
+                    className="rounded-full p-[2px]"
+                    style={{
+                      background: `conic-gradient(from 200deg, ${hue}, ${SV_HOT}, ${hue})`,
+                    }}
+                  >
+                    <div className="rounded-full p-[2px]" style={{ backgroundColor: SV_INK }}>
+                      <div className="overflow-hidden rounded-full">
+                        <UserAvatar user={p} size="md" />
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-bold">{p.name}</span>
-                    {p.timeframe === "now" && (
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold">{p.name}</span>
+                      {p.timeframe === "now" && (
+                        <span
+                          className="rounded-full px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-widest"
+                          style={{ backgroundColor: SV_GREEN, color: SV_INK }}
+                        >
+                          live
+                        </span>
+                      )}
                       <span
-                        className="rounded-full px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-widest"
-                        style={{ backgroundColor: SV_GREEN, color: SV_INK }}
+                        className="rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest"
+                        style={{ color: hue, backgroundColor: `${hue}15` }}
                       >
-                        live
+                        {p.zone}
                       </span>
-                    )}
-                    <span
-                      className="rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest"
-                      style={{ color: hue, backgroundColor: `${hue}15` }}
-                    >
-                      {p.zone}
-                    </span>
+                      {isCrossCampus && (
+                        <span
+                          className="rounded-full border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                          style={{
+                            borderColor: "rgba(255,255,255,0.15)",
+                            color: "rgba(255,255,255,0.55)",
+                          }}
+                        >
+                          {p.college}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm italic text-white/70">"{p.intent}"</p>
                   </div>
-                  <p className="mt-1 text-sm italic text-white/70">"{p.intent}"</p>
-                </div>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -175,6 +231,7 @@ export default function Major() {
                   <MessageCircle className="h-4 w-4" />
                 </button>
               </Link>
+              </div>
             );
           })}
         </div>
