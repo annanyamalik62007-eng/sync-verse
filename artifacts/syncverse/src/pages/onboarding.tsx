@@ -379,6 +379,60 @@ function LandingHero({ onStart }: { onStart: () => void }) {
     setLocation("/feed");
   };
 
+  // ─── ROTATING TAGLINE ───────────────────────────────────────────────
+  // cycles through real student intents to make the headline feel alive
+  const ROTATING_PHRASES = [
+    { word: "your study buddy", color: SV_CYAN },
+    { word: "your cofounder", color: SV_HOT },
+    { word: "your gym partner", color: SV_GREEN },
+    { word: "your hackathon team", color: SV_ACID },
+    { word: "your 2am chai run", color: SV_HOT },
+    { word: "your people", color: SV_CYAN },
+    { word: "your hike crew", color: SV_GREEN },
+    { word: "your dinner squad", color: SV_ACID },
+  ];
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(
+      () => setPhraseIdx((i) => (i + 1) % ROTATING_PHRASES.length),
+      2400,
+    );
+    return () => clearInterval(t);
+  }, []);
+  const currentPhrase = ROTATING_PHRASES[phraseIdx]!;
+
+  // ─── ROTATING INTENT STREAM ─────────────────────────────────────────
+  // picks 3 fresh real users every ~3.5s so the sticker stack actually
+  // shows what people on campus are doing right now
+  const userPool = allUsers.data ?? [];
+  const [streamSeed, setStreamSeed] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setStreamSeed((s) => s + 1), 3500);
+    return () => clearInterval(t);
+  }, []);
+  const streamPicks = (() => {
+    if (userPool.length < 3) return [];
+    const start = (streamSeed * 3) % userPool.length;
+    return [0, 1, 2].map((i) => userPool[(start + i) % userPool.length]!);
+  })();
+
+  // ─── LIVE SYNC PAIR ─────────────────────────────────────────────────
+  // shows two random users "syncing" with a fabricated alignment %.
+  const [syncSeed, setSyncSeed] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setSyncSeed((s) => s + 1), 2800);
+    return () => clearInterval(t);
+  }, []);
+  const syncPair = (() => {
+    if (userPool.length < 2) return null;
+    const a = userPool[(syncSeed * 5) % userPool.length]!;
+    const b = userPool[(syncSeed * 5 + 7) % userPool.length]!;
+    if (a.id === b.id) return null;
+    // deterministic-feeling score 78-99
+    const score = 78 + ((syncSeed * 13) % 22);
+    return { a, b, score };
+  })();
+
   return (
     <div
       className="relative w-full overflow-x-hidden text-white"
@@ -456,9 +510,26 @@ function LandingHero({ onStart }: { onStart: () => void }) {
             <div className="md:col-span-7">
               <p className="text-2xl font-bold leading-tight tracking-tight md:text-4xl">
                 find{" "}
-                <span className="italic" style={{ color: SV_CYAN }}>
-                  your people
-                </span>{" "}
+                <span className="relative inline-flex h-[1.15em] min-w-[5ch] items-baseline overflow-hidden align-baseline">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={phraseIdx}
+                      initial={{ y: "100%", opacity: 0, rotateX: -40 }}
+                      animate={{ y: 0, opacity: 1, rotateX: 0 }}
+                      exit={{ y: "-100%", opacity: 0, rotateX: 40 }}
+                      transition={{ duration: 0.45, ease: [0.2, 0.8, 0.2, 1] }}
+                      className="inline-block whitespace-nowrap italic"
+                      style={{ color: currentPhrase.color }}
+                    >
+                      {currentPhrase.word}
+                    </motion.span>
+                  </AnimatePresence>
+                  <span
+                    className="ml-1 inline-block h-[0.9em] w-[3px] sv-blink self-center"
+                    style={{ backgroundColor: currentPhrase.color }}
+                  />
+                </span>
+                <br />
                 on campus.{" "}
                 <span
                   className="inline-block -rotate-2 px-2"
@@ -524,43 +595,122 @@ function LandingHero({ onStart }: { onStart: () => void }) {
               </div>
             </div>
 
-            {/* Sticker stack */}
+            {/* LIVE INTENT STREAM — rotates real users every ~3.5s */}
             <div className="relative md:col-span-5">
-              <div className="pointer-events-none relative mx-auto h-[280px] max-w-md md:h-[340px]">
+              <div className="relative mx-auto h-[340px] max-w-md md:h-[400px]">
+                {/* header label */}
                 <div
-                  className="absolute left-2 top-4 sv-tilt-l rounded-2xl border px-4 py-3 font-mono text-xs uppercase tracking-widest"
-                  style={{ borderColor: SV_CYAN, color: SV_CYAN, backgroundColor: SV_INK }}
+                  className="absolute -top-2 left-2 z-30 inline-flex items-center gap-2 border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.3em]"
+                  style={{ borderColor: SV_GREEN, color: SV_GREEN, backgroundColor: SV_INK }}
                 >
-                  Stata Center · 2:14 AM
-                  <div className="mt-1 text-sm font-bold normal-case tracking-normal text-white">
-                    "looking for hackathon co-builder"
-                  </div>
+                  <span
+                    className="h-1.5 w-1.5 sv-blink rounded-full"
+                    style={{ backgroundColor: SV_GREEN }}
+                  />
+                  on campus rn
                 </div>
-                <div
-                  className="absolute right-0 top-24 sv-tilt-r rounded-2xl px-4 py-3 shadow-[0_8px_30px_-4px_rgba(255,255,0,0.45)]"
-                  style={{ backgroundColor: SV_ACID, color: SV_INK }}
-                >
-                  <div className="font-mono text-[10px] uppercase tracking-widest opacity-70">
-                    Squad formed
-                  </div>
-                  <div className="text-sm font-black">3/4 locked in</div>
+
+                {/* rotating user cards stack */}
+                <div className="absolute inset-0 pt-6">
+                  <AnimatePresence mode="popLayout">
+                    {streamPicks.map((u, i) => {
+                      const accents = [SV_HOT, SV_CYAN, SV_ACID];
+                      const accent = accents[i]!;
+                      const tilts = [-2.5, 1.8, -1.2];
+                      const offsets = [
+                        { top: 0, left: 0 },
+                        { top: 110, left: 60 },
+                        { top: 220, left: 10 },
+                      ];
+                      const off = offsets[i]!;
+                      return (
+                        <motion.div
+                          key={`${streamSeed}-${u.id}-${i}`}
+                          initial={{ opacity: 0, y: 30, rotate: tilts[i]! - 6, scale: 0.92 }}
+                          animate={{ opacity: 1, y: 0, rotate: tilts[i]!, scale: 1 }}
+                          exit={{ opacity: 0, y: -20, rotate: tilts[i]! + 6, scale: 0.92 }}
+                          transition={{ duration: 0.55, delay: i * 0.08, ease: [0.2, 0.8, 0.2, 1] }}
+                          className="absolute w-[260px] rounded-2xl border p-3 shadow-[0_18px_40px_-10px_rgba(0,0,0,0.6)]"
+                          style={{
+                            borderColor: accent,
+                            backgroundColor: SV_INK,
+                            top: off.top,
+                            left: off.left,
+                            zIndex: 10 + i,
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <UserAvatar user={u} size="md" square />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="truncate text-sm font-black">{u.name}</span>
+                                <span
+                                  className="shrink-0 rounded-full px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-widest"
+                                  style={{ backgroundColor: accent, color: SV_INK }}
+                                >
+                                  {u.zone}
+                                </span>
+                              </div>
+                              <div className="mt-0.5 truncate font-mono text-[9px] uppercase tracking-widest text-white/40">
+                                {u.major} · {u.college}
+                              </div>
+                            </div>
+                          </div>
+                          <p className="mt-2.5 line-clamp-2 text-[13px] leading-snug text-white/85">
+                            "{u.intent.slice(0, 90)}{u.intent.length > 90 ? "…" : ""}"
+                          </p>
+                          {u.lookingFor && (
+                            <div
+                              className="mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                              style={{ borderColor: `${accent}80`, color: accent, borderWidth: 1, backgroundColor: `${accent}15` }}
+                            >
+                              <Asterisk className="h-2.5 w-2.5" />
+                              wants {u.lookingFor}
+                            </div>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+
+                  {streamPicks.length === 0 && (
+                    <div className="space-y-3">
+                      {[0, 1, 2].map((i) => (
+                        <div
+                          key={i}
+                          className="h-[88px] w-[260px] animate-pulse rounded-2xl border"
+                          style={{ borderColor: "#1a1a22", backgroundColor: "#11111A" }}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div
-                  className="absolute bottom-8 left-8 sv-tilt-l rounded-2xl border px-4 py-2"
-                  style={{ borderColor: SV_HOT, color: "white", backgroundColor: SV_INK }}
-                >
-                  <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: SV_HOT }}>
-                    new match
-                  </span>
-                  <div className="text-sm font-bold">"both in 6.046, both stuck"</div>
-                </div>
-                <div
-                  className="absolute -right-2 bottom-2 flex h-16 w-16 items-center justify-center rounded-full font-mono text-[10px] uppercase tracking-widest"
-                  style={{ backgroundColor: SV_HOT, color: SV_INK }}
-                >
-                  <Asterisk className="absolute h-16 w-16 sv-spin-slow opacity-30" />
-                  <span className="relative font-black">live</span>
-                </div>
+
+                {/* live syncing pair — bottom-right floating card */}
+                {syncPair && (
+                  <motion.div
+                    key={syncSeed}
+                    initial={{ opacity: 0, scale: 0.9, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
+                    className="absolute -bottom-4 -right-2 z-40 flex items-center gap-2 rounded-2xl border px-3 py-2 shadow-[0_12px_30px_-6px_rgba(255,255,0,0.55)]"
+                    style={{ borderColor: SV_ACID, backgroundColor: SV_ACID, color: SV_INK }}
+                  >
+                    <div className="flex -space-x-2">
+                      <UserAvatar user={syncPair.a} size="sm" className="border-2" ring={SV_INK} />
+                      <UserAvatar user={syncPair.b} size="sm" className="border-2" ring={SV_INK} />
+                    </div>
+                    <div className="leading-tight">
+                      <div className="font-mono text-[8px] uppercase tracking-widest opacity-70">
+                        syncing now
+                      </div>
+                      <div className="text-sm font-black italic tracking-tight">
+                        {syncPair.score}% align
+                      </div>
+                    </div>
+                    <Asterisk className="h-4 w-4 sv-spin-slow" />
+                  </motion.div>
+                )}
               </div>
             </div>
           </div>
