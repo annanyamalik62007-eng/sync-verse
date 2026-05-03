@@ -8,8 +8,6 @@ import {
   getGetCollegeSnapshotQueryKey,
 } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   GraduationCap,
   Users,
@@ -19,6 +17,7 @@ import {
   Building2,
 } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
+import { SV_INK, SV_HOT, SV_CYAN, SV_ACID, SV_GREEN, SV_GRID, ZONE_HUE } from "@/lib/theme";
 
 export default function Major() {
   const userId = useCurrentUserId();
@@ -49,152 +48,213 @@ export default function Major() {
   const livingNow = peers.filter((p) => p.timeframe === "now");
 
   return (
-    <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-          <GraduationCap className="h-3 w-3" /> Major hub
+    <div className="space-y-8">
+      <header className="border-b-2 pb-6" style={{ borderColor: SV_CYAN }}>
+        <div
+          className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.4em]"
+          style={{ color: SV_CYAN }}
+        >
+          <GraduationCap className="h-3 w-3" /> / major hub
         </div>
-        <h1 className="mt-2 text-3xl font-black tracking-tighter md:text-5xl">
-          {major ?? "Your major"}
+        <h1 className="mt-3 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+          <span className="sv-outline-text" style={{ color: SV_CYAN }}>{major ?? "your major"}</span>
         </h1>
-        <p className="mt-2 text-muted-foreground">
-          {college ? `Everyone studying ${major} at ${college} — and what they're up to right now.` : "Loading..."}
+        <p className="mt-3 font-mono text-xs uppercase tracking-widest text-white/50">
+          // {college ? `everyone studying ${major} at ${college} — what they're up to right now` : "loading..."}
         </p>
-      </div>
+      </header>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="border-border bg-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              <Users className="h-3 w-3" /> Same major
-            </div>
-            <div className="mt-2 text-3xl font-black tracking-tighter text-primary">
-              {peers.length}
-            </div>
-            <div className="text-xs text-muted-foreground">peers on SYNCVERSE</div>
-          </CardContent>
-        </Card>
-        <Card className="border-border bg-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              <Activity className="h-3 w-3" /> Active now
-            </div>
-            <div className="mt-2 text-3xl font-black tracking-tighter text-primary">
-              {livingNow.length}
-            </div>
-            <div className="text-xs text-muted-foreground">in the moment</div>
-          </CardContent>
-        </Card>
-        <Card className="border-border bg-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              <Building2 className="h-3 w-3" /> Campus total
-            </div>
-            <div className="mt-2 text-3xl font-black tracking-tighter text-primary">
-              {snapshot.data?.totalActive ?? "-"}
-            </div>
-            <div className="text-xs text-muted-foreground">students at {college}</div>
-          </CardContent>
-        </Card>
+        <Stat icon={Users} hue={SV_HOT} label="same major" value={peers.length} sub="peers on syncverse" />
+        <Stat icon={Activity} hue={SV_GREEN} label="active now" value={livingNow.length} sub="in the moment" />
+        <Stat icon={Building2} hue={SV_ACID} label="campus total" value={snapshot.data?.totalActive ?? "—"} sub={`students at ${college ?? "—"}`} />
       </div>
 
       {hub.data?.topIntents && hub.data.topIntents.length > 0 && (
-        <Card className="border-border bg-card">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              <TrendingUp className="h-3 w-3" /> What {major} students are working on
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {hub.data.topIntents.map((t, i) => (
-                <Badge
-                  key={i}
-                  variant="outline"
-                  className="border-primary/30 bg-primary/5 text-xs text-primary"
-                >
-                  {t}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <section
+          className="border-2 p-5"
+          style={{ borderColor: SV_HOT, backgroundColor: SV_INK }}
+        >
+          <div
+            className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em]"
+            style={{ color: SV_HOT }}
+          >
+            <TrendingUp className="h-3 w-3" /> / what {major} students are working on
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {hub.data.topIntents.map((t, i) => (
+              <span
+                key={i}
+                className="border px-2 py-1 font-mono text-[10px] uppercase tracking-widest"
+                style={{ borderColor: SV_HOT, color: SV_HOT }}
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </section>
       )}
 
-      <div>
-        <h2 className="mb-3 text-xl font-bold">Your major peers</h2>
-        {hub.isLoading && <p className="text-sm text-muted-foreground">Loading peers...</p>}
+      <section>
+        <div className="mb-4 flex items-center gap-2">
+          <Users className="h-3.5 w-3.5" style={{ color: SV_CYAN }} />
+          <h2
+            className="font-mono text-xs font-black uppercase tracking-[0.3em]"
+            style={{ color: SV_CYAN }}
+          >
+            / your major peers
+          </h2>
+        </div>
+        {hub.isLoading && (
+          <p className="font-mono text-xs uppercase tracking-widest text-white/50">
+            // loading peers...
+          </p>
+        )}
         {peers.length === 0 && !hub.isLoading && (
-          <Card className="border-dashed border-border bg-card">
-            <CardContent className="p-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                You're the first {major} student here. Invite your classmates.
-              </p>
-            </CardContent>
-          </Card>
+          <div
+            className="border-2 border-dashed p-8 text-center font-mono text-xs uppercase tracking-widest text-white/50"
+            style={{ borderColor: SV_GRID }}
+          >
+            // you're the first {major} student here. invite your classmates.
+          </div>
         )}
         <div className="space-y-3">
-          {peers.map((p) => (
-            <Card key={p.id} className="border-border bg-card hover:border-primary/40">
-              <CardContent className="flex items-start gap-4 p-4">
-                <UserAvatar user={p} size="md" />
+          {peers.map((p) => {
+            const hue = ZONE_HUE[p.zone] ?? SV_CYAN;
+            return (
+              <div
+                key={p.id}
+                className="flex items-start gap-4 border-2 p-4 transition-all hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                style={{
+                  borderColor: SV_GRID,
+                  backgroundColor: SV_INK,
+                  boxShadow: `3px 3px 0 0 ${SV_GRID}`,
+                }}
+              >
+                <UserAvatar user={p} size="md" square />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-bold">{p.name}</span>
+                    <span className="font-black">{p.name}</span>
                     {p.timeframe === "now" && (
-                      <Badge className="bg-primary/15 text-[10px] text-primary">live now</Badge>
+                      <span
+                        className="px-1.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-widest"
+                        style={{ backgroundColor: SV_GREEN, color: SV_INK }}
+                      >
+                        live
+                      </span>
                     )}
-                    <Badge variant="outline" className="text-[10px] capitalize">
-                      {p.zone}
-                    </Badge>
+                    <span
+                      className="font-mono text-[10px] uppercase tracking-widest"
+                      style={{ color: hue }}
+                    >
+                      / {p.zone}
+                    </span>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{p.intent}</p>
+                  <p className="mt-1 text-sm italic text-white/70">"{p.intent}"</p>
                 </div>
                 <Link
                   href={`/messages/${p.id}`}
-                  className="flex-shrink-0 rounded-full border border-primary/30 bg-primary/5 p-2 text-primary transition-all hover:bg-primary hover:text-primary-foreground"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center border-2 transition-all hover:translate-x-[-1px] hover:translate-y-[-1px]"
+                  style={{
+                    backgroundColor: hue,
+                    borderColor: hue,
+                    color: SV_INK,
+                    boxShadow: `2px 2px 0 0 ${SV_INK}`,
+                  }}
                   aria-label={`Message ${p.name}`}
                 >
                   <MessageCircle className="h-4 w-4" />
                 </Link>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            );
+          })}
         </div>
-      </div>
+      </section>
 
       {snapshot.data && snapshot.data.topMajors.length > 0 && (
-        <Card className="border-border bg-card">
-          <CardContent className="p-5">
-            <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Most active majors at {college}
-            </div>
-            <div className="mt-3 space-y-2">
-              {snapshot.data.topMajors.map((m) => {
-                const max = snapshot.data!.topMajors[0]?.count ?? 1;
-                const pct = Math.round((m.count / max) * 100);
-                const isYou = m.major === major;
-                return (
-                  <div key={m.major} className="flex items-center gap-3">
-                    <span className={`w-44 truncate text-sm ${isYou ? "font-bold text-primary" : ""}`}>
-                      {m.major} {isYou && <span className="text-[10px]">· you</span>}
-                    </span>
-                    <div className="flex-1">
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
+        <section
+          className="border-2 p-5"
+          style={{ borderColor: SV_ACID, backgroundColor: SV_INK }}
+        >
+          <div
+            className="font-mono text-[10px] uppercase tracking-[0.3em]"
+            style={{ color: SV_ACID }}
+          >
+            / most active majors at {college}
+          </div>
+          <div className="mt-4 space-y-2">
+            {snapshot.data.topMajors.map((m) => {
+              const max = snapshot.data!.topMajors[0]?.count ?? 1;
+              const pct = Math.round((m.count / max) * 100);
+              const isYou = m.major === major;
+              return (
+                <div key={m.major} className="flex items-center gap-3">
+                  <span
+                    className="w-44 truncate text-sm"
+                    style={{ color: isYou ? SV_ACID : "white", fontWeight: isYou ? 900 : 400 }}
+                  >
+                    {m.major} {isYou && <span className="font-mono text-[9px] uppercase tracking-widest">· you</span>}
+                  </span>
+                  <div className="flex-1">
+                    <div
+                      className="h-2 w-full overflow-hidden border"
+                      style={{ borderColor: SV_GRID }}
+                    >
+                      <div
+                        className="h-full transition-all"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: isYou ? SV_ACID : SV_CYAN,
+                        }}
+                      />
                     </div>
-                    <span className="w-8 text-right text-sm tabular-nums text-muted-foreground">
-                      {m.count}
-                    </span>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                  <span
+                    className="w-8 text-right font-mono text-xs tabular-nums text-white/60"
+                  >
+                    {m.count}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
       )}
+    </div>
+  );
+}
+
+function Stat({
+  icon: Icon,
+  hue,
+  label,
+  value,
+  sub,
+}: {
+  icon: typeof Users;
+  hue: string;
+  label: string;
+  value: React.ReactNode;
+  sub: string;
+}) {
+  return (
+    <div
+      className="border-2 p-4"
+      style={{ borderColor: hue, backgroundColor: SV_INK, boxShadow: `4px 4px 0 0 ${SV_GRID}` }}
+    >
+      <div
+        className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em]"
+        style={{ color: hue }}
+      >
+        <Icon className="h-3 w-3" /> / {label}
+      </div>
+      <div
+        className="mt-2 text-4xl font-black italic leading-none tracking-tighter"
+        style={{ color: hue }}
+      >
+        {value}
+      </div>
+      <div className="mt-1 font-mono text-[9px] uppercase tracking-widest text-white/50">{sub}</div>
     </div>
   );
 }

@@ -8,9 +8,9 @@ import {
   type CommunityZone,
 } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
-import { Card, CardContent } from "@/components/ui/card";
 import { Activity, ArrowLeft, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
+import { SV_INK, SV_GRID, ZONE_HUE, SV_CYAN } from "@/lib/theme";
 
 const ZONE_LABELS: Record<CommunityZone, string> = {
   career: "Career",
@@ -41,9 +41,11 @@ export default function Zone() {
 
   if (!zone || !isZone(zone)) {
     return (
-      <div className="text-center text-muted-foreground">
-        <p>Unknown zone.</p>
-        <Link href="/feed" className="text-primary underline">Back to feed</Link>
+      <div className="text-center font-mono text-xs uppercase tracking-widest text-white/50">
+        // unknown zone.
+        <Link href="/feed" style={{ color: SV_CYAN }} className="ml-2 underline">
+          back to feed
+        </Link>
       </div>
     );
   }
@@ -52,29 +54,44 @@ export default function Zone() {
 }
 
 function ZoneInner({ zone, college }: { zone: CommunityZone; college?: string }) {
+  const hue = ZONE_HUE[zone] ?? SV_CYAN;
   const users = useListUsers({ zone, ...(college ? { college } : {}) });
   const activity = useGetZoneActivity();
   const z = activity.data?.find((a) => a.zone === zone);
   const TrendI = z ? trendIcon[z.trendDirection] : Minus;
 
   return (
-    <div className="space-y-6">
-      <Link href="/feed" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
-        <ArrowLeft className="h-3.5 w-3.5" /> Live feed
+    <div className="space-y-8">
+      <Link
+        href="/feed"
+        className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.25em] text-white/60 hover:text-white"
+      >
+        <ArrowLeft className="h-3 w-3" /> / live feed
       </Link>
 
-      <div className="rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-6 md:p-8">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-          <Activity className="h-3 w-3 animate-pulse" /> Zone
+      <section
+        className="border-2 p-6 md:p-10"
+        style={{ borderColor: hue, boxShadow: `8px 8px 0 0 ${SV_GRID}` }}
+      >
+        <div
+          className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.4em]"
+          style={{ color: hue }}
+        >
+          <Activity className="h-3 w-3 animate-pulse" /> / zone
         </div>
-        <h1 className="mt-2 text-4xl font-black tracking-tighter md:text-6xl">{ZONE_LABELS[zone]}</h1>
+        <h1 className="mt-3 text-5xl font-black italic leading-none tracking-tighter md:text-7xl">
+          <span className="sv-outline-text" style={{ color: hue }}>
+            {ZONE_LABELS[zone]}
+          </span>
+        </h1>
         {z && (
-          <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label="Active" value={z.activeUsers} />
-            <Stat label="Living now" value={z.livingNow} />
-            <Stat label="Squads" value={z.squads} />
+          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <Stat hue={hue} label="active" value={z.activeUsers} />
+            <Stat hue={hue} label="living now" value={z.livingNow} />
+            <Stat hue={hue} label="squads" value={z.squads} />
             <Stat
-              label="Trend"
+              hue={hue}
+              label="trend"
               value={
                 <span className="inline-flex items-center gap-1">
                   <TrendI className="h-5 w-5" />
@@ -84,39 +101,56 @@ function ZoneInner({ zone, college }: { zone: CommunityZone; college?: string })
             />
           </div>
         )}
-      </div>
+      </section>
 
       <section>
-        <h2 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">
-          People in this zone {college ? `at ${college}` : ""}
+        <h2
+          className="mb-4 font-mono text-xs font-black uppercase tracking-[0.3em]"
+          style={{ color: hue }}
+        >
+          / people in this zone {college ? `at ${college}` : ""}
         </h2>
-        {users.isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
+        {users.isLoading && (
+          <p className="font-mono text-xs uppercase tracking-widest text-white/50">
+            // loading...
+          </p>
+        )}
         {users.data?.length === 0 && (
-          <Card className="border-dashed border-border bg-card">
-            <CardContent className="p-6 text-center text-sm text-muted-foreground">
-              No one here yet. You could be the first signal.
-            </CardContent>
-          </Card>
+          <div
+            className="border-2 border-dashed p-8 text-center font-mono text-xs uppercase tracking-widest text-white/50"
+            style={{ borderColor: SV_GRID }}
+          >
+            // no one here yet. you could be the first signal.
+          </div>
         )}
         <div className="grid gap-3 md:grid-cols-2">
           {users.data?.map((u: User) => (
-            <Card key={u.id} className="border-border bg-card">
-              <CardContent className="flex items-start gap-3 p-4">
-                <UserAvatar user={u} size="md" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold">{u.name}</h3>
-                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                      {u.timeframe} · {u.energyLevel}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {u.major} · {u.college}
-                  </p>
-                  <p className="mt-1 text-sm">{u.intent}</p>
+            <div
+              key={u.id}
+              className="flex items-start gap-3 border-2 p-4"
+              style={{
+                borderColor: SV_GRID,
+                backgroundColor: SV_INK,
+                boxShadow: `3px 3px 0 0 ${SV_GRID}`,
+              }}
+            >
+              <UserAvatar user={u} size="md" square />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-black">{u.name}</h3>
+                  <span
+                    className="font-mono text-[9px] uppercase tracking-widest"
+                    style={{ color: hue }}
+                  >
+                    {u.timeframe} · {u.energyLevel}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-white/50">
+                  {u.major} · {u.college}
+                </p>
+                <p className="mt-1.5 text-sm italic text-white/80">"{u.intent}"</p>
+              </div>
+            </div>
           ))}
         </div>
       </section>
@@ -124,11 +158,21 @@ function ZoneInner({ zone, college }: { zone: CommunityZone; college?: string })
   );
 }
 
-function Stat({ label, value }: { label: string; value: React.ReactNode }) {
+function Stat({ hue, label, value }: { hue: string; label: string; value: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-border bg-muted/20 p-3">
-      <div className="text-2xl font-black text-primary">{value}</div>
-      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</div>
+    <div className="border-2 p-3" style={{ borderColor: SV_GRID }}>
+      <div
+        className="text-3xl font-black italic leading-none tracking-tighter"
+        style={{ color: hue }}
+      >
+        {value}
+      </div>
+      <div
+        className="mt-1 font-mono text-[9px] uppercase tracking-[0.25em]"
+        style={{ color: hue }}
+      >
+        / {label}
+      </div>
     </div>
   );
 }

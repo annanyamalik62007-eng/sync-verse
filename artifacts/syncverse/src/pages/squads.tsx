@@ -9,12 +9,11 @@ import {
   type User,
 } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Users, Rocket, MapPin, Target } from "lucide-react";
+import { Users, Rocket, MapPin, Target, Sparkles } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
+import { SV_INK, SV_HOT, SV_CYAN, SV_ACID, SV_GREEN, SV_GRID, ZONE_HUE, accentByIndex } from "@/lib/theme";
 
-function MemberDots({ members }: { members: User[] }) {
+function MemberDots({ members, accent }: { members: User[]; accent: string }) {
   return (
     <div className="flex -space-x-2">
       {members.slice(0, 5).map((m) => (
@@ -22,11 +21,20 @@ function MemberDots({ members }: { members: User[] }) {
           key={m.id}
           user={m}
           size="sm"
-          className="border-2 border-card"
+          square
+          className="border-2"
+          style={{ borderColor: SV_INK }}
         />
       ))}
       {members.length > 5 && (
-        <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-muted text-[10px] font-bold text-foreground">
+        <div
+          className="flex h-8 w-8 items-center justify-center border-2 font-mono text-[10px] font-black"
+          style={{
+            borderColor: SV_INK,
+            backgroundColor: accent,
+            color: SV_INK,
+          }}
+        >
           +{members.length - 5}
         </div>
       )}
@@ -39,62 +47,95 @@ function SquadCard({
   isSuggested,
   onJoin,
   joining,
+  accent,
 }: {
   squad: Squad;
   isSuggested: boolean;
   onJoin: () => void;
   joining: boolean;
+  accent: string;
 }) {
+  const zoneHue = ZONE_HUE[squad.zone] ?? SV_CYAN;
   return (
-    <Card className="border-border bg-card transition-all hover:border-primary/50">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              {isSuggested && (
-                <span className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-accent">
-                  Suggested
-                </span>
-              )}
-              <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                {squad.zone}
-              </span>
-            </div>
-            <h3 className="mt-2 text-xl font-bold">{squad.name}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{squad.purpose}</p>
-          </div>
+    <div
+      className="border-2 transition-all hover:translate-x-[-3px] hover:translate-y-[-3px]"
+      style={{
+        borderColor: accent,
+        backgroundColor: SV_INK,
+        boxShadow: `5px 5px 0 0 ${SV_GRID}`,
+      }}
+    >
+      <div
+        className="flex items-center justify-between px-4 py-2"
+        style={{ backgroundColor: accent, color: SV_INK }}
+      >
+        <div className="font-mono text-[10px] font-black uppercase tracking-[0.3em]">
+          {isSuggested ? "/ suggested for you" : "/ active squad"}
         </div>
+        <div className="font-mono text-[10px] uppercase tracking-widest">
+          / {squad.zone}
+        </div>
+      </div>
+      <div className="p-5">
+        <h3 className="text-2xl font-black italic tracking-tight">{squad.name}</h3>
+        <p className="mt-1.5 text-sm text-white/70">{squad.purpose}</p>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <div className="flex items-start gap-2 rounded-lg bg-muted/30 p-3">
-            <Target className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+          <div
+            className="flex items-start gap-2 border p-3"
+            style={{ borderColor: SV_GRID }}
+          >
+            <Target className="mt-0.5 h-4 w-4 flex-shrink-0" style={{ color: zoneHue }} />
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">First action</div>
-              <div className="text-sm">{squad.firstAction}</div>
+              <div
+                className="font-mono text-[9px] uppercase tracking-[0.25em]"
+                style={{ color: zoneHue }}
+              >
+                / first action
+              </div>
+              <div className="mt-0.5 text-sm">{squad.firstAction}</div>
             </div>
           </div>
-          <div className="flex items-start gap-2 rounded-lg bg-muted/30 p-3">
-            <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+          <div
+            className="flex items-start gap-2 border p-3"
+            style={{ borderColor: SV_GRID }}
+          >
+            <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0" style={{ color: zoneHue }} />
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Meet</div>
-              <div className="text-sm">{squad.suggestedMeetup}</div>
+              <div
+                className="font-mono text-[9px] uppercase tracking-[0.25em]"
+                style={{ color: zoneHue }}
+              >
+                / meet
+              </div>
+              <div className="mt-0.5 text-sm">{squad.suggestedMeetup}</div>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex items-center justify-between border-t pt-4" style={{ borderColor: SV_GRID }}>
           <div className="flex items-center gap-3">
-            <MemberDots members={squad.members} />
-            <span className="text-xs text-muted-foreground">
+            <MemberDots members={squad.members} accent={accent} />
+            <span className="font-mono text-[10px] uppercase tracking-widest text-white/50">
               {squad.members.length} {squad.members.length === 1 ? "member" : "members"}
             </span>
           </div>
-          <Button onClick={onJoin} disabled={joining} size="sm" className="gap-1.5">
-            <Rocket className="h-3.5 w-3.5" /> {isSuggested ? "Form squad" : "Join"}
-          </Button>
+          <button
+            onClick={onJoin}
+            disabled={joining}
+            className="inline-flex items-center gap-1.5 border-2 px-4 py-2 font-mono text-[10px] font-black uppercase tracking-[0.25em] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] disabled:opacity-40"
+            style={{
+              backgroundColor: accent,
+              borderColor: accent,
+              color: SV_INK,
+              boxShadow: `3px 3px 0 0 ${SV_INK}`,
+            }}
+          >
+            <Rocket className="h-3 w-3" /> {isSuggested ? "form squad" : "join"}
+          </button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -124,26 +165,40 @@ export default function Squads() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-          <Users className="h-3 w-3" /> Squads
+    <div className="space-y-8">
+      <header className="border-b-2 pb-6" style={{ borderColor: SV_GREEN }}>
+        <div
+          className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.4em]"
+          style={{ color: SV_GREEN }}
+        >
+          <Users className="h-3 w-3" /> / form your squad
         </div>
-        <h1 className="mt-2 text-3xl font-black tracking-tighter md:text-5xl">Form your squad</h1>
-        <p className="mt-2 text-muted-foreground">
-          Join an active squad or spin up a suggested one with people on your exact wavelength.
+        <h1 className="mt-3 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+          rooms that <span className="sv-outline-text" style={{ color: SV_GREEN }}>ship</span>.
+        </h1>
+        <p className="mt-3 font-mono text-xs uppercase tracking-widest text-white/50">
+          // 3-5 people · first action set · meet spot picked
         </p>
-      </div>
+      </header>
 
       {(suggestions.data?.length ?? 0) > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">For you</h2>
-          <div className="space-y-3">
-            {suggestions.data!.map((s) => (
+          <div className="mb-4 flex items-center gap-2">
+            <Sparkles className="h-3.5 w-3.5" style={{ color: SV_HOT }} />
+            <h2
+              className="font-mono text-xs font-black uppercase tracking-[0.3em]"
+              style={{ color: SV_HOT }}
+            >
+              / for you
+            </h2>
+          </div>
+          <div className="space-y-4">
+            {suggestions.data!.map((s, i) => (
               <SquadCard
                 key={s.id}
                 squad={s}
                 isSuggested
+                accent={SV_HOT}
                 joining={joinMutation.isPending}
                 onJoin={() => handleJoin(s.id)}
               />
@@ -153,21 +208,35 @@ export default function Squads() {
       )}
 
       <section>
-        <h2 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">Active squads</h2>
-        {squads.isLoading && <p className="text-sm text-muted-foreground">Loading squads...</p>}
-        {squads.data?.length === 0 && (
-          <Card className="border-dashed border-border bg-card">
-            <CardContent className="p-6 text-center text-sm text-muted-foreground">
-              No active squads yet. Be the founder.
-            </CardContent>
-          </Card>
+        <div className="mb-4 flex items-center gap-2">
+          <Users className="h-3.5 w-3.5" style={{ color: SV_CYAN }} />
+          <h2
+            className="font-mono text-xs font-black uppercase tracking-[0.3em]"
+            style={{ color: SV_CYAN }}
+          >
+            / active squads
+          </h2>
+        </div>
+        {squads.isLoading && (
+          <p className="font-mono text-xs uppercase tracking-widest text-white/50">
+            // loading squads...
+          </p>
         )}
-        <div className="space-y-3">
-          {squads.data?.map((s) => (
+        {squads.data?.length === 0 && (
+          <div
+            className="border-2 border-dashed p-8 text-center font-mono text-xs uppercase tracking-widest text-white/50"
+            style={{ borderColor: SV_GRID }}
+          >
+            // no active squads yet. be the founder.
+          </div>
+        )}
+        <div className="space-y-4">
+          {squads.data?.map((s, i) => (
             <SquadCard
               key={s.id}
               squad={s}
               isSuggested={false}
+              accent={accentByIndex(i + 1)}
               joining={joinMutation.isPending}
               onJoin={() => handleJoin(s.id)}
             />

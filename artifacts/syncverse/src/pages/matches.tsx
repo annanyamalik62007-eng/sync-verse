@@ -1,10 +1,9 @@
 import { Link } from "wouter";
 import { useGetMatchesForUser, getGetMatchesForUserQueryKey, type Match } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Flame, Sparkles, MessageCircle } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
+import { SV_INK, SV_HOT, SV_CYAN, SV_ACID, SV_GREEN, SV_GRID, ZONE_HUE, accentByIndex } from "@/lib/theme";
 
 export default function Matches() {
   const userId = useCurrentUserId();
@@ -13,74 +12,119 @@ export default function Matches() {
   });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-          <Flame className="h-3 w-3" /> Real-time match detection
+    <div className="space-y-8">
+      <header className="border-b-2 pb-6" style={{ borderColor: SV_HOT }}>
+        <div
+          className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.4em]"
+          style={{ color: SV_HOT }}
+        >
+          <Flame className="h-3 w-3" /> / real-time match detection
         </div>
-        <h1 className="mt-2 text-3xl font-black tracking-tighter md:text-5xl">Your matches</h1>
-        <p className="mt-2 text-muted-foreground">
-          People on your wavelength right now — ranked by alignment with your intent.
+        <h1 className="mt-3 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+          your <span className="sv-outline-text" style={{ color: SV_HOT }}>matches</span>
+        </h1>
+        <p className="mt-3 font-mono text-xs uppercase tracking-widest text-white/50">
+          // people on your wavelength · ranked by alignment
         </p>
-      </div>
+      </header>
 
-      {matches.isLoading && <p className="text-sm text-muted-foreground">Scanning campus signals...</p>}
-
-      {matches.data?.length === 0 && (
-        <Card className="border-dashed border-border bg-card">
-          <CardContent className="p-8 text-center">
-            <Sparkles className="mx-auto h-8 w-8 text-muted-foreground" />
-            <p className="mt-3 text-sm text-muted-foreground">
-              No matches yet. The more specific your intent, the better we sync you.
-            </p>
-          </CardContent>
-        </Card>
+      {matches.isLoading && (
+        <p className="font-mono text-xs uppercase tracking-widest text-white/50">
+          // scanning campus signals...
+        </p>
       )}
 
-      <div className="space-y-3">
-        {matches.data?.map((m: Match) => (
-          <Card
-            key={m.user.id}
-            className="border-border bg-card transition-all hover:border-primary/50 hover:shadow-[0_0_25px_-10px_hsl(var(--primary))]"
-          >
-            <CardContent className="p-5">
-              <div className="flex items-start gap-4">
-                <UserAvatar user={m.user} size="lg" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-bold">{m.user.name}</h3>
-                    <span className="text-xs text-muted-foreground">
-                      {m.user.major} · {m.user.college}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-foreground/90">{m.user.intent}</p>
-                  <p className="mt-2 text-xs text-primary">{m.reason}</p>
-                  {m.sharedSignals.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {m.sharedSignals.map((s: string, i: number) => (
-                        <Badge key={i} variant="outline" className="border-primary/30 bg-primary/5 text-[10px] text-primary">
-                          {s}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+      {matches.data?.length === 0 && (
+        <div
+          className="border-2 border-dashed p-10 text-center"
+          style={{ borderColor: SV_GRID }}
+        >
+          <Sparkles className="mx-auto h-8 w-8" style={{ color: SV_CYAN }} />
+          <p className="mt-4 font-mono text-xs uppercase tracking-widest text-white/60">
+            // no matches yet. the more specific your intent, the better we sync you.
+          </p>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {matches.data?.map((m: Match, i: number) => {
+          const accent = accentByIndex(i);
+          const zoneHue = ZONE_HUE[m.user.zone] ?? SV_CYAN;
+          return (
+            <article
+              key={m.user.id}
+              className="border-2 transition-all hover:translate-x-[-3px] hover:translate-y-[-3px]"
+              style={{
+                borderColor: accent,
+                backgroundColor: SV_INK,
+                boxShadow: `5px 5px 0 0 ${SV_GRID}`,
+              }}
+            >
+              <div
+                className="flex items-center justify-between px-4 py-2"
+                style={{ backgroundColor: accent, color: SV_INK }}
+              >
+                <div className="font-mono text-[10px] font-black uppercase tracking-[0.3em]">
+                  / match · 0{i + 1}
                 </div>
-                <div className="flex flex-shrink-0 flex-col items-end gap-2">
-                  <div className="text-right">
-                    <div className="text-2xl font-black leading-none tracking-tighter text-primary">{m.alignmentScore}</div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">align</div>
+                <div className="font-mono text-[10px] uppercase tracking-widest">
+                  align {m.alignmentScore}
+                </div>
+              </div>
+              <div className="p-5">
+                <div className="flex items-start gap-4">
+                  <UserAvatar user={m.user} size="xl" square />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-2xl font-black italic tracking-tight">{m.user.name}</h3>
+                    <div
+                      className="mt-1 font-mono text-[10px] uppercase tracking-[0.25em]"
+                      style={{ color: zoneHue }}
+                    >
+                      / {m.user.major} · {m.user.college}
+                    </div>
+                    <p className="mt-3 text-sm italic text-white/80">"{m.user.intent}"</p>
+                    <p
+                      className="mt-2 font-mono text-[10px] uppercase tracking-widest"
+                      style={{ color: accent }}
+                    >
+                      // {m.reason}
+                    </p>
+                    {m.sharedSignals.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-1.5">
+                        {m.sharedSignals.map((s: string, idx: number) => (
+                          <span
+                            key={idx}
+                            className="border px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest"
+                            style={{ borderColor: accent, color: accent }}
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-5 flex items-center justify-between border-t pt-4" style={{ borderColor: SV_GRID }}>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/40">
+                    anonymous until you say hi
                   </div>
                   <Link
                     href={`/messages/${m.user.id}`}
-                    className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2.5 py-1 text-xs font-semibold text-primary transition-all hover:bg-primary hover:text-primary-foreground"
+                    className="inline-flex items-center gap-1.5 border-2 px-4 py-2 font-mono text-[10px] font-black uppercase tracking-[0.25em] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                    style={{
+                      backgroundColor: accent,
+                      borderColor: accent,
+                      color: SV_INK,
+                      boxShadow: `3px 3px 0 0 ${SV_INK}`,
+                    }}
                   >
-                    <MessageCircle className="h-3 w-3" /> Message
+                    <MessageCircle className="h-3 w-3" /> message
                   </Link>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </article>
+          );
+        })}
       </div>
     </div>
   );

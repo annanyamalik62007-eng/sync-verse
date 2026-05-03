@@ -15,6 +15,14 @@ import {
   type CreateUserInput,
 } from "@workspace/api-client-react";
 import { setCurrentUserId, useCurrentUserId } from "@/hooks/use-current-user";
+import {
+  SV_HOT as THEME_SV_HOT,
+  SV_CYAN as THEME_SV_CYAN,
+  SV_ACID as THEME_SV_ACID,
+  SV_GREEN as THEME_SV_GREEN,
+  SV_INK as THEME_SV_INK,
+  ZONE_HUE as THEME_ZONE_HUE,
+} from "@/lib/theme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -191,21 +199,12 @@ const HERO_STYLES = `
   .sv-tilt-r { transform: rotate(1.5deg); }
 `;
 
-const SV_HOT = "#FF00C8";
-const SV_CYAN = "#00E5FF";
-const SV_ACID = "#DBFF00";
-const SV_GREEN = "#00FF95";
-const SV_INK = "#0A0A0F";
-
-const ZONE_HUE: Record<CommunityZone, string> = {
-  career: "#FFB800",
-  startup: SV_HOT,
-  study: SV_CYAN,
-  social: "#FF6B9D",
-  creative: SV_GREEN,
-  fitness: SV_ACID,
-  research: "#A78BFA",
-};
+const SV_HOT = THEME_SV_HOT;
+const SV_CYAN = THEME_SV_CYAN;
+const SV_ACID = THEME_SV_ACID;
+const SV_GREEN = THEME_SV_GREEN;
+const SV_INK = THEME_SV_INK;
+const ZONE_HUE = THEME_ZONE_HUE;
 
 function MarqueeStrip({
   totalActive,
@@ -818,8 +817,183 @@ function LandingHero({ onStart }: { onStart: () => void }) {
         </div>
       </section>
 
-      {/* PICK A BRAIN — DEMO */}
-      {demoColleges.length > 0 && (
+      {/* WHAT'S INSIDE — explain communities */}
+      <section
+        className="relative border-t border-b"
+        style={{ borderColor: "#1a1a22", backgroundColor: "#0d0d14" }}
+      >
+        <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-24">
+          <div className="mb-10 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="font-mono text-xs uppercase tracking-[0.3em]" style={{ color: SV_ACID }}>
+                / what's inside
+              </div>
+              <h2 className="mt-2 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+                three rooms.<br />
+                <span className="sv-outline-text" style={{ color: SV_ACID }}>one campus</span>.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm text-white/60">
+              everything inside is shaped by who you are and what you're after.
+              no global feed. no follower counts. just your people, this week, on your campus.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                accent: SV_HOT,
+                tag: "/ matches",
+                title: "people on your wavelength",
+                body: "tell us what you're working on right now. we surface the 6 students at your college whose intent, major, and energy line up tightest. ranked by alignment. refreshed live.",
+                bullets: ["filtered to your school only", "ranked by shared signals", "anonymous until you say hi"],
+              },
+              {
+                accent: SV_CYAN,
+                tag: "/ squads",
+                title: "small rooms that ship",
+                body: "auto-formed groups of 3-5 around a real first action. study group for orgo midterm. cofounder team for demo day. running crew for charles river. with a meet spot already picked.",
+                bullets: ["3-5 people max", "first action pre-set", "meet spot suggested"],
+              },
+              {
+                accent: SV_GREEN,
+                tag: "/ events",
+                title: "events curated to you",
+                body: "every event you see is hand-picked for your zone, your major, and what you said you're looking for. no scrolling through 200 frat parties when you came here to find a thesis advisor.",
+                bullets: ["personalized per person", "host your own in 30s", "see who else is going"],
+              },
+            ].map((card, i) => (
+              <div
+                key={card.tag}
+                className="border-2"
+                style={{ borderColor: card.accent, backgroundColor: SV_INK }}
+              >
+                <div
+                  className="flex items-center justify-between px-4 py-3"
+                  style={{ backgroundColor: card.accent, color: SV_INK }}
+                >
+                  <div className="font-mono text-[10px] uppercase tracking-[0.3em]">{card.tag}</div>
+                  <div className="font-mono text-[10px] uppercase tracking-widest">
+                    0{i + 1}
+                  </div>
+                </div>
+                <div className="p-5 md:p-6">
+                  <h3 className="text-2xl font-black italic leading-tight tracking-tight md:text-3xl">
+                    {card.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/70">{card.body}</p>
+                  <ul className="mt-5 space-y-2 border-t pt-4" style={{ borderColor: "#1a1a22" }}>
+                    {card.bullets.map((b) => (
+                      <li
+                        key={b}
+                        className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-white/50"
+                      >
+                        <span
+                          className="inline-block h-1.5 w-1.5"
+                          style={{ backgroundColor: card.accent }}
+                        />
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* STUDY PEERS — meet your major */}
+      <section className="relative border-b" style={{ borderColor: "#1a1a22", backgroundColor: SV_INK }}>
+        <div className="mx-auto grid max-w-[1440px] gap-0 px-5 py-16 md:grid-cols-2 md:px-12 md:py-24">
+          <div className="border-2 p-6 md:p-10" style={{ borderColor: SV_CYAN }}>
+            <div
+              className="font-mono text-xs uppercase tracking-[0.3em]"
+              style={{ color: SV_CYAN }}
+            >
+              / study peers
+            </div>
+            <h2 className="mt-3 text-4xl font-black italic leading-none tracking-tighter md:text-5xl">
+              came here to <span style={{ color: SV_CYAN }}>study</span>?<br />
+              meet the rest of your major.
+            </h2>
+            <p className="mt-5 text-sm leading-relaxed text-white/70 md:text-base">
+              every major on your campus has a hub. see who else is grinding the same orgo problem set,
+              the same quant final, the same thesis defense. find a study room. form a group.
+              never grind alone again.
+            </p>
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              {[
+                { label: "same major", value: "live count" },
+                { label: "active now", value: "in the moment" },
+                { label: "study squads", value: "open to join" },
+                { label: "shared topics", value: "what they're on" },
+              ].map((s) => (
+                <div
+                  key={s.label}
+                  className="border p-3"
+                  style={{ borderColor: "#1a1a22" }}
+                >
+                  <div
+                    className="font-mono text-[10px] uppercase tracking-[0.25em]"
+                    style={{ color: SV_CYAN }}
+                  >
+                    {s.label}
+                  </div>
+                  <div className="mt-1 text-xs text-white/60">{s.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div
+            className="relative flex flex-col justify-between border-l-0 border-2 p-6 md:p-10"
+            style={{ borderColor: SV_GREEN, backgroundColor: "#0d0d14" }}
+          >
+            <div>
+              <div
+                className="font-mono text-xs uppercase tracking-[0.3em]"
+                style={{ color: SV_GREEN }}
+              >
+                / events for you
+              </div>
+              <h2 className="mt-3 text-4xl font-black italic leading-none tracking-tighter md:text-5xl">
+                every event,<br />
+                <span style={{ color: SV_GREEN }}>handpicked</span>.
+              </h2>
+              <p className="mt-5 text-sm leading-relaxed text-white/70 md:text-base">
+                we don't show you everything. we show you what fits.
+                a thesis writing sprint if you're deep in research. a founders friday if you're building.
+                a 6am charles river run if you marked yourself a runner. one calendar. zero noise.
+              </p>
+            </div>
+            <div className="mt-8 border-t pt-6" style={{ borderColor: "#1a1a22" }}>
+              <div className="space-y-3">
+                {[
+                  { tag: "STUDY", text: "orgo midterm sprint · widener basement" },
+                  { tag: "STARTUP", text: "demo day rehearsal · innovation hub" },
+                  { tag: "FITNESS", text: "charles river 5k · 6am thursday" },
+                ].map((e, i) => {
+                  const hue = [SV_CYAN, SV_HOT, SV_ACID][i]!;
+                  return (
+                    <div key={e.tag} className="flex items-center gap-3">
+                      <span
+                        className="px-2 py-1 font-mono text-[10px] uppercase tracking-widest"
+                        style={{ backgroundColor: hue, color: SV_INK }}
+                      >
+                        {e.tag}
+                      </span>
+                      <span className="text-xs text-white/70 md:text-sm">{e.text}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* OLD PICK A BRAIN (kept hidden, was demo) */}
+      {false && demoColleges.length > 0 && (
         <section
           className="relative border-t border-b"
           style={{ borderColor: "#1a1a22", backgroundColor: "#0d0d14" }}
@@ -921,8 +1095,8 @@ function LandingHero({ onStart }: { onStart: () => void }) {
         </section>
       )}
 
-      {/* TRENDING */}
-      {trending.length > 0 && (
+      {/* TRENDING (removed per request) */}
+      {false && trending.length > 0 && (
         <section className="relative border-t" style={{ borderColor: "#1a1a22" }}>
           <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-24">
             <div className="mb-8">

@@ -33,6 +33,7 @@ export interface UserAvatarProps {
   square?: boolean;
   fill?: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export function UserAvatar({
@@ -42,6 +43,7 @@ export function UserAvatar({
   square,
   fill,
   className = "",
+  style,
 }: UserAvatarProps) {
   const [errored, setErrored] = useState(false);
   const px = SIZE_PX[size];
@@ -64,6 +66,7 @@ export function UserAvatar({
         ...sizeStyle,
         backgroundColor: bg,
         boxShadow: ring ? `0 0 0 2px ${ring}` : undefined,
+        ...style,
       }}
     >
       {showImg ? (

@@ -10,11 +10,9 @@ import {
   getListThreadsForUserQueryKey,
 } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Send } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
+import { SV_INK, SV_HOT, SV_CYAN, SV_ACID, SV_GRID, ZONE_HUE } from "@/lib/theme";
 
 export default function Chat() {
   const params = useParams<{ userId: string }>();
@@ -64,45 +62,60 @@ export default function Chat() {
   };
 
   if (!meId) return null;
+  const otherHue = other.data ? ZONE_HUE[other.data.zone] ?? SV_CYAN : SV_CYAN;
 
   return (
-    <div className="flex h-[calc(100dvh-8rem)] flex-col md:h-[calc(100dvh-9rem)]">
-      <div className="mb-4 flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
+    <div className="flex h-[calc(100dvh-7rem)] flex-col md:h-[calc(100dvh-9rem)]">
+      <div
+        className="mb-4 flex items-center gap-3 border-b-2 pb-4"
+        style={{ borderColor: otherHue }}
+      >
+        <button
           onClick={() => setLocation("/messages")}
           aria-label="Back to messages"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center border-2 transition-all hover:translate-x-[-1px] hover:translate-y-[-1px]"
+          style={{
+            borderColor: SV_GRID,
+            color: "white",
+          }}
         >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+          <ArrowLeft className="h-4 w-4" />
+        </button>
         {other.data && (
           <>
-            <UserAvatar user={other.data} size="md" />
-            <div>
-              <div className="font-bold">{other.data.name}</div>
+            <UserAvatar user={other.data} size="md" square />
+            <div className="min-w-0 flex-1">
+              <div className="text-base font-black">{other.data.name}</div>
               <Link
                 href="/major"
-                className="text-xs text-muted-foreground hover:text-primary"
+                className="font-mono text-[10px] uppercase tracking-[0.25em]"
+                style={{ color: otherHue }}
               >
-                {other.data.major} · {other.data.college}
+                / {other.data.major} · {other.data.college}
               </Link>
             </div>
           </>
         )}
       </div>
 
-      <Card className="flex flex-1 flex-col overflow-hidden border-border bg-card">
+      <div
+        className="flex flex-1 flex-col overflow-hidden border-2"
+        style={{ borderColor: SV_GRID, backgroundColor: SV_INK }}
+      >
         <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
           {messages.isLoading && (
-            <p className="text-center text-sm text-muted-foreground">Loading...</p>
+            <p className="text-center font-mono text-xs uppercase tracking-widest text-white/40">
+              // loading...
+            </p>
           )}
           {messages.data && messages.data.length === 0 && (
             <div className="flex h-full items-center justify-center px-6 text-center">
               <div>
-                <p className="text-sm font-semibold">Say hi to {other.data?.name.split(" ")[0]}.</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  You both showed up on each other's match list. Make the first move.
+                <p className="text-sm font-black">
+                  say hi to {other.data?.name.split(" ")[0]}.
+                </p>
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-white/50">
+                  // you both showed up on each other's match list. make the first move.
                 </p>
               </div>
             </div>
@@ -115,17 +128,20 @@ export default function Chat() {
                 className={`flex ${mine ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
-                    mine
-                      ? "rounded-br-sm bg-primary text-primary-foreground"
-                      : "rounded-bl-sm bg-muted text-foreground"
-                  }`}
+                  className="max-w-[75%] border-2 px-3.5 py-2.5 text-sm"
+                  style={{
+                    backgroundColor: mine ? SV_HOT : SV_INK,
+                    borderColor: mine ? SV_HOT : otherHue,
+                    color: mine ? SV_INK : "white",
+                    boxShadow: mine
+                      ? `3px 3px 0 0 ${SV_INK}`
+                      : `3px 3px 0 0 ${otherHue}33`,
+                  }}
                 >
                   <p className="whitespace-pre-wrap break-words">{m.content}</p>
                   <p
-                    className={`mt-1 text-[10px] ${
-                      mine ? "text-primary-foreground/70" : "text-muted-foreground"
-                    }`}
+                    className="mt-1 font-mono text-[9px] uppercase tracking-widest"
+                    style={{ opacity: 0.6 }}
                   >
                     {new Date(m.createdAt).toLocaleTimeString([], {
                       hour: "numeric",
@@ -137,9 +153,12 @@ export default function Chat() {
             );
           })}
         </div>
-        <div className="border-t border-border p-3">
+        <div
+          className="border-t-2 p-3"
+          style={{ borderColor: SV_GRID, backgroundColor: "#0d0d14" }}
+        >
           <div className="flex items-end gap-2">
-            <Textarea
+            <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => {
@@ -148,22 +167,30 @@ export default function Chat() {
                   send();
                 }
               }}
-              placeholder={`Message ${other.data?.name.split(" ")[0] ?? ""}...`}
+              placeholder={`message ${other.data?.name.split(" ")[0] ?? ""}...`}
               rows={1}
-              className="max-h-32 min-h-[44px] resize-none"
+              className="max-h-32 min-h-[44px] flex-1 resize-none border-2 bg-transparent px-3 py-2.5 text-sm text-white placeholder:font-mono placeholder:text-xs placeholder:uppercase placeholder:tracking-widest placeholder:text-white/40 focus:outline-none"
+              style={{ borderColor: SV_GRID }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = otherHue)}
+              onBlur={(e) => (e.currentTarget.style.borderColor = SV_GRID)}
             />
-            <Button
+            <button
               onClick={send}
               disabled={!text.trim() || sendMutation.isPending}
-              size="icon"
-              className="h-11 w-11 flex-shrink-0"
               aria-label="Send"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center border-2 transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] disabled:opacity-40 disabled:hover:translate-x-0 disabled:hover:translate-y-0"
+              style={{
+                backgroundColor: SV_HOT,
+                borderColor: SV_HOT,
+                color: SV_INK,
+                boxShadow: `3px 3px 0 0 ${SV_INK}`,
+              }}
             >
               <Send className="h-4 w-4" />
-            </Button>
+            </button>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
