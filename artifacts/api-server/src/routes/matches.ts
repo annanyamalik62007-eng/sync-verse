@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, ne } from "drizzle-orm";
+import { eq, ne } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import {
   GetMatchesForUserParams,
@@ -23,20 +23,35 @@ router.get("/users/:userId/matches", async (req, res): Promise<void> => {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  // Matches are scoped to the same college — campus connection is the whole point.
-  const others = await db
+  // Pull every other user, then prefer same-college but ALWAYS fill the deck
+  // so a fresh-onboarded student never sees an empty matches page.
+  const allOthers = await db
     .select()
     .from(usersTable)
-    .where(and(ne(usersTable.id, me.id), eq(usersTable.college, me.college)));
+    .where(ne(usersTable.id, me.id));
 
-  const scored = others
+  const sameCollege = allOthers.filter((o) => o.college === me.college);
+  const offCampus = allOthers.filter((o) => o.college !== me.college);
+
+  const sameScored = sameCollege
     .map((o) => scoreMatch(me, o))
-    .sort((a, b) => b.alignmentScore - a.alignmentScore)
-    .slice(0, 50)
-    .map((m) => ({
-      ...m,
-      user: rowToUser(m.user),
-    }));
+    .sort((a, b) => b.alignmentScore - a.alignmentScore);
+
+  // If on-campus deck is thin, fill with the strongest cross-campus matches.
+  const MIN_DECK = 12;
+  const deck = sameScored.slice();
+  if (deck.length < MIN_DECK) {
+    const offScored = offCampus
+      .map((o) => scoreMatch(me, o))
+      .sort((a, b) => b.alignmentScore - a.alignmentScore)
+      .slice(0, MIN_DECK - deck.length);
+    deck.push(...offScored);
+  }
+
+  const scored = deck.slice(0, 50).map((m) => ({
+    ...m,
+    user: rowToUser(m.user),
+  }));
 
   res.json(GetMatchesForUserResponse.parse(scored));
 });
