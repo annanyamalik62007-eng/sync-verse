@@ -50,6 +50,10 @@ import {
   Radio,
   MoveUpRight,
   CornerDownRight,
+  Calendar,
+  MapPin,
+  Link2,
+  Layers,
 } from "lucide-react";
 
 const ZONE_META: Record<
@@ -200,6 +204,21 @@ const HERO_STYLES = `
   }
   .sv-tilt-l { transform: rotate(-1.5deg); }
   .sv-tilt-r { transform: rotate(1.5deg); }
+  .sv-stage-3d { perspective: 1600px; perspective-origin: 50% 30%; }
+  .sv-card-3d {
+    transform-style: preserve-3d;
+    transition: transform 600ms cubic-bezier(.2,.8,.2,1);
+    will-change: transform;
+  }
+  .sv-card-3d:hover { transform: translateZ(40px) rotateX(0deg) rotateY(0deg) !important; }
+  @keyframes sv-float-3d {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+  .sv-float-3d { animation: sv-float-3d 5s ease-in-out infinite; }
+  .sv-shine {
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%);
+  }
 `;
 
 const SV_HOT = THEME_SV_HOT;
@@ -877,6 +896,434 @@ function LandingHero({ onStart }: { onStart: () => void }) {
               {totalActive} students broadcasting now
             </span>
             <span>across {collegeCommunities.length || "—"} campuses</span>
+          </div>
+        </div>
+      </section>
+
+      {/* SAMPLE MATCHES — 3D perspective deck */}
+      {(() => {
+        const pool = allUsers.data ?? [];
+        const pick = (
+          predicate: (u: (typeof pool)[number]) => boolean,
+          fallbackIdx: number,
+        ) => pool.find(predicate) ?? pool[fallbackIdx];
+        const samplePairs = pool.length >= 6
+          ? [
+              {
+                a: pick((u) => u.zone === "startup", 0),
+                b: pick((u) => u.zone === "startup" && u.id !== pool[0]?.id, 1),
+                accent: SV_HOT,
+                shared: ["startup", "cofounder", "this week", "react"],
+                spark: "both shipping demos for accelerator app",
+              },
+              {
+                a: pick((u) => u.zone === "study", 2),
+                b: pick(
+                  (u) => u.zone === "study" && u.major === pool[2]?.major,
+                  3,
+                ),
+                accent: SV_CYAN,
+                shared: ["study", "same major", "evenings"],
+                spark: "cramming the same midterm tomorrow",
+              },
+              {
+                a: pick((u) => u.zone === "creative" || u.zone === "social", 4),
+                b: pick(
+                  (u) => (u.zone === "creative" || u.zone === "social") && u.id !== pool[4]?.id,
+                  5,
+                ),
+                accent: SV_ACID,
+                shared: ["creative", "weekends", "design"],
+                spark: "both want a partner for friday gallery night",
+              },
+            ].filter((p) => p.a && p.b)
+          : [];
+        return (
+          <section
+            className="relative border-t overflow-hidden"
+            style={{ borderColor: "#1a1a22", backgroundColor: "#0a0a12" }}
+          >
+            <div
+              className="pointer-events-none absolute -top-32 left-1/3 h-[400px] w-[400px] rounded-full opacity-20 blur-[120px]"
+              style={{ background: `radial-gradient(circle, ${SV_HOT} 0%, transparent 70%)` }}
+            />
+            <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-24">
+              <div className="mb-12 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <div
+                    className="font-mono text-xs uppercase tracking-[0.3em]"
+                    style={{ color: SV_HOT }}
+                  >
+                    / matches
+                  </div>
+                  <h2 className="mt-2 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+                    matches in <span style={{ color: SV_CYAN }}>3D</span>
+                  </h2>
+                </div>
+                <p className="max-w-md text-sm text-white/60">
+                  every match is two students whose intent overlapped this week.
+                  the connector line shows the signals they share. tap a card to
+                  step into either feed.
+                </p>
+              </div>
+
+              <div className="sv-stage-3d grid gap-10 md:grid-cols-3 md:gap-6">
+                {samplePairs.length === 0
+                  ? Array.from({ length: 3 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-80 animate-pulse border-2"
+                        style={{ borderColor: "#1a1a22", backgroundColor: "#11111A" }}
+                      />
+                    ))
+                  : samplePairs.map((pair, i) => {
+                      const tilt = i === 0 ? -10 : i === 2 ? 10 : 0;
+                      return (
+                        <motion.div
+                          key={`${pair.a!.id}-${pair.b!.id}`}
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: 0.1 * i }}
+                          className="sv-card-3d sv-float-3d relative"
+                          style={{
+                            transform: `rotateX(8deg) rotateY(${tilt}deg)`,
+                            animationDelay: `${i * 0.6}s`,
+                          }}
+                        >
+                          {/* shadow plate */}
+                          <div
+                            className="absolute inset-0 translate-x-2 translate-y-2"
+                            style={{
+                              backgroundColor: pair.accent,
+                              transform: "translate(8px, 8px) translateZ(-30px)",
+                              opacity: 0.4,
+                            }}
+                          />
+                          <div
+                            className="relative border-2 p-5"
+                            style={{ borderColor: pair.accent, backgroundColor: SV_INK }}
+                          >
+                            <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-widest">
+                              <span style={{ color: pair.accent }}>match #{(i + 1).toString().padStart(2, "0")}</span>
+                              <span className="text-white/50">{pair.a!.college.split(" ")[0]}</span>
+                            </div>
+
+                            {/* dual avatars + connector */}
+                            <div className="relative mt-5 flex items-center justify-between">
+                              <button
+                                onClick={() => useDemo(pair.a!.id)}
+                                className="group relative z-10 flex flex-col items-center gap-2"
+                              >
+                                <div
+                                  className="rounded-full border-2 p-1 transition-transform group-hover:scale-110"
+                                  style={{ borderColor: pair.accent }}
+                                >
+                                  <UserAvatar user={pair.a!} size="lg" />
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-[11px] font-black uppercase tracking-tight">
+                                    {pair.a!.name.split(" ")[0]}
+                                  </div>
+                                  <div
+                                    className="font-mono text-[9px] uppercase tracking-widest"
+                                    style={{ color: pair.accent }}
+                                  >
+                                    {pair.a!.major.split(" ")[0]}
+                                  </div>
+                                </div>
+                              </button>
+
+                              {/* connector line + flame node */}
+                              <div className="relative flex-1 mx-2">
+                                <div
+                                  className="absolute left-0 right-0 top-7 h-[2px]"
+                                  style={{
+                                    background: `linear-gradient(90deg, ${pair.accent} 0%, ${SV_CYAN} 50%, ${pair.accent} 100%)`,
+                                  }}
+                                />
+                                <div
+                                  className="relative mx-auto flex h-7 w-7 items-center justify-center rounded-full border-2"
+                                  style={{
+                                    borderColor: pair.accent,
+                                    backgroundColor: SV_INK,
+                                    color: pair.accent,
+                                  }}
+                                >
+                                  <Link2 className="h-3 w-3" />
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() => useDemo(pair.b!.id)}
+                                className="group relative z-10 flex flex-col items-center gap-2"
+                              >
+                                <div
+                                  className="rounded-full border-2 p-1 transition-transform group-hover:scale-110"
+                                  style={{ borderColor: pair.accent }}
+                                >
+                                  <UserAvatar user={pair.b!} size="lg" />
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-[11px] font-black uppercase tracking-tight">
+                                    {pair.b!.name.split(" ")[0]}
+                                  </div>
+                                  <div
+                                    className="font-mono text-[9px] uppercase tracking-widest"
+                                    style={{ color: pair.accent }}
+                                  >
+                                    {pair.b!.major.split(" ")[0]}
+                                  </div>
+                                </div>
+                              </button>
+                            </div>
+
+                            {/* shared signals */}
+                            <div className="mt-5 border-t pt-3" style={{ borderColor: "#1a1a22" }}>
+                              <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/40">
+                                shared signals
+                              </div>
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {pair.shared.map((s) => (
+                                  <span
+                                    key={s}
+                                    className="border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                                    style={{ borderColor: pair.accent, color: pair.accent }}
+                                  >
+                                    {s}
+                                  </span>
+                                ))}
+                              </div>
+                              <p className="mt-3 text-xs italic leading-snug text-white/70">
+                                "{pair.spark}"
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+              </div>
+
+              <div className="mt-8 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-white/40">
+                hover any card · tap a face to drop in
+              </div>
+            </div>
+          </section>
+        );
+      })()}
+
+      {/* EVENTS — fanned 3D card deck */}
+      <section
+        className="relative border-t overflow-hidden"
+        style={{ borderColor: "#1a1a22", backgroundColor: SV_INK }}
+      >
+        <div
+          className="pointer-events-none absolute -bottom-32 right-1/4 h-[400px] w-[400px] rounded-full opacity-20 blur-[120px]"
+          style={{ background: `radial-gradient(circle, ${SV_GREEN} 0%, transparent 70%)` }}
+        />
+        <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-24">
+          <div className="mb-12 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div
+                className="font-mono text-xs uppercase tracking-[0.3em]"
+                style={{ color: SV_GREEN }}
+              >
+                / events
+              </div>
+              <h2 className="mt-2 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+                this week's <span style={{ color: SV_ACID }}>drops</span>
+              </h2>
+            </div>
+            <p className="max-w-md text-sm text-white/60">
+              hand-picked for your zone, your major, what you said you're after.
+              host one in 30 seconds. see who else is locked in.
+            </p>
+          </div>
+
+          {(() => {
+            const events = [
+              {
+                title: "Founders Dinner",
+                where: "Stata Center",
+                when: "Fri 7:00 PM",
+                going: 12,
+                cap: 16,
+                zone: "startup" as CommunityZone,
+                accent: SV_HOT,
+                hostMajor: "Computer Science",
+                tags: ["cofounders", "demo day prep", "byo idea"],
+              },
+              {
+                title: "Distributed Systems Cram",
+                where: "Lamont Cafe, 2nd floor",
+                when: "Sun 2:00 PM",
+                going: 8,
+                cap: 12,
+                zone: "study" as CommunityZone,
+                accent: SV_CYAN,
+                hostMajor: "EECS",
+                tags: ["midterm", "group whiteboard", "snacks"],
+              },
+              {
+                title: "Charles River 5K",
+                where: "BU Beach",
+                when: "Sat 8:00 AM",
+                going: 24,
+                cap: 40,
+                zone: "fitness" as CommunityZone,
+                accent: SV_GREEN,
+                hostMajor: "Mech Eng",
+                tags: ["chill pace", "bagels after", "all paces"],
+              },
+              {
+                title: "Demo Day Pitch Practice",
+                where: "Cogan Lounge",
+                when: "Wed 6:00 PM",
+                going: 16,
+                cap: 20,
+                zone: "career" as CommunityZone,
+                accent: SV_ACID,
+                hostMajor: "Business",
+                tags: ["3 min pitch", "live feedback", "vc notes"],
+              },
+              {
+                title: "AI x Art Jam",
+                where: "MIT Media Lab",
+                when: "Thu 8:00 PM",
+                going: 19,
+                cap: 30,
+                zone: "creative" as CommunityZone,
+                accent: SV_HOT,
+                hostMajor: "Design",
+                tags: ["touchdesigner", "live music", "laptops"],
+              },
+            ];
+            const pool = allUsers.data ?? [];
+            const hostFor = (i: number) => pool[(i * 7) % Math.max(pool.length, 1)];
+            return (
+              <div className="sv-stage-3d">
+                <div className="grid gap-6 md:grid-cols-5 md:gap-3">
+                  {events.map((e, i) => {
+                    const center = (events.length - 1) / 2;
+                    const offset = i - center;
+                    const rot = offset * 6;
+                    const ty = Math.abs(offset) * 8;
+                    const meta = ZONE_META[e.zone];
+                    const Icon = meta?.icon ?? Sparkles;
+                    const host = hostFor(i);
+                    return (
+                      <motion.div
+                        key={e.title}
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.06 * i }}
+                        className="sv-card-3d relative"
+                        style={{
+                          transform: `rotateY(${rot}deg) translateY(${ty}px) translateZ(${-Math.abs(offset) * 30}px)`,
+                          zIndex: 10 - Math.abs(offset),
+                        }}
+                      >
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            backgroundColor: e.accent,
+                            transform: "translate(6px, 6px) translateZ(-20px)",
+                            opacity: 0.35,
+                          }}
+                        />
+                        <div
+                          className="relative border-2"
+                          style={{ borderColor: e.accent, backgroundColor: "#0c0c14" }}
+                        >
+                          {/* date strip */}
+                          <div
+                            className="flex items-center justify-between gap-2 px-3 py-2"
+                            style={{ backgroundColor: e.accent, color: SV_INK }}
+                          >
+                            <div className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest">
+                              <Calendar className="h-3 w-3" />
+                              {e.when}
+                            </div>
+                            <div className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest">
+                              <Icon className="h-3 w-3" />
+                              {meta?.label}
+                            </div>
+                          </div>
+
+                          <div className="p-4">
+                            <h3 className="text-lg font-black italic leading-tight tracking-tight">
+                              {e.title}
+                            </h3>
+                            <div className="mt-2 inline-flex items-start gap-1 font-mono text-[10px] uppercase tracking-widest text-white/60">
+                              <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
+                              {e.where}
+                            </div>
+
+                            {/* attendance bar */}
+                            <div className="mt-4">
+                              <div
+                                className="relative h-1.5 w-full overflow-hidden"
+                                style={{ backgroundColor: "#1a1a22" }}
+                              >
+                                <div
+                                  className="absolute left-0 top-0 h-full"
+                                  style={{
+                                    width: `${(e.going / e.cap) * 100}%`,
+                                    backgroundColor: e.accent,
+                                  }}
+                                />
+                              </div>
+                              <div className="mt-1.5 flex justify-between font-mono text-[9px] uppercase tracking-widest">
+                                <span className="text-white/50">{e.going} going</span>
+                                <span style={{ color: e.accent }}>
+                                  {e.cap - e.going} spots left
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="mt-3 flex flex-wrap gap-1">
+                              {e.tags.map((t) => (
+                                <span
+                                  key={t}
+                                  className="border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white/60"
+                                  style={{ borderColor: "#1a1a22" }}
+                                >
+                                  {t}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* host */}
+                            {host && (
+                              <button
+                                onClick={() => useDemo(host.id)}
+                                className="mt-4 flex w-full items-center gap-2 border-t pt-3 text-left transition-colors hover:bg-white/5"
+                                style={{ borderColor: "#1a1a22" }}
+                              >
+                                <UserAvatar user={host} size="sm" />
+                                <div className="min-w-0">
+                                  <div className="truncate text-[11px] font-black uppercase tracking-tight">
+                                    hosted by {host.name.split(" ")[0]}
+                                  </div>
+                                  <div className="truncate font-mono text-[9px] uppercase tracking-widest text-white/50">
+                                    {e.hostMajor}
+                                  </div>
+                                </div>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="mt-10 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-white/40">
+            5 events live · 200+ campus members locked in this week
           </div>
         </div>
       </section>
