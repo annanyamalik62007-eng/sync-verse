@@ -54,6 +54,8 @@ import {
   MapPin,
   Link2,
   Layers,
+  GraduationCap,
+  School,
 } from "lucide-react";
 
 const ZONE_META: Record<
@@ -469,12 +471,13 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                 className="h-1.5 w-1.5 sv-blink rounded-full"
                 style={{ backgroundColor: SV_GREEN }}
               />
-              Signal Live
+              <GraduationCap className="h-3 w-3" />
+              .edu verified · students only
             </div>
             <div className="hidden items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-white/50 md:flex">
               <span>v0.4 · spring '26</span>
               <Asterisk className="h-3 w-3 sv-spin-slow" style={{ color: SV_HOT }} />
-              <span>made for builders</span>
+              <span>by students · for students</span>
             </div>
           </div>
 
@@ -499,7 +502,10 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                   style={{ color: SV_ACID }}
                 >
                   <CornerDownRight className="h-3 w-3" />
-                  campus os
+                  the campus os
+                  <span className="mx-1 text-white/30">/</span>
+                  <GraduationCap className="h-3 w-3" />
+                  college only
                 </span>
               </span>
             </h1>
@@ -539,9 +545,51 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                 </span>
               </p>
               <p className="mt-5 max-w-xl text-base text-white/60 md:text-lg">
-                anonymous till u say hi · dms + group chats when ur synced · zero
-                algorithm games. you post what ur on. we sync u with the rest.
+                a private network for{" "}
+                <span className="font-bold text-white">college students</span> —
+                verified by your <span className="font-mono" style={{ color: SV_GREEN }}>.edu</span>{" "}
+                email. anonymous till u say hi · dms + group chats when ur synced ·
+                you post what ur on. we sync u with the rest of your campus.
               </p>
+
+              {/* live campus chips — concrete proof we mean colleges */}
+              {(() => {
+                const colleges = Array.from(
+                  new Set((allUsers.data ?? []).map((u) => u.college)),
+                ).slice(0, 6);
+                if (colleges.length === 0) return null;
+                return (
+                  <div className="mt-5 flex flex-wrap items-center gap-2">
+                    <span
+                      className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.3em]"
+                      style={{ color: SV_GREEN }}
+                    >
+                      <School className="h-3 w-3" />
+                      live on:
+                    </span>
+                    {colleges.map((c, i) => {
+                      const accents = [SV_HOT, SV_CYAN, SV_ACID, SV_GREEN, SV_HOT, SV_CYAN];
+                      const accent = accents[i % accents.length]!;
+                      return (
+                        <span
+                          key={c}
+                          className="inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest"
+                          style={{
+                            borderColor: `${accent}80`,
+                            color: accent,
+                            backgroundColor: `${accent}12`,
+                          }}
+                        >
+                          {c}
+                        </span>
+                      );
+                    })}
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-white/40">
+                      + your school next
+                    </span>
+                  </div>
+                );
+              })()}
 
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <button
