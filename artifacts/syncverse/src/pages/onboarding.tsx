@@ -479,10 +479,10 @@ function LandingHero({ onStart }: { onStart: () => void }) {
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <button
                   onClick={onStart}
-                  className="group relative inline-flex items-center gap-3 px-7 py-4 text-base font-black uppercase tracking-widest text-black transition-transform hover:-translate-y-0.5"
+                  className="group relative inline-flex items-center gap-3 rounded-full px-7 py-4 text-base font-black uppercase tracking-widest text-black transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_40px_-6px_rgba(255,0,153,0.7)]"
                   style={{
-                    backgroundColor: SV_HOT,
-                    boxShadow: `6px 6px 0 0 ${SV_CYAN}`,
+                    background: `linear-gradient(135deg, ${SV_HOT} 0%, #FF3DAA 50%, ${SV_CYAN} 130%)`,
+                    boxShadow: `0 8px 28px -6px ${SV_HOT}80`,
                   }}
                 >
                   <Zap className="h-5 w-5" />
@@ -504,7 +504,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                       : ["#22D3EE", "#A78BFA", "#F472B6", "#34D399"].map((c) => (
                           <span
                             key={c}
-                            className="h-9 w-9 rounded-full border-2"
+                            className="h-9 w-9 rounded-full border"
                             style={{ backgroundColor: c, borderColor: SV_INK }}
                           />
                         ))}
@@ -532,7 +532,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
             <div className="relative md:col-span-5">
               <div className="pointer-events-none relative mx-auto h-[280px] max-w-md md:h-[340px]">
                 <div
-                  className="absolute left-2 top-4 sv-tilt-l border-2 px-4 py-3 font-mono text-xs uppercase tracking-widest"
+                  className="absolute left-2 top-4 sv-tilt-l rounded-2xl border px-4 py-3 font-mono text-xs uppercase tracking-widest"
                   style={{ borderColor: SV_CYAN, color: SV_CYAN, backgroundColor: SV_INK }}
                 >
                   Stata Center · 2:14 AM
@@ -541,7 +541,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                   </div>
                 </div>
                 <div
-                  className="absolute right-0 top-24 sv-tilt-r px-4 py-3"
+                  className="absolute right-0 top-24 sv-tilt-r rounded-2xl px-4 py-3 shadow-[0_8px_30px_-4px_rgba(255,255,0,0.45)]"
                   style={{ backgroundColor: SV_ACID, color: SV_INK }}
                 >
                   <div className="font-mono text-[10px] uppercase tracking-widest opacity-70">
@@ -550,7 +550,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                   <div className="text-sm font-black">3/4 locked in</div>
                 </div>
                 <div
-                  className="absolute bottom-8 left-8 sv-tilt-l border-2 px-4 py-2"
+                  className="absolute bottom-8 left-8 sv-tilt-l rounded-2xl border px-4 py-2"
                   style={{ borderColor: SV_HOT, color: "white", backgroundColor: SV_INK }}
                 >
                   <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: SV_HOT }}>
@@ -610,7 +610,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="relative border-2 p-5 md:p-6"
+                    className="relative rounded-2xl border p-5 md:p-6"
                     style={{ borderColor: accent, backgroundColor: SV_INK }}
                   >
                     <div className="flex items-center gap-3">
@@ -632,7 +632,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                     </p>
                     <div className="mt-4 flex flex-wrap gap-1.5">
                       <span
-                        className="inline-flex items-center gap-1 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest"
+                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest"
                         style={{ backgroundColor: accent, color: SV_INK }}
                       >
                         <Icon className="h-3 w-3" />
@@ -640,16 +640,16 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                       </span>
                       {u.lookingFor && (
                         <span
-                          className="inline-flex items-center px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest"
-                          style={{ borderColor: accent, color: accent, borderWidth: 1 }}
+                          className="inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest"
+                          style={{ borderColor: `${accent}80`, color: accent, borderWidth: 1, backgroundColor: `${accent}10` }}
                         >
                           wants {u.lookingFor}
                         </span>
                       )}
                       {u.availability && (
                         <span
-                          className="inline-flex items-center px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest"
-                          style={{ borderColor: accent, color: accent, borderWidth: 1 }}
+                          className="inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest"
+                          style={{ borderColor: `${accent}80`, color: accent, borderWidth: 1, backgroundColor: `${accent}10` }}
                         >
                           free {u.availability}
                         </span>
@@ -669,8 +669,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                   style={{
                     backgroundColor: SV_ACID,
                     color: SV_INK,
-                    boxShadow: `4px 4px 0 0 ${SV_HOT}`,
-                  }}
+                    }}
                 >
                   <div className="font-mono text-[9px] uppercase tracking-widest">
                     align
@@ -684,7 +683,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
             </div>
 
             {sharedSignals.length > 0 && (
-              <div className="mt-8 border-2 p-5" style={{ borderColor: "#1a1a22", backgroundColor: SV_INK }}>
+              <div className="mt-8 rounded-2xl border p-5" style={{ borderColor: "#1a1a22", backgroundColor: SV_INK }}>
                 <div
                   className="font-mono text-[10px] uppercase tracking-[0.3em]"
                   style={{ color: SV_GREEN }}
@@ -698,12 +697,11 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.05 * i }}
-                      className="inline-flex items-center gap-1 px-3 py-1 font-mono text-xs uppercase tracking-widest"
+                      className="inline-flex items-center gap-1 rounded-full px-3 py-1 font-mono text-xs uppercase tracking-widest shadow-[0_4px_14px_-4px_rgba(0,255,136,0.5)]"
                       style={{
                         backgroundColor: SV_GREEN,
                         color: SV_INK,
-                        boxShadow: `2px 2px 0 0 ${SV_INK}`,
-                      }}
+                        }}
                     >
                       <Asterisk className="h-3 w-3" />
                       {s}
@@ -753,7 +751,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-72 animate-pulse border-2"
+                  className="h-72 animate-pulse rounded-2xl border"
                   style={{ borderColor: "#1a1a22", backgroundColor: "#11111A" }}
                 />
               ))}
@@ -769,13 +767,20 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05 * idx }}
-                    className="border-2"
-                    style={{ borderColor: accent, backgroundColor: "#0c0c14" }}
+                    className="overflow-hidden rounded-3xl border backdrop-blur-sm"
+                    style={{
+                      borderColor: `${accent}40`,
+                      backgroundColor: "rgba(255,255,255,0.02)",
+                      boxShadow: `0 12px 40px -12px ${accent}55`,
+                    }}
                   >
                     {/* College header strip */}
                     <div
-                      className="flex items-center justify-between gap-3 px-5 py-3"
-                      style={{ backgroundColor: accent, color: SV_INK }}
+                      className="flex items-center justify-between gap-3 px-5 py-3.5"
+                      style={{
+                        background: `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)`,
+                        color: SV_INK,
+                      }}
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <Users className="h-4 w-4 shrink-0" />
@@ -797,8 +802,8 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                         {c.topMajors.map((m) => (
                           <span
                             key={m}
-                            className="border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white/70"
-                            style={{ borderColor: "#1a1a22" }}
+                            className="rounded-full border px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white/70"
+                            style={{ borderColor: "rgba(255,255,255,0.1)" }}
                           >
                             {m}
                           </span>
@@ -837,8 +842,8 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                                     {p.author.major}
                                   </span>
                                   <span
-                                    className="border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
-                                    style={{ borderColor: hue, color: hue }}
+                                    className="rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                                    style={{ borderColor: `${hue}60`, color: hue, backgroundColor: `${hue}10` }}
                                   >
                                     {meta?.label ?? p.zone}
                                   </span>
@@ -889,8 +894,8 @@ function LandingHero({ onStart }: { onStart: () => void }) {
           {/* live counter pill */}
           <div className="mt-8 flex flex-wrap items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] text-white/60">
             <span
-              className="inline-flex items-center gap-2 border px-3 py-1.5"
-              style={{ borderColor: SV_GREEN, color: SV_GREEN }}
+              className="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5"
+              style={{ borderColor: `${SV_GREEN}60`, color: SV_GREEN, backgroundColor: `${SV_GREEN}10` }}
             >
               <Radio className="h-3 w-3 sv-blink" />
               {totalActive} students broadcasting now
@@ -972,7 +977,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                   ? Array.from({ length: 3 }).map((_, i) => (
                       <div
                         key={i}
-                        className="h-80 animate-pulse border-2"
+                        className="h-80 animate-pulse rounded-2xl border"
                         style={{ borderColor: "#1a1a22", backgroundColor: "#11111A" }}
                       />
                     ))
@@ -1001,7 +1006,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                             }}
                           />
                           <div
-                            className="relative border-2 p-5"
+                            className="relative rounded-2xl border p-5"
                             style={{ borderColor: pair.accent, backgroundColor: SV_INK }}
                           >
                             <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-widest">
@@ -1016,7 +1021,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                                 className="group relative z-10 flex flex-col items-center gap-2"
                               >
                                 <div
-                                  className="rounded-full border-2 p-1 transition-transform group-hover:scale-110"
+                                  className="rounded-full border p-1 transition-transform group-hover:scale-110"
                                   style={{ borderColor: pair.accent }}
                                 >
                                   <UserAvatar user={pair.a!} size="lg" />
@@ -1043,7 +1048,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                                   }}
                                 />
                                 <div
-                                  className="relative mx-auto flex h-7 w-7 items-center justify-center rounded-full border-2"
+                                  className="relative mx-auto flex h-7 w-7 items-center justify-center rounded-full border"
                                   style={{
                                     borderColor: pair.accent,
                                     backgroundColor: SV_INK,
@@ -1059,7 +1064,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                                 className="group relative z-10 flex flex-col items-center gap-2"
                               >
                                 <div
-                                  className="rounded-full border-2 p-1 transition-transform group-hover:scale-110"
+                                  className="rounded-full border p-1 transition-transform group-hover:scale-110"
                                   style={{ borderColor: pair.accent }}
                                 >
                                   <UserAvatar user={pair.b!} size="lg" />
@@ -1233,7 +1238,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                           }}
                         />
                         <div
-                          className="relative border-2"
+                          className="relative rounded-2xl border"
                           style={{ borderColor: e.accent, backgroundColor: "#0c0c14" }}
                         >
                           {/* date strip */}
@@ -1376,7 +1381,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
             ].map((card, i) => (
               <div
                 key={card.tag}
-                className="border-2"
+                className="rounded-2xl border"
                 style={{ borderColor: card.accent, backgroundColor: SV_INK }}
               >
                 <div
@@ -1417,7 +1422,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
       {/* STUDY PEERS — meet your major */}
       <section className="relative border-b" style={{ borderColor: "#1a1a22", backgroundColor: SV_INK }}>
         <div className="mx-auto grid max-w-[1440px] gap-0 px-5 py-16 md:grid-cols-2 md:px-12 md:py-24">
-          <div className="border-2 p-6 md:p-10" style={{ borderColor: SV_CYAN }}>
+          <div className="rounded-2xl border p-6 md:p-10" style={{ borderColor: SV_CYAN }}>
             <div
               className="font-mono text-xs uppercase tracking-[0.3em]"
               style={{ color: SV_CYAN }}
@@ -1457,7 +1462,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
             </div>
           </div>
           <div
-            className="relative flex flex-col justify-between border-l-0 border-2 p-6 md:p-10"
+            className="relative flex flex-col justify-between border-l-0 rounded-2xl border p-6 md:p-10"
             style={{ borderColor: SV_GREEN, backgroundColor: "#0d0d14" }}
           >
             <div>
@@ -1548,7 +1553,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                 return (
                   <div
                     key={college}
-                    className="border-2"
+                    className="rounded-2xl border"
                     style={{ borderColor: accent, backgroundColor: SV_INK }}
                   >
                     <div
@@ -1716,7 +1721,7 @@ function LandingHero({ onStart }: { onStart: () => void }) {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.06 * i }}
-                className="group relative overflow-hidden border-2 p-6 transition-transform hover:-translate-y-1 md:p-8"
+                className="group relative overflow-hidden rounded-2xl border p-6 transition-transform hover:-translate-y-1 md:p-8"
                 style={{ borderColor: c.hue, backgroundColor: SV_INK }}
               >
                 <div
@@ -1775,11 +1780,11 @@ function LandingHero({ onStart }: { onStart: () => void }) {
           <div className="mt-10 flex flex-wrap items-center gap-5">
             <button
               onClick={onStart}
-              className="group inline-flex items-center gap-3 px-8 py-5 text-lg font-black uppercase tracking-widest transition-transform hover:-translate-y-0.5"
+              className="group inline-flex items-center gap-3 rounded-full px-8 py-5 text-lg font-black uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_48px_-8px_rgba(0,0,0,0.6)]"
               style={{
                 backgroundColor: SV_INK,
                 color: SV_ACID,
-                boxShadow: `8px 8px 0 0 ${SV_CYAN}`,
+                boxShadow: `0 10px 32px -6px rgba(0,0,0,0.45)`,
               }}
             >
               <Zap className="h-5 w-5" />
