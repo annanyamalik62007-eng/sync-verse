@@ -130,12 +130,13 @@ export function pickAvatarColor(seed: string): string {
   return COLOR_PALETTE[h % COLOR_PALETTE.length]!;
 }
 
-export function pickAvatarUrl(seed: string): string {
+export function pickAvatarUrl(seed: string, genderHint?: string | null): string {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  const gender = h % 2 === 0 ? "men" : "women";
+  const bucket =
+    genderHint === "he" ? "men" : genderHint === "she" ? "women" : h % 2 === 0 ? "men" : "women";
   const idx = h % 99;
-  return `https://randomuser.me/api/portraits/${gender}/${idx}.jpg`;
+  return `https://randomuser.me/api/portraits/${bucket}/${idx}.jpg`;
 }
 
 export function timeAgoFrom(date: Date): string {
@@ -164,6 +165,7 @@ export function rowToUser(row: UserRow) {
     lookingFor: row.lookingFor,
     skills: row.skills,
     availability: row.availability,
+    gender: row.gender,
     createdAt: row.createdAt.toISOString(),
   };
 }

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CommunityZone } from "./communityZone";
+import type { CreateUserInputGender } from "./createUserInputGender";
 import type { EnergyLevel } from "./energyLevel";
 import type { Timeframe } from "./timeframe";
 
@@ -23,4 +24,5 @@ export interface CreateUserInput {
   lookingFor?: string | null;
   skills?: string | null;
   availability?: string | null;
+  gender?: CreateUserInputGender;
 }

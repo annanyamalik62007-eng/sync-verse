@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useRoute } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetUser,
   useListUserPosts,
+  useUpdateUser,
   getGetUserQueryKey,
   getListUserPostsQueryKey,
   type Post,
@@ -43,6 +45,28 @@ export default function Profile() {
   });
   const [tab, setTab] = useState<"posts" | "saved" | "tagged">("posts");
   const [following, setFollowing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+  const updateUser = useUpdateUser({
+    mutation: {
+      onSuccess: () => {
+        if (userId) {
+          queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) });
+        }
+      },
+    },
+  });
+  const handleAvatarPick = (file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Please pick an image under 2MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      updateUser.mutate({ userId, data: { avatarUrl: String(reader.result) } });
+    };
+    reader.readAsDataURL(file);
+  };
 
   if (isLoading) {
     return (
@@ -86,7 +110,7 @@ export default function Profile() {
         {/* Avatar with story ring */}
         <div className="flex justify-center md:w-[290px] md:justify-end">
           <div
-            className="rounded-full p-[3px]"
+            className="group relative rounded-full p-[3px]"
             style={{
               background: `conic-gradient(from 200deg, ${SV_HOT}, ${hue}, ${SV_CYAN}, ${SV_ACID}, ${SV_HOT})`,
             }}
@@ -96,6 +120,30 @@ export default function Profile() {
                 <UserAvatar user={user} size="2xl" />
               </div>
             </div>
+            {isMe && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={updateUser.isPending}
+                  className="absolute inset-[6px] flex items-center justify-center rounded-full bg-black/55 text-[11px] font-bold uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-100"
+                  aria-label="change profile photo"
+                >
+                  {updateUser.isPending ? "uploading…" : "change photo"}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleAvatarPick(file);
+                    e.target.value = "";
+                  }}
+                />
+              </>
+            )}
           </div>
         </div>
 

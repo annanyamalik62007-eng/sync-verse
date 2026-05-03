@@ -37,6 +37,16 @@ export const EnergyLevel = {
   building: "building",
 } as const;
 
+/**
+ * Pronoun preference (he or she). Used to seed default profile photo.
+ */
+export type UserGender = (typeof UserGender)[keyof typeof UserGender] | null;
+
+export const UserGender = {
+  he: "he",
+  she: "she",
+} as const;
+
 export interface User {
   id: string;
   name: string;
@@ -55,8 +65,19 @@ export interface User {
   skills?: string | null;
   /** When they are free (mornings, evenings, weekends, late-nights) */
   availability?: string | null;
+  /** Pronoun preference (he or she). Used to seed default profile photo. */
+  gender?: UserGender;
   createdAt: string;
 }
+
+export type CreateUserInputGender =
+  | (typeof CreateUserInputGender)[keyof typeof CreateUserInputGender]
+  | null;
+
+export const CreateUserInputGender = {
+  he: "he",
+  she: "she",
+} as const;
 
 export interface CreateUserInput {
   name: string;
@@ -72,6 +93,28 @@ export interface CreateUserInput {
   lookingFor?: string | null;
   skills?: string | null;
   availability?: string | null;
+  gender?: CreateUserInputGender;
+}
+
+export type UpdateUserInputGender =
+  | (typeof UpdateUserInputGender)[keyof typeof UpdateUserInputGender]
+  | null;
+
+export const UpdateUserInputGender = {
+  he: "he",
+  she: "she",
+} as const;
+
+/**
+ * Partial user update. Any field present overrides; omitted fields are unchanged.
+ */
+export interface UpdateUserInput {
+  avatarUrl?: string | null;
+  lookingFor?: string | null;
+  skills?: string | null;
+  availability?: string | null;
+  gender?: UpdateUserInputGender;
+  intent?: string;
 }
 
 export interface Match {

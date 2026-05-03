@@ -14,6 +14,7 @@ export const usersTable = pgTable("users", {
   lookingFor: text("looking_for"),
   skills: text("skills"),
   availability: text("availability"),
+  gender: text("gender"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

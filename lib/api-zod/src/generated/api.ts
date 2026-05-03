@@ -65,6 +65,12 @@ export const ListUsersResponseItem = zod.object({
     .string()
     .nullish()
     .describe("When they are free (mornings, evenings, weekends, late-nights)"),
+  gender: zod
+    .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+    .nullish()
+    .describe(
+      "Pronoun preference (he or she). Used to seed default profile photo.",
+    ),
   createdAt: zod.string(),
 });
 export const ListUsersResponse = zod.array(ListUsersResponseItem);
@@ -97,6 +103,9 @@ export const CreateUserBody = zod.object({
   lookingFor: zod.string().nullish(),
   skills: zod.string().nullish(),
   availability: zod.string().nullish(),
+  gender: zod
+    .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+    .nullish(),
 });
 
 /**
@@ -139,6 +148,76 @@ export const GetUserResponse = zod.object({
     .string()
     .nullish()
     .describe("When they are free (mornings, evenings, weekends, late-nights)"),
+  gender: zod
+    .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+    .nullish()
+    .describe(
+      "Pronoun preference (he or she). Used to seed default profile photo.",
+    ),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Update fields on the current student (e.g. profile photo)
+ */
+export const UpdateUserParams = zod.object({
+  userId: zod.coerce.string(),
+});
+
+export const UpdateUserBody = zod
+  .object({
+    avatarUrl: zod.string().nullish(),
+    lookingFor: zod.string().nullish(),
+    skills: zod.string().nullish(),
+    availability: zod.string().nullish(),
+    gender: zod
+      .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+      .nullish(),
+    intent: zod.string().optional(),
+  })
+  .describe(
+    "Partial user update. Any field present overrides; omitted fields are unchanged.",
+  );
+
+export const UpdateUserResponse = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  college: zod.string(),
+  major: zod.string(),
+  intent: zod.string(),
+  timeframe: zod.enum(["now", "soon", "later"]),
+  energyLevel: zod.enum(["browsing", "exploring", "building"]),
+  zone: zod.enum([
+    "career",
+    "startup",
+    "study",
+    "social",
+    "creative",
+    "fitness",
+    "research",
+  ]),
+  avatarColor: zod.string(),
+  avatarUrl: zod.string().nullish().describe("Profile photo URL (real face)"),
+  lookingFor: zod
+    .string()
+    .nullish()
+    .describe(
+      "What kind of connection they want (cofounder, study buddy, mentor, friend, collab, event partner)",
+    ),
+  skills: zod
+    .string()
+    .nullish()
+    .describe("Comma-separated skill\/interest tags"),
+  availability: zod
+    .string()
+    .nullish()
+    .describe("When they are free (mornings, evenings, weekends, late-nights)"),
+  gender: zod
+    .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+    .nullish()
+    .describe(
+      "Pronoun preference (he or she). Used to seed default profile photo.",
+    ),
   createdAt: zod.string(),
 });
 
@@ -184,6 +263,12 @@ export const GetMatchesForUserResponseItem = zod.object({
       .nullish()
       .describe(
         "When they are free (mornings, evenings, weekends, late-nights)",
+      ),
+    gender: zod
+      .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+      .nullish()
+      .describe(
+        "Pronoun preference (he or she). Used to seed default profile photo.",
       ),
     createdAt: zod.string(),
   }),
@@ -252,6 +337,12 @@ export const ListSquadsResponseItem = zod.object({
         .describe(
           "When they are free (mornings, evenings, weekends, late-nights)",
         ),
+      gender: zod
+        .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+        .nullish()
+        .describe(
+          "Pronoun preference (he or she). Used to seed default profile photo.",
+        ),
       createdAt: zod.string(),
     }),
   ),
@@ -319,6 +410,12 @@ export const GetSquadSuggestionsForUserResponseItem = zod.object({
         .nullish()
         .describe(
           "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      gender: zod
+        .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+        .nullish()
+        .describe(
+          "Pronoun preference (he or she). Used to seed default profile photo.",
         ),
       createdAt: zod.string(),
     }),
@@ -393,6 +490,12 @@ export const JoinSquadResponse = zod.object({
         .nullish()
         .describe(
           "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      gender: zod
+        .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+        .nullish()
+        .describe(
+          "Pronoun preference (he or she). Used to seed default profile photo.",
         ),
       createdAt: zod.string(),
     }),
@@ -546,6 +649,12 @@ export const ListThreadsForUserResponseItem = zod.object({
       .describe(
         "When they are free (mornings, evenings, weekends, late-nights)",
       ),
+    gender: zod
+      .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+      .nullish()
+      .describe(
+        "Pronoun preference (he or she). Used to seed default profile photo.",
+      ),
     createdAt: zod.string(),
   }),
   lastMessage: zod.object({
@@ -648,6 +757,12 @@ export const ListEventsResponseItem = zod.object({
         .describe(
           "When they are free (mornings, evenings, weekends, late-nights)",
         ),
+      gender: zod
+        .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+        .nullish()
+        .describe(
+          "Pronoun preference (he or she). Used to seed default profile photo.",
+        ),
       createdAt: zod.string(),
     })
     .optional(),
@@ -689,6 +804,12 @@ export const ListEventsResponseItem = zod.object({
         .nullish()
         .describe(
           "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      gender: zod
+        .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+        .nullish()
+        .describe(
+          "Pronoun preference (he or she). Used to seed default profile photo.",
         ),
       createdAt: zod.string(),
     }),
@@ -791,6 +912,12 @@ export const ToggleEventRsvpResponse = zod.object({
         .describe(
           "When they are free (mornings, evenings, weekends, late-nights)",
         ),
+      gender: zod
+        .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+        .nullish()
+        .describe(
+          "Pronoun preference (he or she). Used to seed default profile photo.",
+        ),
       createdAt: zod.string(),
     })
     .optional(),
@@ -832,6 +959,12 @@ export const ToggleEventRsvpResponse = zod.object({
         .nullish()
         .describe(
           "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      gender: zod
+        .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+        .nullish()
+        .describe(
+          "Pronoun preference (he or she). Used to seed default profile photo.",
         ),
       createdAt: zod.string(),
     }),
@@ -890,6 +1023,12 @@ export const GetMajorHubResponse = zod.object({
         .nullish()
         .describe(
           "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      gender: zod
+        .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+        .nullish()
+        .describe(
+          "Pronoun preference (he or she). Used to seed default profile photo.",
         ),
       createdAt: zod.string(),
     }),
@@ -982,6 +1121,12 @@ export const GetCollegeSnapshotResponse = zod.object({
             .describe(
               "When they are free (mornings, evenings, weekends, late-nights)",
             ),
+          gender: zod
+            .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+            .nullish()
+            .describe(
+              "Pronoun preference (he or she). Used to seed default profile photo.",
+            ),
           createdAt: zod.string(),
         })
         .optional(),
@@ -1023,6 +1168,12 @@ export const GetCollegeSnapshotResponse = zod.object({
             .nullish()
             .describe(
               "When they are free (mornings, evenings, weekends, late-nights)",
+            ),
+          gender: zod
+            .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+            .nullish()
+            .describe(
+              "Pronoun preference (he or she). Used to seed default profile photo.",
             ),
           createdAt: zod.string(),
         }),
@@ -1092,6 +1243,12 @@ export const ListZonePostsResponseItem = zod.object({
       .describe(
         "When they are free (mornings, evenings, weekends, late-nights)",
       ),
+    gender: zod
+      .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+      .nullish()
+      .describe(
+        "Pronoun preference (he or she). Used to seed default profile photo.",
+      ),
     createdAt: zod.string(),
   }),
   zone: zod.enum([
@@ -1148,6 +1305,12 @@ export const ListZonePostsResponseItem = zod.object({
         .nullish()
         .describe(
           "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      gender: zod
+        .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+        .nullish()
+        .describe(
+          "Pronoun preference (he or she). Used to seed default profile photo.",
         ),
       createdAt: zod.string(),
     }),
@@ -1200,6 +1363,12 @@ export const ListUserPostsResponseItem = zod.object({
       .describe(
         "When they are free (mornings, evenings, weekends, late-nights)",
       ),
+    gender: zod
+      .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+      .nullish()
+      .describe(
+        "Pronoun preference (he or she). Used to seed default profile photo.",
+      ),
     createdAt: zod.string(),
   }),
   zone: zod.enum([
@@ -1256,6 +1425,12 @@ export const ListUserPostsResponseItem = zod.object({
         .nullish()
         .describe(
           "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      gender: zod
+        .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+        .nullish()
+        .describe(
+          "Pronoun preference (he or she). Used to seed default profile photo.",
         ),
       createdAt: zod.string(),
     }),
@@ -1334,6 +1509,12 @@ export const TogglePostReactionResponse = zod.object({
       .describe(
         "When they are free (mornings, evenings, weekends, late-nights)",
       ),
+    gender: zod
+      .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+      .nullish()
+      .describe(
+        "Pronoun preference (he or she). Used to seed default profile photo.",
+      ),
     createdAt: zod.string(),
   }),
   zone: zod.enum([
@@ -1390,6 +1571,12 @@ export const TogglePostReactionResponse = zod.object({
         .nullish()
         .describe(
           "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      gender: zod
+        .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+        .nullish()
+        .describe(
+          "Pronoun preference (he or she). Used to seed default profile photo.",
         ),
       createdAt: zod.string(),
     }),
@@ -1445,6 +1632,12 @@ export const TogglePostJoinResponse = zod.object({
       .describe(
         "When they are free (mornings, evenings, weekends, late-nights)",
       ),
+    gender: zod
+      .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+      .nullish()
+      .describe(
+        "Pronoun preference (he or she). Used to seed default profile photo.",
+      ),
     createdAt: zod.string(),
   }),
   zone: zod.enum([
@@ -1501,6 +1694,12 @@ export const TogglePostJoinResponse = zod.object({
         .nullish()
         .describe(
           "When they are free (mornings, evenings, weekends, late-nights)",
+        ),
+      gender: zod
+        .union([zod.literal("he"), zod.literal("she"), zod.literal(null)])
+        .nullish()
+        .describe(
+          "Pronoun preference (he or she). Used to seed default profile photo.",
         ),
       createdAt: zod.string(),
     }),

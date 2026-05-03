@@ -8,6 +8,7 @@
 import type { CommunityZone } from "./communityZone";
 import type { EnergyLevel } from "./energyLevel";
 import type { Timeframe } from "./timeframe";
+import type { UserGender } from "./userGender";
 
 export interface User {
   id: string;
@@ -27,5 +28,7 @@ export interface User {
   skills?: string | null;
   /** When they are free (mornings, evenings, weekends, late-nights) */
   availability?: string | null;
+  /** Pronoun preference (he or she). Used to seed default profile photo. */
+  gender?: UserGender;
   createdAt: string;
 }

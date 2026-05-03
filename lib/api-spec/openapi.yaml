@@ -103,6 +103,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update fields on the current student (e.g. profile photo)
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserInput"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
 
   /users/{userId}/matches:
     get:
@@ -609,6 +632,11 @@ components:
           type: string
           nullable: true
           description: When they are free (mornings, evenings, weekends, late-nights)
+        gender:
+          type: string
+          nullable: true
+          enum: [he, she, null]
+          description: Pronoun preference (he or she). Used to seed default profile photo.
         createdAt:
           type: string
       required: [id, name, college, major, intent, timeframe, energyLevel, zone, avatarColor, createdAt]
@@ -644,7 +672,34 @@ components:
         availability:
           type: string
           nullable: true
+        gender:
+          type: string
+          nullable: true
+          enum: [he, she, null]
       required: [name, college, major, intent, timeframe, energyLevel, zone]
+
+    UpdateUserInput:
+      type: object
+      description: Partial user update. Any field present overrides; omitted fields are unchanged.
+      properties:
+        avatarUrl:
+          type: string
+          nullable: true
+        lookingFor:
+          type: string
+          nullable: true
+        skills:
+          type: string
+          nullable: true
+        availability:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+          enum: [he, she, null]
+        intent:
+          type: string
 
     Match:
       type: object

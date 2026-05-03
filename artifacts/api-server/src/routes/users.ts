@@ -7,6 +7,7 @@ import {
   CreateUserBody,
   GetUserParams,
   GetUserResponse,
+  UpdateUserBody,
 } from "@workspace/api-zod";
 import { pickAvatarColor, pickAvatarUrl, rowToUser } from "../lib/matching";
 
@@ -46,7 +47,7 @@ router.post("/users", async (req, res): Promise<void> => {
   const avatarUrl =
     data.avatarUrl && data.avatarUrl.trim().length > 0
       ? data.avatarUrl
-      : pickAvatarUrl(data.name + data.college + data.major);
+      : pickAvatarUrl(data.name + data.college + data.major, data.gender);
   const [row] = await db
     .insert(usersTable)
     .values({ ...data, avatarColor, avatarUrl })
@@ -68,6 +69,37 @@ router.get("/users/:userId", async (req, res): Promise<void> => {
     .select()
     .from(usersTable)
     .where(eq(usersTable.id, parsed.data.userId));
+  if (!row) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  res.json(GetUserResponse.parse(rowToUser(row)));
+});
+
+router.patch("/users/:userId", async (req, res): Promise<void> => {
+  const params = GetUserParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const body = UpdateUserBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+  const patch: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(body.data)) {
+    if (v !== undefined) patch[k] = v;
+  }
+  if (Object.keys(patch).length === 0) {
+    res.status(400).json({ error: "No fields to update" });
+    return;
+  }
+  const [row] = await db
+    .update(usersTable)
+    .set(patch)
+    .where(eq(usersTable.id, params.data.userId))
+    .returning();
   if (!row) {
     res.status(404).json({ error: "User not found" });
     return;

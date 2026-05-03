@@ -1824,6 +1824,7 @@ export default function Onboarding() {
     lookingFor: "",
     skills: "",
     availability: "",
+    gender: null,
   });
   const [extraZones, setExtraZones] = useState<CommunityZone[]>([]);
 
@@ -2024,6 +2025,37 @@ export default function Onboarding() {
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Pronouns</Label>
+                    <div className="flex gap-2">
+                      {([
+                        { value: "he", label: "he / him" },
+                        { value: "she", label: "she / her" },
+                        { value: null, label: "skip" },
+                      ] as const).map((opt) => {
+                        const active = form.gender === opt.value;
+                        return (
+                          <button
+                            key={String(opt.value)}
+                            type="button"
+                            onClick={() => setForm({ ...form, gender: opt.value })}
+                            className="flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-all"
+                            style={{
+                              borderColor: active ? SV_HOT : "rgba(255,255,255,0.15)",
+                              backgroundColor: active ? SV_HOT : "transparent",
+                              color: active ? SV_INK : "rgba(255,255,255,0.7)",
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Optional. Helps us pick a default photo if you skip uploading one.
+                    </p>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">

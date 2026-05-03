@@ -56,6 +56,72 @@ export default function Feed() {
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8">
+      {/* What is SYNCVERSE — primer for new users */}
+      <section
+        className="relative overflow-hidden rounded-3xl border p-6 md:p-7"
+        style={{
+          borderColor: "rgba(255,255,255,0.08)",
+          background: `linear-gradient(135deg, rgba(255,0,153,0.08), rgba(0,229,255,0.06))`,
+        }}
+      >
+        <div className="flex items-start gap-3">
+          <div
+            className="mt-1 inline-flex h-2 w-2 shrink-0 animate-pulse rounded-full"
+            style={{ backgroundColor: "#FF0099", boxShadow: "0 0 12px #FF0099" }}
+          />
+          <div className="flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/60">
+              What is SYNCVERSE
+            </p>
+            <h2 className="mt-1 text-lg font-bold leading-snug md:text-xl">
+              Anonymous campus signal — find the people on{" "}
+              <span style={{ color: "#FF0099" }}>{user?.college ?? "your campus"}</span>{" "}
+              building, studying, or hyped on what you're hyped on{" "}
+              <span style={{ color: "#FFFF00" }}>right now</span>.
+            </h2>
+            <ul className="mt-3 grid gap-2 text-sm text-white/75 md:grid-cols-3">
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full bg-white/40" />
+                <span>Post what you're on. We sync you with the rest.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full bg-white/40" />
+                <span>Anonymous by default. No DMs, no inbox games.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full bg-white/40" />
+                <span>Shared signals = matches, squads, events.</span>
+              </li>
+            </ul>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href="/matches"
+                className="rounded-full px-4 py-1.5 text-xs font-bold"
+                style={{ backgroundColor: "#FF0099", color: "#0A0A0F" }}
+              >
+                See your matches
+              </Link>
+              <Link
+                href="/events"
+                className="rounded-full border px-4 py-1.5 text-xs font-bold"
+                style={{ borderColor: "rgba(0,229,255,0.5)", color: "#00E5FF" }}
+              >
+                Browse events
+              </Link>
+              {userId && (
+                <Link
+                  href={`/user/${userId}`}
+                  className="rounded-full border px-4 py-1.5 text-xs font-bold text-white/70"
+                  style={{ borderColor: "rgba(255,255,255,0.18)" }}
+                >
+                  Edit profile
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Hero — soft gradient orb */}
       <section
         className="relative overflow-hidden rounded-3xl border p-8 md:p-10"
