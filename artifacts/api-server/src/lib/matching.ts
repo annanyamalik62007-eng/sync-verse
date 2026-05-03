@@ -46,6 +46,66 @@ function skillTokens(s: string | null): Set<string> {
   );
 }
 
+// Keyword → zone affinity. If a user's intent text strongly suggests a zone
+// (e.g. "socialise", "hangout") that differs from the zone they picked at
+// onboarding, we treat the inferred zone as their effective intent for
+// matching purposes. This prevents the classic failure: "I typed I want to
+// socialise but you matched me with founders".
+// Strong, unambiguous zone keywords only. Generic verbs ("meet", "build",
+// "review") are deliberately excluded because they leak between zones.
+const ZONE_KEYWORDS: Record<string, string[]> = {
+  social: [
+    "socialise", "socialize", "socializing", "socialising", "hangout",
+    "hang-out", "friends", "friend", "party", "chill", "chilling",
+    "make friends",
+  ],
+  startup: [
+    "cofounder", "co-founder", "co founder", "founder", "founding", "startup",
+    "start-up", "mvp", "yc", "y combinator", "techstars", "pitch deck",
+  ],
+  career: [
+    "internship", "intern", "interview", "interviews", "leetcode", "recruiter",
+    "recruiting", "fulltime", "full-time", "fang", "faang", "consulting",
+    "banking", "trading", "quant", "swe role", "new grad",
+  ],
+  study: [
+    "study", "studying", "exam", "exams", "midterm", "midterms", "finals",
+    "homework", "pset", "psets", "problem-set", "tutor", "tutoring",
+    "study group", "study buddy",
+  ],
+  research: [
+    "research", "paper", "papers", "lab", "phd", "thesis", "neurips", "icml",
+    "iclr", "professor", "advisor", "publication",
+  ],
+  creative: [
+    "art", "music", "film", "painting", "photography", "podcast", "designer",
+    "poetry", "fashion", "filmmaking",
+  ],
+  fitness: [
+    "gym", "workout", "lift", "lifting", "marathon", "yoga", "pilates",
+    "hiking", "running", "climbing", "cycling", "crossfit",
+  ],
+};
+
+function inferZoneFromIntent(intent: string): string | null {
+  const text = intent.toLowerCase();
+  const scores: Record<string, number> = {};
+  for (const [zone, keywords] of Object.entries(ZONE_KEYWORDS)) {
+    for (const kw of keywords) {
+      if (text.includes(kw)) scores[zone] = (scores[zone] ?? 0) + 1;
+    }
+  }
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  return sorted[0]?.[0] ?? null;
+}
+
+export function effectiveZone(u: UserRow): string {
+  // Inferred zone wins if the intent text strongly signals one — the picked
+  // zone is just a starting hint, the words in the intent are the real signal.
+  const inferred = inferZoneFromIntent(u.intent);
+  return inferred ?? u.zone;
+}
+
 export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
   const myTokens = tokens(me.intent);
   const theirTokens = tokens(other.intent);
@@ -53,7 +113,11 @@ export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
 
   const sharedTokens = [...myTokens].filter((t) => theirTokens.has(t)).slice(0, 5);
 
-  const sameZone = me.zone === other.zone ? 1 : 0;
+  // Use intent-inferred zone for matching: if someone wrote "I want to
+  // socialise" but picked the career zone, we still treat them as social.
+  const myZone = effectiveZone(me);
+  const theirZone = effectiveZone(other);
+  const sameZone = myZone === theirZone ? 1 : 0;
   const sameCollege = me.college === other.college ? 1 : 0;
   const sameMajor = me.major === other.major ? 1 : 0;
 
@@ -100,7 +164,7 @@ export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
   if (sharedTokens.length > 0) {
     reasons.push(`Both mention "${sharedTokens.slice(0, 3).join(", ")}"`);
   }
-  if (sameZone) reasons.push(`Both in ${me.zone} zone`);
+  if (sameZone) reasons.push(`Both in ${myZone} zone`);
   if (sharedSkills.length > 0) reasons.push(`Shared skills: ${sharedSkills.slice(0, 3).join(", ")}`);
   if (sameLookingFor) reasons.push(`Both want ${me.lookingFor}`);
   if (sameAvailability) reasons.push(`Both free ${me.availability}`);
@@ -110,7 +174,7 @@ export function scoreMatch(me: UserRow, other: UserRow): ScoredMatch {
   if (sameMajor) reasons.push(`${me.major} alignment`);
 
   const sharedSignals: string[] = [];
-  if (sameZone) sharedSignals.push(me.zone);
+  if (sameZone) sharedSignals.push(myZone);
   if (me.timeframe === other.timeframe) sharedSignals.push(me.timeframe);
   if (me.energyLevel === other.energyLevel) sharedSignals.push(me.energyLevel);
   if (sameLookingFor && me.lookingFor) sharedSignals.push(me.lookingFor);

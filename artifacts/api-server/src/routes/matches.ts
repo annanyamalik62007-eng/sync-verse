@@ -5,7 +5,7 @@ import {
   GetMatchesForUserParams,
   GetMatchesForUserResponse,
 } from "@workspace/api-zod";
-import { rowToUser, scoreMatch } from "../lib/matching";
+import { rowToUser, scoreMatch, effectiveZone } from "../lib/matching";
 
 const router: IRouter = Router();
 
@@ -46,17 +46,25 @@ router.get("/users/:userId/matches", async (req, res): Promise<void> => {
     deck.push(...scored);
   };
 
-  // 1. same college + same zone — strongest real signal
-  pushScored(allOthers.filter((o) => o.college === me.college && o.zone === me.zone));
+  // Effective zone may differ from picked zone if intent text strongly signals
+  // a different vibe (e.g. user picked "career" but typed "want to socialise").
+  const myZone = effectiveZone(me);
 
-  // 2. same zone, any college, RELABELED to user's college (demo fill)
+  // 1. same college + same effective zone — strongest real signal
+  pushScored(
+    allOthers.filter((o) => o.college === me.college && effectiveZone(o) === myZone),
+  );
+
+  // 2. same effective zone, any college, RELABELED to user's college (demo fill)
   const remoteSameZone = allOthers
-    .filter((o) => o.college !== me.college && o.zone === me.zone)
+    .filter((o) => o.college !== me.college && effectiveZone(o) === myZone)
     .map((o) => ({ ...o, college: me.college }));
   pushScored(remoteSameZone);
 
   // 3. same college, other zones — still local, just different vibe
-  pushScored(allOthers.filter((o) => o.college === me.college && o.zone !== me.zone));
+  pushScored(
+    allOthers.filter((o) => o.college === me.college && effectiveZone(o) !== myZone),
+  );
 
   const MIN_DECK = 12;
   // 4. last-resort demo fill: anyone, relabeled to user's college
