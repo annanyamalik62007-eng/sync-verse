@@ -84,27 +84,41 @@ router.get("/majors/hub", async (req, res): Promise<void> => {
     return;
   }
   const { major, college } = parsed.data;
+  const MIN_PEERS = 18;
   // Always return same-major peers from any campus, ordered with the user's
   // own college first so they feel local but the feed is never empty.
   const sameMajorAnyCollege: UserRow[] = await db
     .select()
     .from(usersTable)
     .where(eq(usersTable.major, major));
-  let peers: UserRow[] = college
-    ? [
-        ...sameMajorAnyCollege.filter((p) => p.college === college),
-        ...sameMajorAnyCollege.filter((p) => p.college !== college),
-      ]
-    : sameMajorAnyCollege;
-  // If the major itself isn't seeded at all, fall back to same-college users
-  // so the user still sees nearby people doing things.
-  if (peers.length === 0 && college) {
-    peers = await db.select().from(usersTable).where(eq(usersTable.college, college));
+  const peerIds = new Set<string>();
+  const peers: UserRow[] = [];
+  const pushUnique = (rows: UserRow[]): void => {
+    for (const r of rows) {
+      if (!peerIds.has(r.id)) {
+        peerIds.add(r.id);
+        peers.push(r);
+      }
+    }
+  };
+  // 1. same major + same college first (most relevant)
+  if (college) {
+    pushUnique(sameMajorAnyCollege.filter((p) => p.college === college));
   }
-  // Last-resort: if even college has nothing seeded, return any active users
-  // so the feed has signal regardless of what the user typed at onboarding.
-  if (peers.length === 0) {
-    peers = await db.select().from(usersTable).limit(12);
+  // 2. same major from any other college
+  pushUnique(sameMajorAnyCollege.filter((p) => !college || p.college !== college));
+  // 3. top up with same-college peers (other majors) so the local feed feels alive
+  if (peers.length < MIN_PEERS && college) {
+    const collegePeers = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.college, college));
+    pushUnique(collegePeers);
+  }
+  // 4. last-resort: any users from anywhere — guarantees a populated hub
+  if (peers.length < MIN_PEERS) {
+    const anyone = await db.select().from(usersTable).limit(MIN_PEERS * 2);
+    pushUnique(anyone);
   }
 
   const zoneBreakdown = ZONES.map((z) => {
