@@ -29,9 +29,7 @@ import {
 import { UserAvatar } from "@/components/user-avatar";
 import {
   SV_INK,
-  SV_GRID,
   SV_HOT,
-  SV_ACID,
   SV_GREEN,
   ZONE_HUE,
   SV_CYAN,
@@ -65,8 +63,8 @@ export default function Zone() {
 
   if (!zone || !isZone(zone)) {
     return (
-      <div className="text-center font-mono text-xs uppercase tracking-widest text-white/50">
-        // unknown zone.
+      <div className="text-center text-sm text-white/50">
+        unknown zone.
         <Link href="/feed" style={{ color: SV_CYAN }} className="ml-2 underline">
           back to feed
         </Link>
@@ -89,25 +87,28 @@ function ZoneInner({ zone, me }: { zone: CommunityZone; me?: User }) {
   const TrendI = z ? trendIcon[z.trendDirection] : Minus;
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto w-full max-w-3xl space-y-8">
       <Link
         href="/feed"
-        className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.25em] text-white/60 hover:text-white"
+        className="inline-flex items-center gap-1 text-xs text-white/50 hover:text-white"
       >
-        <ArrowLeft className="h-3 w-3" /> / live feed
+        <ArrowLeft className="h-3 w-3" /> live feed
       </Link>
 
       <section
-        className="border-2 p-6 md:p-10"
-        style={{ borderColor: hue, boxShadow: `8px 8px 0 0 ${SV_GRID}` }}
+        className="relative overflow-hidden rounded-3xl border p-8 md:p-10"
+        style={{
+          borderColor: "rgba(255,255,255,0.08)",
+          background: `radial-gradient(ellipse at top right, ${hue}33 0%, transparent 60%), ${SV_INK}`,
+        }}
       >
         <div
-          className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.4em]"
-          style={{ color: hue }}
+          className="inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.3em]"
+          style={{ borderColor: `${hue}55`, color: hue, backgroundColor: `${hue}15` }}
         >
-          <Activity className="h-3 w-3 animate-pulse" /> / zone
+          <Activity className="h-3 w-3 animate-pulse" /> zone
         </div>
-        <h1 className="mt-3 text-5xl font-black italic leading-none tracking-tighter md:text-7xl">
+        <h1 className="mt-4 text-5xl font-black italic leading-none tracking-tighter md:text-7xl">
           <span className="sv-outline-text" style={{ color: hue }}>
             {ZONE_LABELS[zone]}
           </span>
@@ -135,22 +136,20 @@ function ZoneInner({ zone, me }: { zone: CommunityZone; me?: User }) {
 
       <section>
         <h2
-          className="mb-4 font-mono text-xs font-black uppercase tracking-[0.3em]"
+          className="mb-3 px-1 font-mono text-[11px] font-bold uppercase tracking-[0.3em]"
           style={{ color: hue }}
         >
-          / what people are doing
+          what people are doing
         </h2>
         {posts.isLoading && (
-          <p className="font-mono text-xs uppercase tracking-widest text-white/50">
-            // loading...
-          </p>
+          <p className="text-sm text-white/50">loading...</p>
         )}
         {posts.data?.length === 0 && (
           <div
-            className="border-2 border-dashed p-8 text-center font-mono text-xs uppercase tracking-widest text-white/50"
-            style={{ borderColor: SV_GRID }}
+            className="rounded-2xl border border-dashed p-8 text-center text-sm text-white/50"
+            style={{ borderColor: "rgba(255,255,255,0.1)" }}
           >
-            // no posts yet. drop the first signal.
+            no posts yet. drop the first signal.
           </div>
         )}
         <div className="space-y-3">
@@ -162,22 +161,20 @@ function ZoneInner({ zone, me }: { zone: CommunityZone; me?: User }) {
 
       <section>
         <h2
-          className="mb-4 font-mono text-xs font-black uppercase tracking-[0.3em]"
+          className="mb-3 px-1 font-mono text-[11px] font-bold uppercase tracking-[0.3em]"
           style={{ color: hue }}
         >
-          / people in this zone {college ? `at ${college}` : ""}
+          people in this zone {college ? `at ${college}` : ""}
         </h2>
         {users.isLoading && (
-          <p className="font-mono text-xs uppercase tracking-widest text-white/50">
-            // loading...
-          </p>
+          <p className="text-sm text-white/50">loading...</p>
         )}
         {users.data?.length === 0 && (
           <div
-            className="border-2 border-dashed p-8 text-center font-mono text-xs uppercase tracking-widest text-white/50"
-            style={{ borderColor: SV_GRID }}
+            className="rounded-2xl border border-dashed p-8 text-center text-sm text-white/50"
+            style={{ borderColor: "rgba(255,255,255,0.1)" }}
           >
-            // no one here yet. you could be the first signal.
+            no one here yet. you could be the first signal.
           </div>
         )}
         <div className="grid gap-3 md:grid-cols-2">
@@ -185,25 +182,34 @@ function ZoneInner({ zone, me }: { zone: CommunityZone; me?: User }) {
             <Link
               key={u.id}
               href={`/user/${u.id}`}
-              className="flex items-start gap-3 border-2 p-4 transition-all hover:translate-x-[-2px] hover:translate-y-[-2px]"
+              className="flex items-start gap-3 rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:bg-white/[0.03]"
               style={{
-                borderColor: SV_GRID,
-                backgroundColor: SV_INK,
-                boxShadow: `3px 3px 0 0 ${SV_GRID}`,
+                borderColor: "rgba(255,255,255,0.08)",
+                backgroundColor: "rgba(255,255,255,0.02)",
               }}
             >
-              <UserAvatar user={u} size="md" square />
+              <div
+                className="rounded-full p-[2px]"
+                style={{
+                  background: `conic-gradient(from 200deg, ${hue}, ${SV_HOT}, ${hue})`,
+                }}
+              >
+                <div className="rounded-full p-[2px]" style={{ backgroundColor: SV_INK }}>
+                  <div className="overflow-hidden rounded-full">
+                    <UserAvatar user={u} size="md" />
+                  </div>
+                </div>
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-black">{u.name}</h3>
+                  <h3 className="font-bold">{u.name}</h3>
                   <span
-                    className="font-mono text-[9px] uppercase tracking-widest"
-                    style={{ color: hue }}
+                    className="font-mono text-[9px] uppercase tracking-widest text-white/50"
                   >
                     {u.timeframe} · {u.energyLevel}
                   </span>
                 </div>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/50">
+                <p className="text-xs text-white/50">
                   {u.major} · {u.college}
                 </p>
                 <p className="mt-1.5 text-sm italic text-white/80">"{u.intent}"</p>
@@ -253,48 +259,47 @@ function PostComposer({
 
   return (
     <section
-      className="border-2 p-4 md:p-5"
+      className="rounded-2xl border p-4 md:p-5"
       style={{
-        borderColor: hue,
-        backgroundColor: SV_INK,
-        boxShadow: `5px 5px 0 0 ${SV_GRID}`,
+        borderColor: "rgba(255,255,255,0.08)",
+        backgroundColor: "rgba(255,255,255,0.02)",
       }}
     >
       <div className="flex items-start gap-3">
-        <UserAvatar user={me} size="md" square />
+        <div className="overflow-hidden rounded-full">
+          <UserAvatar user={me} size="md" />
+        </div>
         <div className="flex-1">
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder={`What are you doing in ${ZONE_LABELS[zone].toLowerCase()} right now?`}
             rows={3}
-            className="w-full resize-none border-2 bg-transparent p-3 font-mono text-sm text-white placeholder:text-white/40 focus:outline-none"
-            style={{ borderColor: SV_GRID }}
+            className="w-full resize-none rounded-xl border bg-transparent p-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2"
+            style={{
+              borderColor: "rgba(255,255,255,0.08)",
+              ["--tw-ring-color" as string]: hue,
+            } as React.CSSProperties}
           />
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <input
               value={tag}
               onChange={(e) => setTag(e.target.value)}
               placeholder="activity tag (optional)"
-              className="w-48 border-2 bg-transparent px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-white placeholder:text-white/30 focus:outline-none"
-              style={{ borderColor: SV_GRID, color: SV_ACID }}
+              className="w-48 rounded-full border bg-transparent px-3 py-1 font-mono text-[10px] uppercase tracking-widest placeholder:text-white/30 focus:outline-none"
+              style={{ borderColor: "rgba(255,255,255,0.08)", color: hue }}
             />
-            <span className="font-mono text-[10px] uppercase tracking-widest text-white/40">
+            <span className="text-[10px] text-white/40">
               · {body.length}/500
             </span>
             <button
               type="button"
               onClick={submit}
               disabled={!body.trim() || create.isPending}
-              className="ml-auto inline-flex items-center gap-1.5 border-2 px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-[0.3em] disabled:opacity-40"
-              style={{
-                borderColor: hue,
-                backgroundColor: hue,
-                color: SV_INK,
-                boxShadow: `3px 3px 0 0 ${SV_GRID}`,
-              }}
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold transition-transform hover:scale-[1.04] disabled:opacity-40"
+              style={{ backgroundColor: hue, color: SV_INK }}
             >
-              <Send className="h-3 w-3" />
+              <Send className="h-3.5 w-3.5" />
               {create.isPending ? "posting..." : "post"}
             </button>
           </div>
@@ -345,38 +350,39 @@ function PostCard({
 
   return (
     <article
-      className="border-2 p-4 md:p-5"
+      className="rounded-2xl border p-4 md:p-5"
       style={{
-        borderColor: SV_GRID,
-        backgroundColor: SV_INK,
-        boxShadow: `4px 4px 0 0 ${SV_GRID}`,
+        borderColor: "rgba(255,255,255,0.08)",
+        backgroundColor: "rgba(255,255,255,0.02)",
       }}
     >
       <div className="flex items-start gap-3">
         <Link href={`/user/${post.author.id}`}>
-          <UserAvatar user={post.author} size="md" square />
+          <div
+            className="rounded-full p-[2px]"
+            style={{ background: `conic-gradient(from 200deg, ${hue}, ${SV_HOT}, ${hue})` }}
+          >
+            <div className="rounded-full p-[2px]" style={{ backgroundColor: SV_INK }}>
+              <div className="overflow-hidden rounded-full">
+                <UserAvatar user={post.author} size="md" />
+              </div>
+            </div>
+          </div>
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/user/${post.author.id}`}
-              className="font-black hover:underline"
+              className="font-bold hover:underline"
             >
               {post.author.name}
             </Link>
-            <span
-              className="font-mono text-[9px] uppercase tracking-[0.25em]"
-              style={{ color: hue }}
-            >
-              {post.author.major}
-            </span>
-            <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/40">
-              · {ago} ago
-            </span>
+            <span className="text-xs text-white/50">{post.author.major}</span>
+            <span className="text-xs text-white/40">· {ago} ago</span>
             {post.activityTag && (
               <span
-                className="ml-auto border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
-                style={{ borderColor: SV_ACID, color: SV_ACID }}
+                className="ml-auto rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                style={{ borderColor: `${hue}55`, color: hue, backgroundColor: `${hue}10` }}
               >
                 {post.activityTag}
               </span>
@@ -391,40 +397,40 @@ function PostCard({
               type="button"
               onClick={onReact}
               disabled={!viewerId || react.isPending}
-              className="inline-flex items-center gap-1.5 border-2 px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-[0.25em] transition-all disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-40"
               style={{
-                borderColor: SV_HOT,
+                borderColor: `${SV_HOT}66`,
                 backgroundColor: reacted ? SV_HOT : "transparent",
                 color: reacted ? SV_INK : SV_HOT,
               }}
             >
-              <Flame className="h-3 w-3" />
+              <Flame className="h-3.5 w-3.5" />
               {post.reactionCount} fire
             </button>
             <button
               type="button"
               onClick={onJoin}
               disabled={!viewerId || join.isPending}
-              className="inline-flex items-center gap-1.5 border-2 px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-[0.25em] transition-all disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-40"
               style={{
-                borderColor: SV_GREEN,
+                borderColor: `${SV_GREEN}66`,
                 backgroundColor: joined ? SV_GREEN : "transparent",
                 color: joined ? SV_INK : SV_GREEN,
               }}
             >
-              <UserPlus className="h-3 w-3" />
+              <UserPlus className="h-3.5 w-3.5" />
               {joined ? "joined" : "join"} · {post.joinCount}
             </button>
             {post.joiners.length > 0 && (
               <div className="ml-1 flex -space-x-2">
                 {post.joiners.slice(0, 5).map((j) => (
                   <Link key={j.id} href={`/user/${j.id}`}>
-                    <UserAvatar
-                      user={j}
-                      size="xs"
-                      ring={SV_INK}
-                      className="ring-2"
-                    />
+                    <div
+                      className="rounded-full ring-2"
+                      style={{ ["--tw-ring-color" as string]: SV_INK } as React.CSSProperties}
+                    >
+                      <UserAvatar user={j} size="xs" />
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -438,7 +444,13 @@ function PostCard({
 
 function Stat({ hue, label, value }: { hue: string; label: string; value: React.ReactNode }) {
   return (
-    <div className="border-2 p-3" style={{ borderColor: SV_GRID }}>
+    <div
+      className="rounded-2xl border p-3"
+      style={{
+        borderColor: "rgba(255,255,255,0.08)",
+        backgroundColor: "rgba(255,255,255,0.02)",
+      }}
+    >
       <div
         className="text-3xl font-black italic leading-none tracking-tighter"
         style={{ color: hue }}
@@ -449,7 +461,7 @@ function Stat({ hue, label, value }: { hue: string; label: string; value: React.
         className="mt-1 font-mono text-[9px] uppercase tracking-[0.25em]"
         style={{ color: hue }}
       >
-        / {label}
+        {label}
       </div>
     </div>
   );

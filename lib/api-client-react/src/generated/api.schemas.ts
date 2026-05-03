@@ -67,6 +67,8 @@ export interface CreateUserInput {
   timeframe: Timeframe;
   energyLevel: EnergyLevel;
   zone: CommunityZone;
+  /** Profile photo URL (data URL or remote) */
+  avatarUrl?: string | null;
   lookingFor?: string | null;
   skills?: string | null;
   availability?: string | null;

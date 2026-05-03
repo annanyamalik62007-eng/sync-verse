@@ -43,7 +43,10 @@ router.post("/users", async (req, res): Promise<void> => {
   }
   const data = parsed.data;
   const avatarColor = pickAvatarColor(data.name + data.major);
-  const avatarUrl = pickAvatarUrl(data.name + data.college + data.major);
+  const avatarUrl =
+    data.avatarUrl && data.avatarUrl.trim().length > 0
+      ? data.avatarUrl
+      : pickAvatarUrl(data.name + data.college + data.major);
   const [row] = await db
     .insert(usersTable)
     .values({ ...data, avatarColor, avatarUrl })

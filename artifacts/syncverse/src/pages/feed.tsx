@@ -32,10 +32,10 @@ function ZoneChip({ zone }: { zone: CommunityZone }) {
   return (
     <Link href={`/zone/${zone}`}>
       <span
-        className="cursor-pointer border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.25em]"
-        style={{ borderColor: hue, color: hue }}
+        className="cursor-pointer rounded-full border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em]"
+        style={{ borderColor: `${hue}55`, color: hue, backgroundColor: `${hue}10` }}
       >
-        / {zone}
+        {zone}
       </span>
     </Link>
   );
@@ -55,51 +55,49 @@ export default function Feed() {
   const totalActive = insights.data?.totalActiveNow ?? 0;
 
   return (
-    <div className="space-y-8">
-      {/* Hero */}
+    <div className="mx-auto w-full max-w-3xl space-y-8">
+      {/* Hero — soft gradient orb */}
       <section
-        className="relative overflow-hidden border-2 p-6 md:p-10"
-        style={{ borderColor: SV_HOT, boxShadow: `8px 8px 0 0 ${SV_GRID}` }}
+        className="relative overflow-hidden rounded-3xl border p-8 md:p-10"
+        style={{
+          borderColor: "rgba(255,255,255,0.08)",
+          background: `radial-gradient(ellipse at top left, ${SV_HOT}22 0%, transparent 50%), radial-gradient(ellipse at bottom right, ${SV_CYAN}1f 0%, transparent 50%), ${SV_INK}`,
+        }}
       >
         <div
-          className="font-mono text-[10px] uppercase tracking-[0.4em]"
-          style={{ color: SV_ACID }}
+          className="inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.3em]"
+          style={{ borderColor: `${SV_GREEN}55`, color: SV_GREEN, backgroundColor: `${SV_GREEN}10` }}
         >
-          / live signal feed · {college ?? "campus"}
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full" style={{ backgroundColor: SV_GREEN, opacity: 0.6 }} />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SV_GREEN }} />
+          </span>
+          live · {college ?? "campus"}
         </div>
-        <h1 className="mt-3 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+        <h1 className="mt-4 text-4xl font-black italic leading-[0.95] tracking-tighter md:text-6xl">
           <span style={{ color: SV_HOT }}>{totalActive}</span>{" "}
           {totalActive === 1 ? "soul is" : "souls are"}
           <br />
           <span className="sv-outline-text" style={{ color: SV_CYAN }}>active</span> right now
         </h1>
-        <p className="mt-4 font-mono text-xs uppercase tracking-widest text-white/60">
-          // welcome back, {user?.name?.split(" ")[0] ?? "stranger"} — here's where the energy is.
+        <p className="mt-4 text-sm text-white/70">
+          welcome back, {user?.name?.split(" ")[0] ?? "stranger"} — here's where the energy is.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href="/matches">
             <button
-              className="inline-flex items-center gap-2 border-2 px-5 py-2.5 font-mono text-xs font-black uppercase tracking-[0.25em] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px]"
-              style={{
-                backgroundColor: SV_HOT,
-                borderColor: SV_HOT,
-                color: SV_INK,
-                boxShadow: `4px 4px 0 0 ${SV_INK}`,
-              }}
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-transform hover:scale-[1.03]"
+              style={{ backgroundColor: SV_HOT, color: SV_INK }}
             >
-              <Flame className="h-3.5 w-3.5" /> see matches
+              <Flame className="h-4 w-4" /> see matches
             </button>
           </Link>
           <Link href="/squads">
             <button
-              className="inline-flex items-center gap-2 border-2 px-5 py-2.5 font-mono text-xs font-black uppercase tracking-[0.25em] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px]"
-              style={{
-                borderColor: SV_CYAN,
-                color: SV_CYAN,
-                boxShadow: `4px 4px 0 0 ${SV_CYAN}`,
-              }}
+              className="inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-bold transition-colors hover:bg-white/5"
+              style={{ borderColor: `${SV_CYAN}66`, color: SV_CYAN }}
             >
-              <Users className="h-3.5 w-3.5" /> squads forming
+              <Users className="h-4 w-4" /> squads forming
             </button>
           </Link>
         </div>
@@ -117,23 +115,20 @@ export default function Feed() {
                 <Link key={f.id} href={`/zone/${f.relatedZone}`}>
                   <div
                     tabIndex={0}
-                    className="group flex h-full cursor-pointer items-center gap-3 border-2 p-4 transition-all outline-none hover:translate-x-[-2px] hover:translate-y-[-2px] hover:[border-color:var(--sv-hue)] hover:shadow-[4px_4px_0_0_var(--sv-hue)] focus-visible:translate-x-[-2px] focus-visible:translate-y-[-2px] focus-visible:[border-color:var(--sv-hue)] focus-visible:shadow-[4px_4px_0_0_var(--sv-hue)]"
-                    style={
-                      {
-                        borderColor: SV_GRID,
-                        backgroundColor: SV_INK,
-                        ["--sv-hue" as string]: hue,
-                      } as React.CSSProperties
-                    }
+                    className="group flex h-full cursor-pointer items-center gap-3 rounded-2xl border p-4 outline-none transition-all hover:-translate-y-0.5 hover:bg-white/[0.03]"
+                    style={{
+                      borderColor: "rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(255,255,255,0.02)",
+                    }}
                   >
                     <div
-                      className="flex h-10 w-10 flex-shrink-0 items-center justify-center"
-                      style={{ backgroundColor: hue, color: SV_INK }}
+                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl"
+                      style={{ backgroundColor: `${hue}22`, color: hue }}
                     >
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-bold leading-snug">{f.message}</p>
+                      <p className="text-sm font-semibold leading-snug">{f.message}</p>
                       <div className="mt-1.5">
                         <ZoneChip zone={f.relatedZone} />
                       </div>
@@ -154,31 +149,31 @@ export default function Feed() {
       <section>
         <SectionHeader hue={SV_CYAN} tag="live signals" icon={Activity} />
         <div
-          className="border-y-2"
-          style={{ borderColor: SV_CYAN }}
+          className="overflow-hidden rounded-2xl border"
+          style={{ borderColor: "rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.02)" }}
         >
           {signals.isLoading && (
             <p className="p-5 font-mono text-xs uppercase tracking-widest text-white/50">
-              // reading the pulse...
+              reading the pulse...
             </p>
           )}
           {signals.data?.length === 0 && (
             <p className="p-5 font-mono text-xs uppercase tracking-widest text-white/50">
-              // quiet on campus right now. be the first to spark something.
+              quiet on campus right now. be the first to spark something.
             </p>
           )}
-          {signals.data?.map((s: Signal, i: number) => {
+          {signals.data?.map((s: Signal) => {
             const hue = intensityHue[s.intensity] ?? SV_CYAN;
             return (
               <div
                 key={s.id}
-                className="flex items-center justify-between gap-4 border-b py-3 px-4 last:border-b-0"
-                style={{ borderColor: SV_GRID }}
+                className="flex items-center justify-between gap-4 border-b px-4 py-3 last:border-b-0"
+                style={{ borderColor: "rgba(255,255,255,0.06)" }}
               >
-                <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
                   <span
-                    className="flex-shrink-0 border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest"
-                    style={{ borderColor: hue, color: hue }}
+                    className="flex-shrink-0 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest"
+                    style={{ borderColor: `${hue}55`, color: hue, backgroundColor: `${hue}10` }}
                   >
                     {s.intensity}
                   </span>
@@ -199,7 +194,13 @@ export default function Feed() {
       {/* Insights */}
       {insights.data && (
         <section className="grid gap-4 md:grid-cols-2">
-          <div className="border-2 p-5" style={{ borderColor: SV_ACID, backgroundColor: SV_INK }}>
+          <div
+            className="rounded-2xl border p-5"
+            style={{
+              borderColor: "rgba(255,255,255,0.08)",
+              background: `linear-gradient(135deg, ${SV_ACID}10 0%, transparent 60%), rgba(255,255,255,0.02)`,
+            }}
+          >
             <SectionHeader hue={SV_ACID} tag="trending now" icon={TrendingUp} compact />
             <ul className="mt-3 space-y-2">
               {insights.data.trendingActivities.map((t: TrendingActivity, i: number) => (
@@ -207,10 +208,7 @@ export default function Feed() {
                   <span className="truncate">{t.label}</span>
                   <div className="flex flex-shrink-0 items-center gap-2">
                     <ZoneChip zone={t.zone} />
-                    <span
-                      className="font-mono text-xs font-black"
-                      style={{ color: SV_ACID }}
-                    >
+                    <span className="font-mono text-xs font-black" style={{ color: SV_ACID }}>
                       {t.count}
                     </span>
                   </div>
@@ -218,12 +216,18 @@ export default function Feed() {
               ))}
               {insights.data.trendingActivities.length === 0 && (
                 <li className="font-mono text-[10px] uppercase tracking-widest text-white/40">
-                  // nothing trending yet.
+                  nothing trending yet.
                 </li>
               )}
             </ul>
           </div>
-          <div className="border-2 p-5" style={{ borderColor: SV_GREEN, backgroundColor: SV_INK }}>
+          <div
+            className="rounded-2xl border p-5"
+            style={{
+              borderColor: "rgba(255,255,255,0.08)",
+              background: `linear-gradient(135deg, ${SV_GREEN}10 0%, transparent 60%), rgba(255,255,255,0.02)`,
+            }}
+          >
             <SectionHeader hue={SV_GREEN} tag="most active zones" icon={Users} compact />
             <ul className="mt-3 space-y-1">
               {insights.data.mostActiveZones.map((z: ZoneActivity) => {
@@ -231,12 +235,12 @@ export default function Feed() {
                 return (
                   <li key={z.zone}>
                     <Link href={`/zone/${z.zone}`}>
-                      <div className="flex cursor-pointer items-center justify-between gap-3 border border-transparent px-2 py-1.5 text-sm hover:border-white/10">
+                      <div className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-white/5">
                         <span
                           className="font-mono text-xs font-black uppercase tracking-widest"
                           style={{ color: hue }}
                         >
-                          / {z.zone}
+                          {z.zone}
                         </span>
                         <span className="font-mono text-[10px] uppercase tracking-widest text-white/50">
                           {z.activeUsers} active · {z.livingNow} now · {z.squads} sq
@@ -266,13 +270,13 @@ function SectionHeader({
   compact?: boolean;
 }) {
   return (
-    <div className={compact ? "flex items-center gap-2" : "mb-4 flex items-center gap-2"}>
+    <div className={compact ? "flex items-center gap-2" : "mb-3 flex items-center gap-2 px-1"}>
       <Icon className="h-3.5 w-3.5" style={{ color: hue }} />
       <h2
-        className="font-mono text-xs font-black uppercase tracking-[0.3em]"
+        className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]"
         style={{ color: hue }}
       >
-        / {tag}
+        {tag}
       </h2>
     </div>
   );

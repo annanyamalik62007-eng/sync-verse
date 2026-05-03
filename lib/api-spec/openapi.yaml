@@ -631,6 +631,10 @@ components:
           $ref: "#/components/schemas/EnergyLevel"
         zone:
           $ref: "#/components/schemas/CommunityZone"
+        avatarUrl:
+          type: string
+          nullable: true
+          description: Profile photo URL (data URL or remote)
         lookingFor:
           type: string
           nullable: true

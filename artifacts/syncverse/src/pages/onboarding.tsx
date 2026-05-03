@@ -1948,6 +1948,74 @@ export default function Onboarding() {
                   className="space-y-5"
                 >
                   <h2 className="text-2xl font-bold">Who are you?</h2>
+
+                  {/* Profile photo upload */}
+                  <div className="flex items-center gap-4">
+                    <label
+                      htmlFor="avatar-upload"
+                      className="group relative h-20 w-20 shrink-0 cursor-pointer overflow-hidden rounded-full"
+                      style={{
+                        background: form.avatarUrl
+                          ? "transparent"
+                          : `conic-gradient(from 200deg, ${SV_HOT}, ${SV_CYAN}, ${SV_ACID}, ${SV_HOT})`,
+                      }}
+                    >
+                      {form.avatarUrl ? (
+                        <img
+                          src={form.avatarUrl}
+                          alt="preview"
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className="absolute inset-[3px] flex items-center justify-center rounded-full text-xs font-bold uppercase tracking-widest text-white/80"
+                          style={{ backgroundColor: SV_INK }}
+                        >
+                          add photo
+                        </div>
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white">
+                          change
+                        </span>
+                      </div>
+                    </label>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 2 * 1024 * 1024) {
+                          alert("Please pick an image under 2MB.");
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setForm({ ...form, avatarUrl: String(reader.result) });
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Profile photo</p>
+                      <p className="text-xs text-muted-foreground">
+                        Optional · we'll generate one if you skip
+                      </p>
+                      {form.avatarUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, avatarUrl: "" })}
+                          className="mt-1 text-xs text-muted-foreground underline hover:text-foreground"
+                        >
+                          remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="name">Your name</Label>
                     <Input

@@ -17,7 +17,7 @@ import {
   Building2,
 } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
-import { SV_INK, SV_HOT, SV_CYAN, SV_ACID, SV_GREEN, SV_GRID, ZONE_HUE } from "@/lib/theme";
+import { SV_INK, SV_HOT, SV_CYAN, SV_ACID, SV_GREEN, ZONE_HUE } from "@/lib/theme";
 
 export default function Major() {
   const userId = useCurrentUserId();
@@ -48,19 +48,19 @@ export default function Major() {
   const livingNow = peers.filter((p) => p.timeframe === "now");
 
   return (
-    <div className="space-y-8">
-      <header className="border-b-2 pb-6" style={{ borderColor: SV_CYAN }}>
+    <div className="mx-auto w-full max-w-3xl space-y-8">
+      <header>
         <div
-          className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.4em]"
-          style={{ color: SV_CYAN }}
+          className="inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.3em]"
+          style={{ borderColor: `${SV_CYAN}55`, color: SV_CYAN, backgroundColor: `${SV_CYAN}10` }}
         >
-          <GraduationCap className="h-3 w-3" /> / major hub
+          <GraduationCap className="h-3 w-3" /> major hub
         </div>
-        <h1 className="mt-3 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
+        <h1 className="mt-4 text-4xl font-black italic leading-none tracking-tighter md:text-6xl">
           <span className="sv-outline-text" style={{ color: SV_CYAN }}>{major ?? "your major"}</span>
         </h1>
-        <p className="mt-3 font-mono text-xs uppercase tracking-widest text-white/50">
-          // {college ? `everyone studying ${major} at ${college} — what they're up to right now` : "loading..."}
+        <p className="mt-3 text-sm text-white/60">
+          {college ? `everyone studying ${major} at ${college} — what they're up to right now` : "loading..."}
         </p>
       </header>
 
@@ -72,21 +72,24 @@ export default function Major() {
 
       {hub.data?.topIntents && hub.data.topIntents.length > 0 && (
         <section
-          className="border-2 p-5"
-          style={{ borderColor: SV_HOT, backgroundColor: SV_INK }}
+          className="rounded-2xl border p-5"
+          style={{
+            borderColor: "rgba(255,255,255,0.08)",
+            background: `linear-gradient(135deg, ${SV_HOT}10 0%, transparent 60%), rgba(255,255,255,0.02)`,
+          }}
         >
           <div
             className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em]"
             style={{ color: SV_HOT }}
           >
-            <TrendingUp className="h-3 w-3" /> / what {major} students are working on
+            <TrendingUp className="h-3 w-3" /> what {major} students are working on
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {hub.data.topIntents.map((t, i) => (
               <span
                 key={i}
-                className="border px-2 py-1 font-mono text-[10px] uppercase tracking-widest"
-                style={{ borderColor: SV_HOT, color: SV_HOT }}
+                className="rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest"
+                style={{ borderColor: `${SV_HOT}55`, color: SV_HOT, backgroundColor: `${SV_HOT}10` }}
               >
                 {t}
               </span>
@@ -96,76 +99,82 @@ export default function Major() {
       )}
 
       <section>
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-3 flex items-center gap-2 px-1">
           <Users className="h-3.5 w-3.5" style={{ color: SV_CYAN }} />
-          <h2
-            className="font-mono text-xs font-black uppercase tracking-[0.3em]"
-            style={{ color: SV_CYAN }}
-          >
-            / your major peers
+          <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]" style={{ color: SV_CYAN }}>
+            your major peers
           </h2>
         </div>
         {hub.isLoading && (
-          <p className="font-mono text-xs uppercase tracking-widest text-white/50">
-            // loading peers...
-          </p>
+          <p className="text-sm text-white/50">loading peers...</p>
         )}
         {peers.length === 0 && !hub.isLoading && (
           <div
-            className="border-2 border-dashed p-8 text-center font-mono text-xs uppercase tracking-widest text-white/50"
-            style={{ borderColor: SV_GRID }}
+            className="rounded-2xl border border-dashed p-8 text-center text-sm text-white/50"
+            style={{ borderColor: "rgba(255,255,255,0.1)" }}
           >
-            // you're the first {major} student here. invite your classmates.
+            you're the first {major} student here. invite your classmates.
           </div>
         )}
         <div className="space-y-3">
           {peers.map((p) => {
             const hue = ZONE_HUE[p.zone] ?? SV_CYAN;
             return (
-              <div
+              <Link
                 key={p.id}
-                className="flex items-start gap-4 border-2 p-4 transition-all hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                href={`/user/${p.id}`}
+                className="flex items-start gap-4 rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:bg-white/[0.03]"
                 style={{
-                  borderColor: SV_GRID,
-                  backgroundColor: SV_INK,
-                  boxShadow: `3px 3px 0 0 ${SV_GRID}`,
+                  borderColor: "rgba(255,255,255,0.08)",
+                  backgroundColor: "rgba(255,255,255,0.02)",
                 }}
               >
-                <UserAvatar user={p} size="md" square />
+                <div
+                  className="rounded-full p-[2px]"
+                  style={{
+                    background: `conic-gradient(from 200deg, ${hue}, ${SV_HOT}, ${hue})`,
+                  }}
+                >
+                  <div className="rounded-full p-[2px]" style={{ backgroundColor: SV_INK }}>
+                    <div className="overflow-hidden rounded-full">
+                      <UserAvatar user={p} size="md" />
+                    </div>
+                  </div>
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-black">{p.name}</span>
+                    <span className="font-bold">{p.name}</span>
                     {p.timeframe === "now" && (
                       <span
-                        className="px-1.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-widest"
+                        className="rounded-full px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-widest"
                         style={{ backgroundColor: SV_GREEN, color: SV_INK }}
                       >
                         live
                       </span>
                     )}
                     <span
-                      className="font-mono text-[10px] uppercase tracking-widest"
-                      style={{ color: hue }}
+                      className="rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest"
+                      style={{ color: hue, backgroundColor: `${hue}15` }}
                     >
-                      / {p.zone}
+                      {p.zone}
                     </span>
                   </div>
                   <p className="mt-1 text-sm italic text-white/70">"{p.intent}"</p>
                 </div>
-                <Link
-                  href={`/messages/${p.id}`}
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center border-2 transition-all hover:translate-x-[-1px] hover:translate-y-[-1px]"
-                  style={{
-                    backgroundColor: hue,
-                    borderColor: hue,
-                    color: SV_INK,
-                    boxShadow: `2px 2px 0 0 ${SV_INK}`,
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.location.href = `/messages/${p.id}`;
                   }}
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-transform hover:scale-110"
+                  style={{ backgroundColor: hue, color: SV_INK }}
                   aria-label={`Message ${p.name}`}
                 >
                   <MessageCircle className="h-4 w-4" />
-                </Link>
-              </div>
+                </button>
+              </Link>
             );
           })}
         </div>
@@ -173,14 +182,17 @@ export default function Major() {
 
       {snapshot.data && snapshot.data.topMajors.length > 0 && (
         <section
-          className="border-2 p-5"
-          style={{ borderColor: SV_ACID, backgroundColor: SV_INK }}
+          className="rounded-2xl border p-5"
+          style={{
+            borderColor: "rgba(255,255,255,0.08)",
+            background: `linear-gradient(135deg, ${SV_ACID}10 0%, transparent 60%), rgba(255,255,255,0.02)`,
+          }}
         >
           <div
             className="font-mono text-[10px] uppercase tracking-[0.3em]"
             style={{ color: SV_ACID }}
           >
-            / most active majors at {college}
+            most active majors at {college}
           </div>
           <div className="mt-4 space-y-2">
             {snapshot.data.topMajors.map((m) => {
@@ -191,17 +203,17 @@ export default function Major() {
                 <div key={m.major} className="flex items-center gap-3">
                   <span
                     className="w-44 truncate text-sm"
-                    style={{ color: isYou ? SV_ACID : "white", fontWeight: isYou ? 900 : 400 }}
+                    style={{ color: isYou ? SV_ACID : "white", fontWeight: isYou ? 700 : 400 }}
                   >
                     {m.major} {isYou && <span className="font-mono text-[9px] uppercase tracking-widest">· you</span>}
                   </span>
                   <div className="flex-1">
                     <div
-                      className="h-2 w-full overflow-hidden border"
-                      style={{ borderColor: SV_GRID }}
+                      className="h-2 w-full overflow-hidden rounded-full"
+                      style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                     >
                       <div
-                        className="h-full transition-all"
+                        className="h-full rounded-full transition-all"
                         style={{
                           width: `${pct}%`,
                           backgroundColor: isYou ? SV_ACID : SV_CYAN,
@@ -209,9 +221,7 @@ export default function Major() {
                       />
                     </div>
                   </div>
-                  <span
-                    className="w-8 text-right font-mono text-xs tabular-nums text-white/60"
-                  >
+                  <span className="w-8 text-right font-mono text-xs tabular-nums text-white/60">
                     {m.count}
                   </span>
                 </div>
@@ -239,14 +249,17 @@ function Stat({
 }) {
   return (
     <div
-      className="border-2 p-4"
-      style={{ borderColor: hue, backgroundColor: SV_INK, boxShadow: `4px 4px 0 0 ${SV_GRID}` }}
+      className="rounded-2xl border p-4"
+      style={{
+        borderColor: "rgba(255,255,255,0.08)",
+        background: `linear-gradient(135deg, ${hue}15 0%, transparent 60%), rgba(255,255,255,0.02)`,
+      }}
     >
       <div
         className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em]"
         style={{ color: hue }}
       >
-        <Icon className="h-3 w-3" /> / {label}
+        <Icon className="h-3 w-3" /> {label}
       </div>
       <div
         className="mt-2 text-4xl font-black italic leading-none tracking-tighter"
@@ -254,7 +267,7 @@ function Stat({
       >
         {value}
       </div>
-      <div className="mt-1 font-mono text-[9px] uppercase tracking-widest text-white/50">{sub}</div>
+      <div className="mt-1 text-xs text-white/50">{sub}</div>
     </div>
   );
 }

@@ -90,6 +90,10 @@ export const CreateUserBody = zod.object({
     "fitness",
     "research",
   ]),
+  avatarUrl: zod
+    .string()
+    .nullish()
+    .describe("Profile photo URL (data URL or remote)"),
   lookingFor: zod.string().nullish(),
   skills: zod.string().nullish(),
   availability: zod.string().nullish(),

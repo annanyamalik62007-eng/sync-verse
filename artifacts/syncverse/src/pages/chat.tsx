@@ -10,9 +10,9 @@ import {
   getListThreadsForUserQueryKey,
 } from "@workspace/api-client-react";
 import { useCurrentUserId } from "@/hooks/use-current-user";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, Phone, Video, Info, Smile, Image as ImageIcon, Heart, Mic } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
-import { SV_INK, SV_HOT, SV_CYAN, SV_ACID, SV_GRID, ZONE_HUE } from "@/lib/theme";
+import { SV_INK, SV_HOT, SV_CYAN, ZONE_HUE } from "@/lib/theme";
 
 export default function Chat() {
   const params = useParams<{ userId: string }>();
@@ -65,130 +65,164 @@ export default function Chat() {
   const otherHue = other.data ? ZONE_HUE[other.data.zone] ?? SV_CYAN : SV_CYAN;
 
   return (
-    <div className="flex h-[calc(100dvh-7rem)] flex-col md:h-[calc(100dvh-9rem)]">
+    <div className="mx-auto flex h-[calc(100dvh-7rem)] w-full max-w-2xl flex-col md:h-[calc(100dvh-9rem)]">
+      {/* IG-style chat header */}
       <div
-        className="mb-4 flex items-center gap-3 border-b-2 pb-4"
-        style={{ borderColor: otherHue }}
+        className="-mx-4 mb-3 flex items-center gap-3 border-b px-4 py-3 md:-mx-8 md:px-8"
+        style={{ borderColor: "rgba(255,255,255,0.08)" }}
       >
         <button
           onClick={() => setLocation("/messages")}
-          aria-label="Back to messages"
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center border-2 transition-all hover:translate-x-[-1px] hover:translate-y-[-1px]"
-          style={{
-            borderColor: SV_GRID,
-            color: "white",
-          }}
+          aria-label="Back"
+          className="rounded-full p-1.5 transition-colors hover:bg-white/5"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-5 w-5 text-white" />
         </button>
         {other.data && (
           <>
-            <UserAvatar user={other.data} size="md" square />
-            <div className="min-w-0 flex-1">
-              <div className="text-base font-black">{other.data.name}</div>
-              <Link
-                href="/major"
-                className="font-mono text-[10px] uppercase tracking-[0.25em]"
-                style={{ color: otherHue }}
+            <Link href={`/user/${other.data.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+              <div
+                className="rounded-full p-[2px]"
+                style={{
+                  background: `conic-gradient(from 200deg, ${otherHue}, ${SV_HOT}, ${otherHue})`,
+                }}
               >
-                / {other.data.major} · {other.data.college}
-              </Link>
+                <div className="rounded-full p-[2px]" style={{ backgroundColor: SV_INK }}>
+                  <div className="overflow-hidden rounded-full">
+                    <UserAvatar user={other.data} size="md" />
+                  </div>
+                </div>
+              </div>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-bold">
+                  {other.data.name.toLowerCase().replace(/\s+/g, ".")}
+                </div>
+                <div className="truncate text-[11px] text-white/50">
+                  {other.data.major} · {other.data.college}
+                </div>
+              </div>
+            </Link>
+            <div className="flex items-center gap-1">
+              <button className="rounded-full p-2 transition-colors hover:bg-white/5" aria-label="call">
+                <Phone className="h-5 w-5 text-white" />
+              </button>
+              <button className="rounded-full p-2 transition-colors hover:bg-white/5" aria-label="video">
+                <Video className="h-5 w-5 text-white" />
+              </button>
+              <button className="rounded-full p-2 transition-colors hover:bg-white/5" aria-label="info">
+                <Info className="h-5 w-5 text-white" />
+              </button>
             </div>
           </>
         )}
       </div>
 
-      <div
-        className="flex flex-1 flex-col overflow-hidden border-2"
-        style={{ borderColor: SV_GRID, backgroundColor: SV_INK }}
-      >
-        <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
-          {messages.isLoading && (
-            <p className="text-center font-mono text-xs uppercase tracking-widest text-white/40">
-              // loading...
-            </p>
-          )}
-          {messages.data && messages.data.length === 0 && (
-            <div className="flex h-full items-center justify-center px-6 text-center">
-              <div>
-                <p className="text-sm font-black">
-                  say hi to {other.data?.name.split(" ")[0]}.
-                </p>
-                <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-white/50">
-                  // you both showed up on each other's match list. make the first move.
-                </p>
-              </div>
-            </div>
-          )}
-          {messages.data?.map((m) => {
-            const mine = m.fromUserId === meId;
-            return (
-              <div
-                key={m.id}
-                className={`flex ${mine ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className="max-w-[75%] border-2 px-3.5 py-2.5 text-sm"
-                  style={{
-                    backgroundColor: mine ? SV_HOT : SV_INK,
-                    borderColor: mine ? SV_HOT : otherHue,
-                    color: mine ? SV_INK : "white",
-                    boxShadow: mine
-                      ? `3px 3px 0 0 ${SV_INK}`
-                      : `3px 3px 0 0 ${otherHue}33`,
-                  }}
-                >
-                  <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                  <p
-                    className="mt-1 font-mono text-[9px] uppercase tracking-widest"
-                    style={{ opacity: 0.6 }}
-                  >
-                    {new Date(m.createdAt).toLocaleTimeString([], {
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <div
-          className="border-t-2 p-3"
-          style={{ borderColor: SV_GRID, backgroundColor: "#0d0d14" }}
-        >
-          <div className="flex items-end gap-2">
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  send();
-                }
-              }}
-              placeholder={`message ${other.data?.name.split(" ")[0] ?? ""}...`}
-              rows={1}
-              className="max-h-32 min-h-[44px] flex-1 resize-none border-2 bg-transparent px-3 py-2.5 text-sm text-white placeholder:font-mono placeholder:text-xs placeholder:uppercase placeholder:tracking-widest placeholder:text-white/40 focus:outline-none"
-              style={{ borderColor: SV_GRID }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = otherHue)}
-              onBlur={(e) => (e.currentTarget.style.borderColor = SV_GRID)}
-            />
-            <button
-              onClick={send}
-              disabled={!text.trim() || sendMutation.isPending}
-              aria-label="Send"
-              className="flex h-11 w-11 flex-shrink-0 items-center justify-center border-2 transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] disabled:opacity-40 disabled:hover:translate-x-0 disabled:hover:translate-y-0"
+      {/* Message list (no card frame — full bleed IG style) */}
+      <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto px-1 py-2">
+        {messages.isLoading && (
+          <p className="py-8 text-center text-sm text-white/40">loading...</p>
+        )}
+        {messages.data && messages.data.length === 0 && other.data && (
+          <div className="flex h-full flex-col items-center justify-center px-6 py-12 text-center">
+            <div
+              className="rounded-full p-[3px]"
               style={{
-                backgroundColor: SV_HOT,
-                borderColor: SV_HOT,
-                color: SV_INK,
-                boxShadow: `3px 3px 0 0 ${SV_INK}`,
+                background: `conic-gradient(from 200deg, ${otherHue}, ${SV_HOT}, ${otherHue})`,
               }}
             >
-              <Send className="h-4 w-4" />
-            </button>
+              <div className="rounded-full p-[3px]" style={{ backgroundColor: SV_INK }}>
+                <div className="overflow-hidden rounded-full">
+                  <UserAvatar user={other.data} size="2xl" />
+                </div>
+              </div>
+            </div>
+            <h3 className="mt-4 text-xl font-bold">{other.data.name}</h3>
+            <p className="mt-1 text-sm text-white/60">
+              {other.data.major} · {other.data.college}
+            </p>
+            <Link href={`/user/${other.data.id}`}>
+              <button
+                className="mt-4 rounded-lg px-4 py-1.5 text-sm font-bold"
+                style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "white" }}
+              >
+                View profile
+              </button>
+            </Link>
+            <p className="mt-6 max-w-xs text-xs text-white/40">
+              you both showed up on each other's match list. make the first move.
+            </p>
           </div>
+        )}
+        {messages.data?.map((m, i) => {
+          const mine = m.fromUserId === meId;
+          const prev = i > 0 ? messages.data![i - 1] : null;
+          const isFirstInGroup = !prev || prev.fromUserId !== m.fromUserId;
+          return (
+            <div
+              key={m.id}
+              className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}
+            >
+              {!mine && (
+                <div className={`w-7 ${isFirstInGroup ? "" : "invisible"}`}>
+                  {other.data && (
+                    <div className="overflow-hidden rounded-full">
+                      <UserAvatar user={other.data} size="xs" />
+                    </div>
+                  )}
+                </div>
+              )}
+              <div
+                className="max-w-[75%] rounded-3xl px-3.5 py-2 text-sm"
+                style={
+                  mine
+                    ? { background: `linear-gradient(135deg, ${SV_HOT} 0%, #c91488 100%)`, color: "white" }
+                    : { backgroundColor: "rgba(255,255,255,0.08)", color: "white" }
+                }
+              >
+                <p className="whitespace-pre-wrap break-words">{m.content}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* IG composer */}
+      <div className="px-1 py-3">
+        <div
+          className="flex items-center gap-2 rounded-full border px-3 py-1.5"
+          style={{ borderColor: "rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.02)" }}
+        >
+          <Smile className="h-5 w-5 shrink-0 text-white/70" />
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            placeholder={`Message ${other.data?.name.split(" ")[0] ?? ""}...`}
+            className="flex-1 bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
+          />
+          {text.trim() ? (
+            <button
+              onClick={send}
+              disabled={sendMutation.isPending}
+              className="text-sm font-bold disabled:opacity-40"
+              style={{ color: SV_HOT }}
+              aria-label="Send"
+            >
+              <Send className="h-5 w-5" />
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 text-white/70">
+              <Mic className="h-5 w-5" />
+              <ImageIcon className="h-5 w-5" />
+              <Heart className="h-5 w-5" />
+            </div>
+          )}
         </div>
       </div>
     </div>
