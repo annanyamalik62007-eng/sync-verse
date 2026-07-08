@@ -42,4 +42,4 @@ Syncverse aims to become the default identity and collaboration layer for studen
 
 ---
 
-Built by [Annanya Malik](https://annanyamalik.com), born out of an Anthropic Buildathon.
+Built by [Annanya Malik](https://annanyamalik.com), born out of a Replit Buildathon.
